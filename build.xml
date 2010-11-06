@@ -1,0 +1,31 @@
+<project name="tilitin" default="compile" basedir=".">
+	<property name="src" location="src"/>
+	<property name="lib" location="lib"/>
+	<property name="build" location="bin"/>
+	<property name="dist" location="dist"/>
+
+	<target name="init">
+		<mkdir dir="${build}"/>
+		<mkdir dir="${dist}"/>
+	</target>
+
+	<target name="compile" depends="init">
+		<javac srcdir="${src}" destdir="${build}" classpath="${lib}/itext.jar"/>
+		<copy todir="${build}">
+			<fileset dir="${src}">
+				<exclude name="**/*.java"/>
+			</fileset>
+		</copy>
+
+		<jar destfile="${dist}/tilitin.jar" basedir="${build}">
+			<manifest>
+				<attribute name="Main-Class" value="kirjanpito.ui.Kirjanpito"/>
+				<attribute name="Class-Path" value="sqlite-jdbc.jar mysql-connector.jar postgresql-jdbc.jar itext.jar"/>
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="clean">
+		<delete dir="${build}"/>
+	</target>
+</project>

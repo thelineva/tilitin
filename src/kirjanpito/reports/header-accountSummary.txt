@@ -1,0 +1,7 @@
+set height=17
+text +0+5 "$n"
+text +0+12 "$y"
+text align=right -0+5 "Sivu $p"
+text align=right -0+12 "$d"
+text align=center font=heading +50%+5 "Tilien saldot"
+text align=center +50%+12 "$1"

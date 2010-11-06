@@ -1,0 +1,400 @@
+package kirjanpito.reports;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+
+import kirjanpito.db.Account;
+import kirjanpito.db.COAHeading;
+import kirjanpito.db.DTOCallback;
+import kirjanpito.db.DataAccessException;
+import kirjanpito.db.DataSource;
+import kirjanpito.db.Entry;
+import kirjanpito.db.Period;
+import kirjanpito.db.Session;
+import kirjanpito.db.Settings;
+import kirjanpito.util.AccountBalances;
+import kirjanpito.util.ChartOfAccounts;
+import kirjanpito.util.Registry;
+
+/**
+ * Malli tilien saldot -tulosteelle.
+ * 
+ * @author Tommi Helineva
+ */
+public class AccountSummaryModel implements PrintModel {
+	private Registry registry;
+	private Settings settings;
+	private Period period;
+	private Period periodPrev;
+	private Date startDate;
+	private Date endDate;
+	private AccountSummaryRow[] rows;
+	private AccountBalances balances;
+	private AccountBalances balancesPrev;
+	private boolean previousPeriodVisible;
+	private int printedAccounts;
+
+	public Registry getRegistry() {
+		return registry;
+	}
+
+	public void setRegistry(Registry registry) {
+		this.registry = registry;
+	}
+
+	/**
+	 * Palauttaa tilikauden, jonka saldot haetaan.
+	 * 
+	 * @return tilikausi
+	 */
+	public Period getPeriod() {
+		return period;
+	}
+	
+	/**
+	 * Asettaa tilikauden, jonka saldot haetaan.
+	 * 
+	 * @param period tilikausi
+	 */
+	public void setPeriod(Period period) {
+		this.period = period;
+	}
+	
+	/**
+	 * Palauttaa edellisen tilikauden.
+	 * 
+	 * @return edellinen tilikausi
+	 */
+	public Period getPreviousPeriod() {
+		return periodPrev;
+	}
+
+	/**
+	 * Palauttaa alkamispäivämäärän.
+	 * 
+	 * @return alkamispäivämäärä
+	 */
+	public Date getStartDate() {
+		return startDate;
+	}
+
+	/**
+	 * Asettaa alkamispäivämäärän.
+	 * 
+	 * @param startDate alkamispäivämäärä
+	 */
+	public void setStartDate(Date startDate) {
+		this.startDate = startDate;
+	}
+
+	/**
+	 * Palauttaa päättymispäivämäärän.
+	 * 
+	 * @return päättymispäivämäärä
+	 */
+	public Date getEndDate() {
+		return endDate;
+	}
+
+	/**
+	 * Asettaa päättymispäivämäärän.
+	 * 
+	 * @param endDate päättymispäivämäärä
+	 */
+	public void setEndDate(Date endDate) {
+		this.endDate = endDate;
+	}
+	
+	/**
+	 * Ilmoittaa, onko edellisen tilikauden rahamäärät näkyvillä
+	 * 
+	 * @return <code>true</code> tai <code>false</code>
+	 */
+	public boolean isPreviousPeriodVisible() {
+		return previousPeriodVisible;
+	}
+
+	/**
+	 * Näyttää tai piilottaa edellisen tilikauden rahamäärät.
+	 * 
+	 * @param previousPeriodVisible ilmoittaa, onko edellisen tilikauden rahamäärät näkyvillä
+	 */
+	public void setPreviousPeriodVisible(boolean previousPeriodVisible) {
+		this.previousPeriodVisible = previousPeriodVisible;
+	}
+
+	public int getPrintedAccounts() {
+		return printedAccounts;
+	}
+
+	public void setPrintedAccounts(int printedAccounts) {
+		this.printedAccounts = printedAccounts;
+	}
+
+	public void run() throws DataAccessException {
+		DataSource dataSource = registry.getDataSource();
+		Session sess = null;
+		int accountCount = 0;
+		settings = registry.getSettings();
+		balances = new AccountBalances(registry.getAccounts());
+		
+		if (previousPeriodVisible) {
+			balancesPrev = new AccountBalances(registry.getAccounts());
+		}
+		
+		try {
+			final HashSet<Integer> accountIds = new HashSet<Integer>();
+			sess = dataSource.openSession();
+			dataSource.getEntryDAO(sess).getByPeriodIdAndDate(period.getId(),
+				startDate, endDate, new DTOCallback<Entry>() {
+					public void process(Entry entry) {
+						if (isAccountPrinted(entry.getAccountId())) {
+							balances.addEntry(entry);
+							accountIds.add(entry.getAccountId());
+						}
+					}
+				});
+			
+			if (previousPeriodVisible) {
+				/* Haetaan edellinen tilikausi. */
+				periodPrev = null;
+				List<Period> periods = dataSource.getPeriodDAO(sess).getAll();
+				
+				for (int i = 1; i < periods.size(); i++) {
+					if (periods.get(i).getId() == period.getId()) {
+						periodPrev = periods.get(i - 1);
+						break;
+					}
+				}
+				
+				if (periodPrev == null) {
+					previousPeriodVisible = false;
+				}
+				else {
+					/* Lasketaan edellisen tilikauden tilien saldot. */
+					dataSource.getEntryDAO(sess).getByPeriodIdAndDate(periodPrev.getId(),
+						periodPrev.getStartDate(), periodPrev.getEndDate(), new DTOCallback<Entry>() {
+							public void process(Entry entry) {
+								if (isAccountPrinted(entry.getAccountId())) {
+									balancesPrev.addEntry(entry);
+									accountIds.add(entry.getAccountId());
+								}
+							}
+						});
+				}
+			}
+			
+			accountCount = accountIds.size();
+		}
+		finally {
+			if (sess != null) sess.close();
+		}
+		
+		BigDecimal balance, balancePrev;
+		Account account;
+		COAHeading heading;
+		ChartOfAccounts coa = registry.getChartOfAccounts();
+		HashSet<Integer> headings = new HashSet<Integer>();
+		int maxLevel = 0;
+		int level;
+		
+		/* Etsitään tarvittavat otsikot. */
+		for (int i = 0; i < coa.getSize(); i++) {
+			if (coa.getType(i) != ChartOfAccounts.TYPE_ACCOUNT)
+				continue;
+			
+			if (previousPeriodVisible) {
+				if (balances.getBalance(coa.getAccount(i).getId()) == null &&
+						balancesPrev.getBalance(coa.getAccount(i).getId()) == null) {
+					continue;
+				}
+			}
+			else if (balances.getBalance(coa.getAccount(i).getId()) == null) {
+				continue;
+			}
+			
+			level = Integer.MAX_VALUE;
+			
+			for (int j = i - 1; j >= 0; j--) {
+				if (coa.getType(j) == ChartOfAccounts.TYPE_HEADING) {
+					heading = coa.getHeading(j);
+					
+					if (heading.getLevel() < level) {
+						headings.add(heading.getId());
+						level = heading.getLevel();
+						maxLevel = Math.max(level, maxLevel);
+						if (level == 0) break;
+					}
+				}
+			}
+		}
+		
+		rows = new AccountSummaryRow[headings.size() + accountCount];
+		int index = 0;
+		
+		for (int i = 0; i < coa.getSize(); i++) {
+			if (coa.getType(i) == ChartOfAccounts.TYPE_ACCOUNT) {
+				account = coa.getAccount(i);
+				
+				if (previousPeriodVisible) {
+					/* Edellinen tilikausi */
+					balance = balances.getBalance(account.getId());
+					balancePrev = balancesPrev.getBalance(account.getId());
+					
+					if (balance != null || balancePrev != null) {
+						rows[index++] = new AccountSummaryRow(account, balance, balancePrev, maxLevel);
+					}
+				}
+				else {
+					/* Ei edellistä tilikautta */
+					balance = balances.getBalance(account.getId());
+					
+					if (balance != null) {
+						rows[index++] = new AccountSummaryRow(account, balance, null, maxLevel);
+					}
+				}
+			}
+			else {
+				heading = coa.getHeading(i);
+				
+				if (headings.contains(heading.getId())) {
+					rows[index++] = new AccountSummaryRow(
+						heading.getText(), heading.getLevel());
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Palauttaa käyttäjän nimen.
+	 * 
+	 * @return käyttäjän nimi
+	 */
+	public String getName() {
+		return settings.getName();
+	}
+	
+	/**
+	 * Palauttaa Y-tunnuksen.
+	 * 
+	 * @return y-tunnus
+	 */
+	public String getBusinessId() {
+		return settings.getBusinessId();
+	}
+	
+	/**
+	 * Palauttaa tulosteessa olevien rivien lukumäärän.
+	 * 
+	 * @return rivien lukumäärä
+	 */
+	public int getRowCount() {
+		return rows.length;
+	}
+	
+	/**
+	 * Palauttaa rivillä <code>index</code> olevan tilin.
+	 * 
+	 * @param index rivinumero
+	 * @return tili
+	 */
+	public Account getAccount(int index) {
+		return rows[index].account;
+	}
+	
+	/**
+	 * Palauttaa rivillä <code>index</code> olevan tilin
+	 * saldon.
+	 * 
+	 * @param index rivinumero
+	 * @return tilin saldo
+	 */
+	public BigDecimal getBalance(int index) {
+		return rows[index].balance;
+	}
+	
+	/**
+	 * Palauttaa rivillä <code>index</code> olevan tilin
+	 * edellisen tilikauden saldon.
+	 * 
+	 * @param index rivinumero
+	 * @return tilin saldo
+	 */
+	public BigDecimal getBalancePrev(int index) {
+		return rows[index].balancePrev;
+	}
+	
+	/**
+	 * Palauttaa rivillä <code>index</code> olevan otsikkotekstin.
+	 * 
+	 * @param index rivinumero
+	 * @return otsikkoteksti
+	 */
+	public String getText(int index) {
+		return rows[index].text;
+	}
+	
+	/**
+	 * Palauttaa rivin <code>index</code> sisennystason.
+	 * 
+	 * @param index rivinumero
+	 * @return sisennystaso
+	 */
+	public int getLevel(int index) {
+		return rows[index].level;
+	}
+	
+	private boolean isAccountPrinted(int accountId) {
+		if (printedAccounts == 0) {
+			return true;
+		}
+		
+		if (printedAccounts == 1) {
+			Account account = registry.getAccountById(accountId);
+			
+			if (account != null) {
+				int type = account.getType();
+				
+				return type == Account.TYPE_ASSET ||
+					type == Account.TYPE_LIABILITY ||
+					type == Account.TYPE_EQUITY ||
+					type == Account.TYPE_PROFIT;
+			}
+		}
+		else if (printedAccounts == 2) {
+			Account account = registry.getAccountById(accountId);
+			
+			if (account != null) {
+				int type = account.getType();
+				
+				return type == Account.TYPE_REVENUE ||
+					type == Account.TYPE_EXPENSE;
+			}
+		}
+		
+		return false;
+	}
+	
+	private class AccountSummaryRow {
+		public Account account;
+		public BigDecimal balance;
+		public BigDecimal balancePrev;
+		public String text;
+		public int level;
+		
+		public AccountSummaryRow(Account account, BigDecimal balance,
+				BigDecimal balancePrev, int level) {
+			this.account = account;
+			this.balance = balance;
+			this.balancePrev = balancePrev;
+			this.level = level;
+		}
+		
+		public AccountSummaryRow(String text, int level) {
+			this.text = text;
+			this.level = level;
+		}
+	}
+}

@@ -1,0 +1,205 @@
+package kirjanpito.util;
+
+import java.util.List;
+
+import kirjanpito.db.Account;
+import kirjanpito.db.COAHeading;
+
+public class ChartOfAccounts {
+	private COAItem[] items;
+	
+	/**
+	 * Tili
+	 */
+	public static final int TYPE_ACCOUNT = 0;
+	
+	/**
+	 * Otsikko
+	 */
+	public static final int TYPE_HEADING = 1;
+	
+	/**
+	 * Asettaa tilikartan sisällön.
+	 * 
+	 * @param accounts tilikartan tilit
+	 * @param headings tilikartan otsikot
+	 */
+	public void set(List<Account> accounts, List<COAHeading> headings) {
+		Account account;
+		COAHeading heading;
+		int ai = 0;
+		int hi = 0;
+		
+		items = new COAItem[accounts.size() + headings.size()];
+		
+		for (int i = 0; i < items.length; i++) {
+			/* Jos kaikki tilit jo lisätty, lisätään loput otsikot. */
+			if (ai >= accounts.size()) {
+				items[i] = new COAItem(null, headings.get(hi));
+				hi++;
+			}
+			/* Jos kaikki otsikot jo lisätty, lisätään loput tilit. */
+			else if (hi >= headings.size()) {
+				items[i] = new COAItem(accounts.get(ai), null);
+				ai++;
+			}
+			else {
+				account = accounts.get(ai);
+				heading = headings.get(hi);
+				
+				if (heading.getNumber().compareTo(account.getNumber()) <= 0) {
+					/* Otsikko on ennen tiliä. */
+					items[i] = new COAItem(null, heading);
+					hi++;
+				}
+				else {
+					/* Tili on ennen otsikkoa. */
+					items[i] = new COAItem(account, null);
+					ai++;
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Palauttaa rivillä <code>index</code> olevan tilin.
+	 * 
+	 * @param index rivinumero
+	 * @return tili
+	 */
+	public Account getAccount(int index) {
+		return items[index].account;
+	}
+	
+	/**
+	 * Palauttaa rivillä <code>index</code> olevan otsikon.
+	 * 
+	 * @param index rivinumero
+	 * @return otsikko
+	 */
+	public COAHeading getHeading(int index) {
+		return items[index].heading;
+	}
+	
+	/**
+	 * Palauttaa rivin <code>index</code> tyypin,
+	 * TYPE_ACCOUNT tai TYPE_HEADING.
+	 * 
+	 * @param index rivinumero
+	 * @return rivin tyyppi
+	 */
+	public int getType(int index) {
+		return (items[index].heading == null) ? TYPE_ACCOUNT : TYPE_HEADING;
+	}
+	
+	/**
+	 * Palauttaa rivien lukumäärän.
+	 * 
+	 * @return rivien lukumäärä
+	 */
+	public int getSize() {
+		return (items == null) ? 0 : items.length;
+	}
+	
+	/**
+	 * Etsii tilikartasta tilin <code>account</code> ja
+	 * palauttaa tilin rivinumeron.
+	 * 
+	 * @param account haettava tili
+	 * @return rivinumero tai -1, jos tiliä ei löydy
+	 */
+	public int indexOfAccount(Account account) {
+		int index = 0;
+		
+		for (COAItem item : items) {
+			if (item.account == account) {
+				return index;
+			}
+			
+			index++;
+		}
+		
+		return -1;
+	}
+	
+	/**
+	 * Etsii tilikartasta otsikon <code>otsikon</code> ja
+	 * palauttaa otsikon rivinumeron.
+	 * 
+	 * @param heading haettava otsikko
+	 * @return rivinumero tai -1, jos tiliä ei löydy
+	 */
+	public int indexOfHeading(COAHeading heading) {
+		int index = 0;
+		
+		for (COAItem item : items) {
+			if (item.heading == heading) {
+				return index;
+			}
+			
+			index++;
+		}
+		
+		return -1;
+	}
+	
+	/**
+	 * Etsii tilikartan tilien nimistä ja otsikkoteksteistä
+	 * merkkijonoa <code>q</code>. Metodi palauttaa
+	 * ensimmäisen löytyneen tilin tai otsikon rivinumeron.
+	 * 
+	 * @param q hakusana
+	 * @return rivinumero
+	 */
+	public int search(String q) {
+		int index = 0;
+		int match1 = -1;
+		int match2 = -1;
+		int match3 = -1;
+		int len = q.length();
+		
+		for (COAItem item : items) {
+			if (item.account != null) {
+				if (item.account.getNumber().equalsIgnoreCase(q) ||
+						item.account.getName().equalsIgnoreCase(q)) {
+					match1 = index;
+					break;
+				}
+				else if (item.account.getNumber().regionMatches(true, 0, q, 0, len) ||
+						item.account.getName().regionMatches(true, 0, q, 0, len)) {
+					
+					if (match2 < 0) {
+						match2 = index;
+					}
+				}
+			}
+			else if (item.heading.getText().regionMatches(true, 0, q, 0, len)) {
+				if (match3 < 0) {
+					match3 = index;
+				}
+			}
+			
+			index++;
+		}
+		
+		if (match2 < 0) {
+			match2 = match3;
+		}
+		
+		if (match1 < 0) {
+			match1 = match2;
+		}
+		
+		return match1;
+	}
+	
+	private static class COAItem {
+		private Account account;
+		private COAHeading heading;
+		
+		public COAItem(Account account, COAHeading heading) {
+			this.account = account;
+			this.heading = heading;
+		}
+	}
+}
