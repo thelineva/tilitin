@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist SYSTEM "file://localhost/System/Library/DTDs/PropertyList.dtd">
+<plist version="0.9">
+<dict>
+	<key>CFBundleName</key>
+	<string>Tilitin</string>
+	<key>CFBundleIdentifier</key>
+	<string>kirjanpito.ui.Kirjanpito</string>
+	<key>CFBundleVersion</key>
+	<string>%(VERSION)s</string>
+	<key>CFBundleAllowMixedLocalizations</key>
+	<string>true</string>
+	<key>CFBundleExecutable</key>
+	<string>JavaApplicationStub</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleIconFile</key>
+	<string>tilitin.icns</string>
+	<key>Java</key>
+	<dict>
+		<key>MainClass</key>
+		<string>kirjanpito.ui.Kirjanpito</string>
+		<key>JVMVersion</key>
+		<string>1.6+</string>
+		<key>ClassPath</key>
+		<array>
+			<string>$JAVAROOT/tilitin.jar</string>
+			<string>$JAVAROOT/sqlite-jdbc.jar</string>
+			<string>$JAVAROOT/itext.jar</string>
+		</array>
+	</dict>
+</dict>
+</plist>
