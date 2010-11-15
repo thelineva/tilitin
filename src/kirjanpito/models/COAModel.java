@@ -11,6 +11,7 @@ import kirjanpito.db.DataAccessException;
 import kirjanpito.db.DataSource;
 import kirjanpito.db.Entry;
 import kirjanpito.db.Session;
+import kirjanpito.db.Settings;
 import kirjanpito.util.ChartOfAccounts;
 import kirjanpito.util.Registry;
 
@@ -25,6 +26,8 @@ public class COAModel {
 	private List<COAHeading> coaHeadings;
 	private List<DataSourceAction> dataSourceActions;
 	private ChartOfAccounts coa;
+	private Account defaultAccount;
+	private boolean changed;
 	
 	public COAModel(Registry registry) {
 		this.registry = registry;
@@ -32,6 +35,7 @@ public class COAModel {
 		dataSourceActions = new ArrayList<DataSourceAction>();
 		updateChartOfAccounts(registry.getAccounts(),
 				registry.getCOAHeadings());
+		loadSettings();
 	}
 	
 	/**
@@ -104,7 +108,26 @@ public class COAModel {
 	 * tietokantaan
 	 */
 	public boolean isChanged() {
-		return dataSourceActions.size() > 0;
+		return changed;
+	}
+
+	/**
+	 * Palauttaa oletustilin.
+	 * 
+	 * @return oletustili
+	 */
+	public Account getDefaultAccount() {
+		return defaultAccount;
+	}
+
+	/**
+	 * Asettaa oletustilin.
+	 * 
+	 * @param defaultAccount oletustili
+	 */
+	public void setDefaultAccount(Account defaultAccount) {
+		this.defaultAccount = defaultAccount;
+		this.changed = true;
 	}
 
 	/**
@@ -130,6 +153,7 @@ public class COAModel {
 		}
 		
 		dataSourceActions.add(new SaveAccountAction(account));
+		changed = true;
 		accounts.add(account);
 		Collections.sort(accounts);
 		updateChartOfAccounts(accounts, coaHeadings);
@@ -192,8 +216,10 @@ public class COAModel {
 			}
 		}
 		
-		if (!dataSourceActions.contains(action))
+		if (!dataSourceActions.contains(action)) {
 			dataSourceActions.add(action);
+			changed = true;
+		}
 	}
 	
 	/**
@@ -213,6 +239,7 @@ public class COAModel {
 			coaHeadings.remove(heading);
 		}
 		
+		changed = true;
 		updateChartOfAccounts(accounts, coaHeadings);
 	}
 	
@@ -258,8 +285,10 @@ public class COAModel {
 		updateChartOfAccounts(accounts, coaHeadings);
 		SaveCOAHeadingAction action = new SaveCOAHeadingAction(heading);
 		
-		if (!dataSourceActions.contains(action))
+		if (!dataSourceActions.contains(action)) {
 			dataSourceActions.add(action);
+			changed = true;
+		}
 		
 		return coa.indexOfHeading(heading);
 	}
@@ -279,6 +308,7 @@ public class COAModel {
 			for (DataSourceAction action : dataSourceActions)
 				action.execute(dataSource, sess);
 			
+			saveSettings(dataSource, sess);
 			sess.commit();
 		}
 		catch (DataAccessException e) {
@@ -290,6 +320,7 @@ public class COAModel {
 		}
 		
 		dataSourceActions.clear();
+		changed = false;
 		registry.updateChartOfAccounts();
 		registry.fireChartOfAccountsChanged();
 	}
@@ -371,6 +402,31 @@ public class COAModel {
 		}
 		
 		return number;
+	}
+	
+	private void loadSettings() {
+		Settings settings = registry.getSettings();
+		String accountIdString = settings.getProperty("defaultAccount", "");
+		
+		try {
+			int accountId = Integer.parseInt(accountIdString);
+			defaultAccount = getAccountById(accountId);
+		}
+		catch (NumberFormatException e) {
+			defaultAccount = null;
+		}
+	}
+	
+	private void saveSettings(DataSource dataSource, Session sess) throws DataAccessException {
+		Settings settings = registry.getSettings();
+		String accountIdString = null;
+		
+		if (defaultAccount != null) {
+			accountIdString = Integer.toString(defaultAccount.getId());
+		}
+		
+		settings.setProperty("defaultAccount", accountIdString);
+		dataSource.getSettingsDAO(sess).save(settings);
 	}
 	
 	private static interface DataSourceAction {

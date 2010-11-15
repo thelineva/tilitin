@@ -610,6 +610,7 @@ public class DocumentModel {
 		entries.add(count, entry);
 		amounts.add(BigDecimal.ZERO);
 		vatAmounts.add(BigDecimal.ZERO);
+		setDefaultAccount(count);
 		return count;
 	}
 	
@@ -635,15 +636,15 @@ public class DocumentModel {
 	
 	public void updateAccountId(int index, int accountId) {
 		Entry entry = entries.get(index);
+		Account account = registry.getAccountById(accountId);
 		BigDecimal amount = getVatIncludedAmount(index);
 		entry.setAccountId(accountId);
 		
 		/* Jos tili on valittu, mutta rahamäärää ei ole
 		 * vielä syötetty, asetetaan rahamääräksi
 		 * debet- ja kreditvientien erotus. */
-		if (accountId > 0 && amount.compareTo(BigDecimal.ZERO) == 0) {
-			Account account = registry.getAccountById(accountId);
-			BigDecimal diff = calculateDebetKreditDifference();
+		if (account != null && amount.compareTo(BigDecimal.ZERO) == 0) {
+			BigDecimal diff = calculateDebitKreditDifference();
 			
 			if (account.getType() == Account.TYPE_REVENUE) {
 				entry.setDebit(false);
@@ -665,11 +666,19 @@ public class DocumentModel {
 				amount = diff;
 			}
 		}
+		else if (account != null) {
+			if (account.getType() == Account.TYPE_REVENUE) {
+				entry.setDebit(false);
+			}
+			else if (account.getType() == Account.TYPE_EXPENSE) {
+				entry.setDebit(true);
+			}
+		}
 		
 		updateAmount(index, amount);
 	}
 	
-	private BigDecimal calculateDebetKreditDifference() {
+	private BigDecimal calculateDebitKreditDifference() {
 		int count = amounts.size();
 		BigDecimal diff = BigDecimal.ZERO;
 		Entry entry;
@@ -1138,6 +1147,29 @@ public class DocumentModel {
 			}
 			
 			return documentTypes.get(0);
+		}
+	}
+	
+	private void setDefaultAccount(int index) {
+		if (index == 0) {
+			return;
+		}
+		
+		Settings settings = registry.getSettings();
+		String accountIdString = settings.getProperty("defaultAccount", "");
+		int accountId;
+		
+		try {
+			accountId = Integer.parseInt(accountIdString);
+		}
+		catch (NumberFormatException e) {
+			return;
+		}
+		
+		Account account = registry.getAccountById(accountId);
+		
+		if (account != null) {
+			updateAccountId(index, accountId);
 		}
 	}
 }
