@@ -168,8 +168,8 @@ public class ReportEditorModel {
 				
 				ch = line.charAt(0);
 				
-				if (ch != 'G' && ch != 'H' && ch != 'S' && ch != 'T' && ch != 'D') {
-					throw new ParseException("Ensimmäisen merkin on oltava D, G, H, S tai T.", number);
+				if (ch != 'F' && ch != 'G' && ch != 'H' && ch != 'S' && ch != 'T' && ch != 'D') {
+					throw new ParseException("Ensimmäisen merkin on oltava D, F, G, H, S tai T.", number);
 				}
 				
 				ch = line.charAt(1);
@@ -190,7 +190,7 @@ public class ReportEditorModel {
 					if (line.charAt(i) == ';') count++;
 				}
 				
-				if ((count % 2) != 0) {
+				if (ch != 'F' && (count % 2) != 0) {
 					throw new ParseException("Tilinumeroita on oltava parillinen määrä.", number);
 				}
 			}

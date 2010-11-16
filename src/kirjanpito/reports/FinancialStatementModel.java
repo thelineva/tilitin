@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -38,12 +40,18 @@ public class FinancialStatementModel implements PrintModel {
 	private List<FinancialStatementRow> rows;
 	private AccountBalances balances;
 	private AccountBalances balancesPrev;
+	private DecimalFormat numberFormat;
 	private boolean details;
 	private boolean emptyRow;
 	
 	public static final int STYLE_PLAIN = 0;
 	public static final int STYLE_BOLD = 1;
 	public static final int STYLE_ITALIC = 2;
+	
+	public FinancialStatementModel() {
+		numberFormat = new DecimalFormat();
+		numberFormat.setParseBigDecimal(true);
+	}
 	
 	/**
 	 * Palauttaa tietokannan, josta tiedot haetaan.
@@ -313,13 +321,32 @@ public class FinancialStatementModel implements PrintModel {
 			style = STYLE_PLAIN;
 		}
 		
+		BigDecimal amount = BigDecimal.ZERO;
+		BigDecimal amountPrev = BigDecimal.ZERO;
+		
+		if (typeChar == 'F') {
+			String[] fields = line.substring(4).split(";");
+			
+			try {
+				amount = (fields.length >= 2) ? (BigDecimal)numberFormat.parse(fields[1]) : null;
+				amountPrev = (fields.length >= 3) ? (BigDecimal)numberFormat.parse(fields[2]) : null;
+			}
+			catch (ParseException e) {
+				amount = null;
+				amountPrev = null;
+			}
+			
+			rows.add(new FinancialStatementRow(null,
+					fields[0], style, level, amount, amountPrev));
+			emptyRow = false;
+			return;
+		}
+		
 		/* Luetaan tilinumerot ja lasketaan rivin rahamäärä. */
 		int pos1, pos2, pos3;
 		pos1 = 4;
 		pos2 = line.indexOf(';', pos1);
 		pos3 = line.indexOf(';', pos2 + 1);
-		BigDecimal amount = BigDecimal.ZERO;
-		BigDecimal amountPrev = BigDecimal.ZERO;
 		
 		while (pos2 >= 0) {
 			String start = line.substring(pos1, pos2);

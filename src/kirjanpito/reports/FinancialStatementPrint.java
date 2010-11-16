@@ -2,7 +2,6 @@ package kirjanpito.reports;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 
 import kirjanpito.db.Period;
 
@@ -14,7 +13,7 @@ import kirjanpito.db.Period;
 public class FinancialStatementPrint extends Print {
 	private FinancialStatementModel model;
 	private String title;
-	private NumberFormat numberFormat;
+	private DecimalFormat numberFormat;
 	private int[] columns;
 	private int numRowsPerPage;
 	private int pageCount;
