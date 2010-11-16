@@ -336,6 +336,10 @@ public class FinancialStatementModel implements PrintModel {
 				amountPrev = null;
 			}
 			
+			if (!previousPeriodVisible) {
+				amountPrev = null;
+			}
+			
 			rows.add(new FinancialStatementRow(null,
 					fields[0], style, level, amount, amountPrev));
 			emptyRow = false;
@@ -357,13 +361,8 @@ public class FinancialStatementModel implements PrintModel {
 			}
 			else {
 				amount = amount.add(calculateBalance(balances, start, stop));
-				
-				if (previousPeriodVisible) {
-					amountPrev = amountPrev.add(calculateBalance(balancesPrev, start, stop));
-				}
-				else {
-					amountPrev = null;
-				}
+				amountPrev = previousPeriodVisible ?
+						amountPrev.add(calculateBalance(balancesPrev, start, stop)) : null;
 			}
 			
 			pos1 = pos3 + 1;
