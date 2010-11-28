@@ -102,6 +102,7 @@ public class DataSourceInitializationWorker extends SwingWorker<Void, Void> {
 		settings.setCurrentPeriodId(period.getId());
 		settings.setName("");
 		settings.setBusinessId("");
+		settings.setDocumentTypeId(-1);
 		dataSource.getSettingsDAO(sess).save(settings);
 		
 		/* Luodaan 0-tosite, johon tallennetaan taseen tilien alkusaldot. */

@@ -1,5 +1,6 @@
 package kirjanpito.db.mysql;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -102,6 +103,21 @@ public class MySQLDataSource implements DataSource {
 		return new MySQLSession(conn);
 	}
 	
+	private static void createTables(Connection conn)
+		throws DataAccessException {
+		
+		try {
+			DatabaseUpgradeUtil.executeQueries(conn,
+					MySQLDataSource.class.getResourceAsStream("database.sql"));
+		}
+		catch (SQLException e) {
+			throw new DataAccessException(e.getMessage(), e);
+		}
+		catch (IOException e) {
+			throw new DataAccessException(e.getMessage(), e); 
+		}
+	}
+	
 	private static void upgradeDatabase(Connection conn)
 		throws DataAccessException {
 		
@@ -158,6 +174,17 @@ public class MySQLDataSource implements DataSource {
 			stmt.close();
 		}
 		catch (SQLException e) {
+			try {
+				conn.rollback();
+			}
+			catch (SQLException exc) {
+			}
+			
+			if (e.getMessage() != null || e.getMessage().contains("exist")) {
+				createTables(conn);
+				return;
+			}
+			
 			throw new DataAccessException(e.getMessage(), e);
 		}
 	}

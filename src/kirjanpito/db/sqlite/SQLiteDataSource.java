@@ -1,12 +1,9 @@
 package kirjanpito.db.sqlite;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -135,26 +132,8 @@ public class SQLiteDataSource implements DataSource {
 		throws DataAccessException {
 		
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-				SQLiteDataSource.class.getResourceAsStream("database.sql"),
-				Charset.forName("UTF-8")));
-			
-			StringBuffer buf = new StringBuffer();
-			String line;
-			
-			while ((line = reader.readLine()) != null) {
-				buf.append(line.trim());
-			}
-			
-			String[] queries = buf.toString().split(";");
-			Statement stmt = conn.createStatement();
-			
-			for (String query : queries) {
-				stmt.execute(query);
-			}
-			
-			conn.commit();
-			stmt.close();
+			DatabaseUpgradeUtil.executeQueries(conn,
+					SQLiteDataSource.class.getResourceAsStream("database.sql"));
 		}
 		catch (SQLException e) {
 			throw new DataAccessException(e.getMessage(), e);

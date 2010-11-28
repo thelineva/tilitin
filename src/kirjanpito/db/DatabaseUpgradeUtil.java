@@ -3,6 +3,7 @@ package kirjanpito.db;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.sql.Connection;
@@ -17,6 +18,28 @@ import java.util.regex.Pattern;
 import kirjanpito.models.DataSourceInitializationModel;
 
 public class DatabaseUpgradeUtil {
+	public static void executeQueries(Connection conn, InputStream stream) throws IOException, SQLException {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(stream,
+				Charset.forName("UTF-8")));
+		
+		StringBuffer buf = new StringBuffer();
+		String line;
+		
+		while ((line = reader.readLine()) != null) {
+			buf.append(line.trim());
+		}
+		
+		String[] queries = buf.toString().split(";");
+		Statement stmt = conn.createStatement();
+		
+		for (String query : queries) {
+			stmt.execute(query);
+		}
+		
+		conn.commit();
+		stmt.close();
+	}
+	
 	public static void upgrade3to4(Connection conn, Statement stmt) throws SQLException {
 		ResultSet rs = stmt.executeQuery("SELECT name FROM account WHERE number = '9000'");
 		boolean updateCOA = false;
