@@ -241,7 +241,7 @@ public class ReportEditorDialog extends JDialog {
 				model.parseContent(id, textAreas[index].getText());
 			}
 			catch (ParseException e) {
-				tabbedPane.setSelectedIndex(index);
+				tabbedPane.setSelectedIndex(index + 1);
 				JOptionPane.showMessageDialog(this,
 						"Virhe rivillä " + e.getErrorOffset() +
 						": " + e.getMessage(), Kirjanpito.APP_NAME,

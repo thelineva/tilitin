@@ -167,9 +167,10 @@ public class ReportEditorModel {
 				}
 				
 				ch = line.charAt(0);
+				boolean accountNumbers = (ch != 'F');
 				
-				if (ch != 'G' && ch != 'H' && ch != 'S' && ch != 'T' && ch != 'D') {
-					throw new ParseException("Ensimmäisen merkin on oltava D, G, H, S tai T.", number);
+				if (ch != 'F' && ch != 'G' && ch != 'H' && ch != 'S' && ch != 'T' && ch != 'D') {
+					throw new ParseException("Ensimmäisen merkin on oltava D, F, G, H, S tai T.", number);
 				}
 				
 				ch = line.charAt(1);
@@ -184,14 +185,16 @@ public class ReportEditorModel {
 					throw new ParseException("Kolmannen merkin on oltava numero.", number);
 				}
 				
-				count = 0;
-				
-				for (int i = 4; i < len; i++) {
-					if (line.charAt(i) == ';') count++;
-				}
-				
-				if ((count % 2) != 0) {
-					throw new ParseException("Tilinumeroita on oltava parillinen määrä.", number);
+				if (accountNumbers) {
+					count = 0;
+					
+					for (int i = 4; i < len; i++) {
+						if (line.charAt(i) == ';') count++;
+					}
+					
+					if (ch != 'F' && (count % 2) != 0) {
+						throw new ParseException("Tilinumeroita on oltava parillinen määrä.", number);
+					}
 				}
 			}
 		}

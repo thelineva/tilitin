@@ -89,6 +89,7 @@ public class COADialog extends JDialog {
 	private JTextField searchTextField;
 	private JMenuItem removeMenuItem;
 	private JMenuItem saveMenuItem;
+	private JCheckBoxMenuItem defaultAccountMenuItem;
 	private COATableCellRenderer cellRenderer;
 	private EditableCOATableModel tableModel;
 	
@@ -198,6 +199,25 @@ public class COADialog extends JDialog {
 		
 		JMenu vatMenu = new JMenu("Arvonlisävero");
 		accountPopupMenu.add(vatMenu);
+		
+		defaultAccountMenuItem = new JCheckBoxMenuItem("Oletusvastatili");
+		defaultAccountMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int index = accountTable.getSelectedRow();
+				if (index < 0) return;
+				ChartOfAccounts coa = model.getChartOfAccounts();
+				Account account = coa.getAccount(index);
+				
+				if (model.getDefaultAccount() == account) {
+					model.setDefaultAccount(null);
+				}
+				else {
+					model.setDefaultAccount(coa.getAccount(index));
+				}
+			}
+		});
+		
+		accountPopupMenu.add(defaultAccountMenuItem);
 		
 		String[] codes = new String[] {"---", "Arvonlisäverovelka",
 				"Suoritettava ALV", "Vähennettävä ALV",
@@ -411,6 +431,7 @@ public class COADialog extends JDialog {
 			}
 			
 			vatAccountMenuItem.setEnabled(rateEnabled);
+			defaultAccountMenuItem.setState(account == model.getDefaultAccount());
 			accountPopupMenu.show(comp, x, y);
 		}
 		else {

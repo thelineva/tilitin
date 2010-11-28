@@ -818,7 +818,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		
 		settings.set("table.auto-complete-enabled", model.isAutoCompleteEnabled());
 		settings.save();
-		dispose();
 		System.exit(0);
 	}
 
@@ -1230,18 +1229,19 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	}
 	
 	/**
-	 * Pyytää mallia lisäämään viennin tositteeseen.
+	 * Lisää viennin tositteeseen.
 	 */
 	public void addEntry() {
 		stopEditing();
 		int index = model.addEntry();
 		tableModel.fireTableRowsInserted(index, index);
 		updateTotalRow();
-		editEntry(index);
+		entryTable.changeSelection(index, 0, false, false);
+		entryTable.requestFocusInWindow();
 	}
 	
 	/**
-	 * Pyytää mallia poistamaan käyttäjän valitseman viennin.
+	 * Poistaa käyttäjän valitseman viennin.
 	 */
 	public void removeEntry() {
 		int index = entryTable.getSelectedRow();
@@ -1903,7 +1903,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		searchMenuItem.setSelected(searchEnabled);
 		
 		if (searchEnabled) {
-			searchPhraseTextField.requestFocus();
+			searchPhraseTextField.requestFocusInWindow();
 		}
 	}
 	
@@ -2061,7 +2061,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		for (int i = 0; i < count; i++) {
 			if (model.getEntry(i).getAccountId() < 1) {
 				SwingUtils.showErrorMessage(this, "Valitse tili ennen tallentamista.");
-				editEntry(i);
+				entryTable.changeSelection(i, 0, false, false);
+				entryTable.requestFocusInWindow();
 				return -1;
 			}
 			
@@ -2075,8 +2076,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	}
 	
 	/**
-	 * Poistaa viimeisen viennin, jos tiliä ei ole valittu
-	 * ja selite on sama kuin edellisessä viennissä.
+	 * Poistaa viimeisen viennin, jos selite on sama kuin edellisessä viennissä
+	 * ja lisäksi rahamäärä on nolla tai tiliä ei ole valittu.
 	 */
 	protected void removeEmptyEntry() {
 		int count = model.getEntryCount();
@@ -2091,7 +2092,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			
 			Entry lastEntry = model.getEntry(count - 1);
 			
-			if (lastEntry.getAccountId() <= 0 &&
+			if ((lastEntry.getAccountId() <= 0 ||
+					BigDecimal.ZERO.compareTo(lastEntry.getAmount()) == 0) &&
 					lastEntry.getDescription().equals(prevDescription)) {
 				
 				model.removeEntry(count - 1);
@@ -2154,17 +2156,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		PrintPreviewDialog frame = new PrintPreviewDialog(this, previewModel);
 		frame.create();
 		frame.setVisible(true);
-	}
-	
-	/**
-	 * Muokkaa vientiä rivillä <code>index</code>.
-	 * 
-	 * @param index rivinumero
-	 */
-	protected void editEntry(int index) {
-		entryTable.changeSelection(index, 0, false, false);
-		entryTable.requestFocus();
-		entryTable.editCellAt(index, 0);
 	}
 	
 	/**
@@ -2349,7 +2340,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 				removeEntry();
 				
 				if (entryTable.getRowCount() == 0)
-					dateTextField.requestFocus();
+					dateTextField.requestFocusInWindow();
 			}
 		}
 	};
@@ -2506,9 +2497,11 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 					
 					Entry entry = model.getEntry(row);
 					
-					if (row == lastRow && entry.getAccountId() <= 0 &&
-							entry.getDescription().equals(prevDescription)) {
-						
+					/* Siirrytään uuteen tositteeseen, jos vientejä on jo vähintään kaksi
+					 * ja selite on sama kuin edellisessä viennissä ja lisäksi
+					 * tiliä ei ole valittu tai rahamäärä on nolla. */
+					if (row == lastRow && row >= 1 && entry.getDescription().equals(prevDescription) &&
+							(entry.getAccountId() < 0 || BigDecimal.ZERO.compareTo(entry.getAmount()) == 0)) {
 						createDocument();
 					}
 					else {
