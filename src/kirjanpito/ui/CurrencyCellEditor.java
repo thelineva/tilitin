@@ -30,6 +30,7 @@ public class CurrencyCellEditor extends AbstractCellEditor
 	private DecimalFormat formatter;
 	private JTextField textField;
 	private char decimalSeparator;
+	private int lastModifiers;
 
 	private static final long serialVersionUID = 1L;
 	
@@ -44,6 +45,13 @@ public class CurrencyCellEditor extends AbstractCellEditor
 		textField.setBorder(new LineBorder(Color.BLACK));
 		textField.addKeyListener(new KeyAdapter() {
 			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					lastModifiers = e.getModifiersEx();
+				}
+			}
+
+			@Override
 			public void keyTyped(KeyEvent e) {
 				char c = e.getKeyChar();
 				
@@ -52,6 +60,14 @@ public class CurrencyCellEditor extends AbstractCellEditor
 				}
 			}
 		});
+	}
+	
+	public int getLastModifiers() {
+		return lastModifiers;
+	}
+	
+	public void setLastModifiers(int lastModifiers) {
+		this.lastModifiers = lastModifiers;
 	}
 
 	public boolean isCellEditable(EventObject evt) {

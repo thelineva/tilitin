@@ -1,10 +1,12 @@
 package kirjanpito.models;
 
+import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
 
 import javax.swing.table.AbstractTableModel;
 
 import kirjanpito.db.Entry;
+import kirjanpito.ui.CurrencyCellEditor;
 
 /**
  * <code>TableModel</code>in toteuttava luokka, joka sisältää
@@ -14,6 +16,7 @@ import kirjanpito.db.Entry;
  */
 public class EntryTableModel extends AbstractTableModel {
 	private DocumentModel model;
+	private CurrencyCellEditor currencyCellEditor;
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -32,6 +35,14 @@ public class EntryTableModel extends AbstractTableModel {
 
 	public void setModel(DocumentModel model) {
 		this.model = model;
+	}
+
+	public CurrencyCellEditor getCurrencyCellEditor() {
+		return currencyCellEditor;
+	}
+
+	public void setCurrencyCellEditor(CurrencyCellEditor currencyCellEditor) {
+		this.currencyCellEditor = currencyCellEditor;
 	}
 
 	/**
@@ -120,14 +131,18 @@ public class EntryTableModel extends AbstractTableModel {
 			}
 		}
 		else if (col == 1) {
+			boolean vatEntries = (currencyCellEditor.getLastModifiers() & KeyEvent.SHIFT_DOWN_MASK) == 0;
 			Entry entry = model.getEntry(row);
 			entry.setDebit(true);
-			model.updateAmount(row, (BigDecimal)value);
+			model.updateAmount(row, (BigDecimal)value, vatEntries);
+			currencyCellEditor.setLastModifiers(0);
 		}
 		else if (col == 2) {
+			boolean vatEntries = (currencyCellEditor.getLastModifiers() & KeyEvent.SHIFT_DOWN_MASK) == 0;
 			Entry entry = model.getEntry(row);
 			entry.setDebit(false);
-			model.updateAmount(row, (BigDecimal)value);
+			model.updateAmount(row, (BigDecimal)value, vatEntries);
+			currencyCellEditor.setLastModifiers(0);
 		}
 		else if (col == 4) {
 			Entry entry = model.getEntry(row);

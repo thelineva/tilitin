@@ -180,7 +180,6 @@ public class VATReportModel implements PrintModel {
 					Account account = accountMap.get(entry.getAccountId());
 					
 					if (account.getVatCode() >= 4) {
-						balances.addEntry(entry);
 						entryMap.put(entry.getRowNumber(), entry);
 					}
 					
@@ -188,9 +187,10 @@ public class VATReportModel implements PrintModel {
 							entry.getRowNumber() < 300000) {
 						
 						int rowNumber = entry.getRowNumber() % 100000;
-						Entry entry2 = entryMap.get(rowNumber);
+						Entry entry2 = entryMap.remove(rowNumber);
 						
 						if (entry2 != null) {
+							balances.addEntry(entry2);
 							BigDecimal vatAmount = entry.getAmount();
 							
 							if (entry.isDebit())

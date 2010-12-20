@@ -675,7 +675,7 @@ public class DocumentModel {
 			}
 		}
 		
-		updateAmount(index, amount);
+		updateAmount(index, amount, true);
 	}
 	
 	private BigDecimal calculateDebitKreditDifference() {
@@ -702,15 +702,16 @@ public class DocumentModel {
 	 * 
 	 * @param index rivinumero
 	 * @param amount rahamäärä
+	 * @param addVatEntries määrittää, lisätäänkö myös ALV-viennit
 	 */
-	public void updateAmount(int index, BigDecimal amount) {
+	public void updateAmount(int index, BigDecimal amount, boolean addVatEntries) {
 		Entry entry = entries.get(index);
 		BigDecimal vatAmount, vatExcludedAmount;
 		
 		if (amount == null)
 			amount = BigDecimal.ZERO;
 		
-		if (entry.getAccountId() >= 0) {
+		if (entry.getAccountId() >= 0 && addVatEntries) {
 			Account account = registry.getAccountById(entry.getAccountId());
 
 			if (account == null || account.getVatAccount1Id() < 0) {
@@ -889,7 +890,7 @@ public class DocumentModel {
 				this.amounts.add(BigDecimal.ZERO);
 				this.vatAmounts.add(BigDecimal.ZERO);
 				this.entries.add(entry.getRowNumber(), entry);
-				updateAmount(entry.getRowNumber(), template.getAmount());
+				updateAmount(entry.getRowNumber(), template.getAmount(), true);
 			}
 		}
 		

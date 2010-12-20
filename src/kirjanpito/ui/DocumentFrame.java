@@ -600,16 +600,17 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		int width;
 		
 		DescriptionCellEditor descriptionCellEditor = new DescriptionCellEditor(model);
+		CurrencyCellRenderer currencyCellRenderer = new CurrencyCellRenderer();
+		CurrencyCellEditor currencyCellEditor = new CurrencyCellEditor();
+		tableModel.setCurrencyCellEditor(currencyCellEditor);
 		
 		TableCellRenderer[] renderers = new TableCellRenderer[] {
-			accountCellRenderer,
-			new CurrencyCellRenderer(),
-			new CurrencyCellRenderer(),
-			new CurrencyCellRenderer(), null };
+			accountCellRenderer, currencyCellRenderer, currencyCellRenderer,
+			currencyCellRenderer, null };
 		
 		TableCellEditor[] editors = new TableCellEditor[] {
-			accountCellEditor, new CurrencyCellEditor(),
-			new CurrencyCellEditor(), null, descriptionCellEditor };
+			accountCellEditor, currencyCellEditor, currencyCellEditor,
+			null, descriptionCellEditor };
 		
 		for (int i = 0; i < widths.length; i++) {
 			column = entryTable.getColumnModel().getColumn(i);
@@ -640,6 +641,9 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		/* Muutetaan enter-näppäimen toiminta. */
 		entryTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
 				KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "nextCell");
+		
+		entryTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.SHIFT_DOWN_MASK), "nextCell");
 		
 		entryTable.getActionMap().put("nextCell", nextCellAction);
 		
