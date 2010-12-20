@@ -17,8 +17,13 @@ import kirjanpito.util.ChartOfAccounts;
  */
 public class COATableCellRenderer extends DefaultTableCellRenderer {
 	private ChartOfAccounts coa;
+	private boolean indentEnabled;
 	
 	private static final long serialVersionUID = 1L;
+	
+	public COATableCellRenderer() {
+		this.indentEnabled = true;
+	}
 	
 	/**
 	 * Palauttaa tilikartan, jonka rivit näytetään.
@@ -38,12 +43,21 @@ public class COATableCellRenderer extends DefaultTableCellRenderer {
 		this.coa = coa;
 	}
 
+	public boolean isIndentEnabled() {
+		return indentEnabled;
+	}
+
+	public void setIndentEnabled(boolean indentEnabled) {
+		this.indentEnabled = indentEnabled;
+	}
+
 	public Component getTableCellRendererComponent(JTable table, Object value, 
 			boolean isSelected, boolean hasFocus, int row, int column)
 	{
 		Component comp = super.getTableCellRendererComponent(table, value, 
 				isSelected, hasFocus, row, column);
 
+		row = table.convertRowIndexToModel(row);
 		Font font = comp.getFont();
 		int level;
 
@@ -56,6 +70,10 @@ public class COATableCellRenderer extends DefaultTableCellRenderer {
 			comp.setForeground(Color.BLACK);
 			comp.setFont(font.deriveFont(Font.PLAIN));
 			level = 12;
+		}
+		
+		if (!indentEnabled) {
+			level = 0;
 		}
 		
 		/* Sisennetään tekstiä. */

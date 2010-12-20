@@ -9,6 +9,7 @@ import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
@@ -21,6 +22,7 @@ import java.awt.event.WindowEvent;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -29,14 +31,17 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import javax.swing.RowFilter;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableRowSorter;
 
 import kirjanpito.db.Account;
 import kirjanpito.models.COATableModel;
+import kirjanpito.util.AppSettings;
 import kirjanpito.util.ChartOfAccounts;
 import kirjanpito.util.Registry;
 import kirjanpito.util.RegistryAdapter;
@@ -50,10 +55,13 @@ public class AccountSelectionDialog extends JDialog {
 	private AccountSelectionListener listener;
 	private Registry registry;
 	private JTable accountTable;
+	private TableRowSorter<COATableModel> sorter;
 	private JTextField searchTextField;
 	private JButton okButton;
+	private JCheckBox allAccountsCheckBox;
 	private COATableCellRenderer cellRenderer;
 	private COATableModel tableModel;
+	private String searchPhrase;
 	private boolean firstFocus;
 	
 	private static final long serialVersionUID = 1L;
@@ -61,6 +69,7 @@ public class AccountSelectionDialog extends JDialog {
 	public AccountSelectionDialog(Window owner, Registry registry) {
 		super(owner, "Tilin valinta", Dialog.ModalityType.APPLICATION_MODAL);
 		this.registry = registry;
+		this.searchPhrase = "";
 	}
 
 	/**
@@ -88,6 +97,11 @@ public class AccountSelectionDialog extends JDialog {
 	 */
 	public Account getSelectedAccount() {
 		int index = accountTable.getSelectedRow();
+		
+		if (index >= 0) {
+			index = accountTable.convertRowIndexToModel(index);
+		}
+		
 		return registry.getChartOfAccounts().getAccount(index);
 	}
 	
@@ -112,6 +126,7 @@ public class AccountSelectionDialog extends JDialog {
 	 */
 	public void setSearchPhrase(String q) {
 		firstFocus = true;
+		searchPhrase = q;
 		searchTextField.setText(q);
 		searchTextField.requestFocusInWindow();
 	}
@@ -146,6 +161,10 @@ public class AccountSelectionDialog extends JDialog {
 				tableModel.fireTableDataChanged();
 			}
 		});
+		
+		AppSettings settings = AppSettings.getInstance();
+		allAccountsCheckBox.setSelected(settings.getBoolean("account-selection.all-accounts", false));
+		allAccountsCheckBoxListener.actionPerformed(null);
 	}
 
 	private void createSearchPanel() {
@@ -191,7 +210,10 @@ public class AccountSelectionDialog extends JDialog {
 		
 		searchTextField.getDocument().addDocumentListener(
 				searchTextFieldListener);
-		panel.add(new JLabel("Haku"), BorderLayout.LINE_START);
+		JLabel label = new JLabel("Haku");
+		label.setDisplayedMnemonic('H');
+		label.setLabelFor(searchTextField);
+		panel.add(label, BorderLayout.LINE_START);
 		panel.add(searchTextField, BorderLayout.CENTER);
 		add(panel, BorderLayout.NORTH);
 	}
@@ -227,6 +249,9 @@ public class AccountSelectionDialog extends JDialog {
 		
 		accountTable.getActionMap().put("accept", okButtonListener);
 		
+		sorter = new TableRowSorter<COATableModel>(tableModel);
+	    sorter.setRowFilter(accountFilter);
+		
 		cellRenderer = new COATableCellRenderer();
 		cellRenderer.setChartOfAccounts(registry.getChartOfAccounts());
 		
@@ -249,6 +274,10 @@ public class AccountSelectionDialog extends JDialog {
 		panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		add(panel, BorderLayout.SOUTH);
 		
+		allAccountsCheckBox = new JCheckBox("Kaikki tilit");
+		allAccountsCheckBox.setMnemonic('K');
+		allAccountsCheckBox.addActionListener(allAccountsCheckBoxListener);
+		
 		okButton = new JButton("OK");
 		okButton.setMnemonic('O');
 		okButton.setPreferredSize(new Dimension(100, 30));
@@ -260,7 +289,12 @@ public class AccountSelectionDialog extends JDialog {
 		cancelButton.addActionListener(cancelButtonListener);
 		
 		c = new GridBagConstraints();
+		panel.add(allAccountsCheckBox);
 		c.weightx = 1.0;
+		c.anchor = GridBagConstraints.WEST;
+		panel.add(allAccountsCheckBox, c);
+		
+		c.weightx = 0.0;
 		c.anchor = GridBagConstraints.EAST;
 		c.insets = new Insets(0, 0, 0, 5);
 		panel.add(okButton, c);
@@ -270,12 +304,22 @@ public class AccountSelectionDialog extends JDialog {
 	}
 	
 	private void search() {
-		int index = registry.getChartOfAccounts().search(
-				searchTextField.getText());
+		searchPhrase = searchTextField.getText();
 		
-		if (index >= 0) {
-			setSelectedRow(index);
+		if (allAccountsCheckBox.isSelected()) {
+			int index = registry.getChartOfAccounts().search(searchTextField.getText());
+			
+			if (index >= 0) {
+				setSelectedRow(index);
+			}
 		}
+		else {
+			sorter.allRowsChanged();
+			
+			if (accountTable.getRowCount() > 0) {
+				setSelectedRow(0);
+			}
+		}		
 	}
 	
 	protected void fireAccountSelected() {
@@ -299,6 +343,10 @@ public class AccountSelectionDialog extends JDialog {
 		public void valueChanged(ListSelectionEvent e) {
 			int index = accountTable.getSelectedRow();
 			
+			if (index >= 0) {
+				index = accountTable.convertRowIndexToModel(index);
+			}
+			
 			/* OK-painiketta voi painaa, jos taulukosta on valittu tili. */
 			okButton.setEnabled(index >= 0 &&
 				registry.getChartOfAccounts().getType(index) == ChartOfAccounts.TYPE_ACCOUNT);
@@ -318,6 +366,30 @@ public class AccountSelectionDialog extends JDialog {
 		
 		public void actionPerformed(ActionEvent e) {
 			setVisible(false);
+		}
+	};
+	
+	private ActionListener allAccountsCheckBoxListener = new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			boolean allAccounts = allAccountsCheckBox.isSelected();
+			accountTable.setRowSorter(allAccounts ? null : sorter);
+			cellRenderer.setIndentEnabled(allAccounts);
+			AppSettings settings = AppSettings.getInstance();
+			settings.set("account-selection.all-accounts", allAccounts);
+			search();
+		}
+	};
+	
+	private RowFilter<COATableModel, Integer> accountFilter = new RowFilter<COATableModel, Integer>() {
+		@Override
+		public boolean include(Entry<? extends COATableModel, ? extends Integer> entry) {
+			if (registry.getChartOfAccounts().getType(entry.getIdentifier()) == ChartOfAccounts.TYPE_HEADING) {
+				return false;
+			}
+			
+			return entry.getStringValue(0).startsWith(searchPhrase) ||
+				entry.getStringValue(1).regionMatches(true, 0, searchPhrase, 0, searchPhrase.length());
 		}
 	};
 }
