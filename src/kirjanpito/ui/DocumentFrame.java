@@ -497,6 +497,11 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		
 		numberTextField = new JTextField();
 		numberTextField.addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				dateTextField.requestFocusInWindow();
+				e.consume();
+			}
+			
 			public void keyReleased(KeyEvent e) {
 				model.setDocumentChanged();
 			}
@@ -1131,7 +1136,12 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	 * @param number vientimallin numero
 	 */
 	public void addEntriesFromTemplate(int number) {
-		removeEmptyEntry();
+		int result = updateModel();
+		
+		if (result < 0) {
+			return;
+		}
+		
 		model.addEntriesFromTemplate(number);
 		tableModel.fireTableDataChanged();
 	}
@@ -1252,8 +1262,12 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		updateTotalRow();
 		
 		/* Valitaan edellinen vienti. */
-		if (index >= 1)
+		if (index >= 1) {
 			entryTable.setRowSelectionInterval(index - 1, index - 1);
+		}
+		else if (tableModel.getRowCount() > 0) {
+			entryTable.setRowSelectionInterval(0, 0);
+		}
 	}
 	
 	/**
@@ -2005,9 +2019,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	/**
 	 * Päivittää käyttäjän syöttämät tiedot <code>DocumentModel</code>ille.
 	 * 
-	 * @return <code>true</code>, jos tietojen päivittäminen onnistui
+	 * @return -1, jos tiedot ovat virheellisiä; 0, jos tietojen päivittäminen onnistui;
+	 * 1, jos päivittäminen onnistui ja tositenumero on muuttunut
 	 */
-	protected int updateModel() throws DataAccessException {
+	protected int updateModel() {
 		Document document = model.getDocument();
 		int result = 0;
 		stopEditing();
@@ -2017,7 +2032,17 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			
 			/* Tarkistetaan tositenumeron oikeellisuus, jos käyttäjä on muuttanut sitä. */
 			if (number != document.getNumber()) {
-				int r = model.validateDocumentNumber(number);
+				int r;
+				
+				try {
+					r = model.validateDocumentNumber(number);
+				}
+				catch (DataAccessException e) {
+					String message = "Tositetietojen hakeminen epäonnistui";
+					logger.log(Level.SEVERE, message, e);
+					SwingUtils.showDataAccessErrorMessage(this, e, message);
+					return -2;
+				}
 				
 				if (r == -1) {
 					SwingUtils.showErrorMessage(this, String.format("Tositenumero %d on jo käytössä.", number));
