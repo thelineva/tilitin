@@ -11,8 +11,6 @@ FILES = (
 	('tilikarttamallit+', 'tilitin-%(VERSION)s/tilikarttamallit'),
 	('lib/itext.jar', 'tilitin-%(VERSION)s/itext.jar'),
 	('lib/sqlite-jdbc.jar', 'tilitin-%(VERSION)s/sqlite-jdbc.jar'),
-	('sql/postgresql.sql', 'tilitin-%(VERSION)s/sql/postgresql.sql'),
-	('sql/mysql.sql', 'tilitin-%(VERSION)s/sql/mysql.sql'),
 	('COPYING', 'tilitin-%(VERSION)s/COPYING'),
 	('src/kirjanpito/ui/resources/tilitin-24x24.png', 'tilitin-%(VERSION)s/icons/tilitin-24x24.png'),
 	('src/kirjanpito/ui/resources/tilitin-32x32.png', 'tilitin-%(VERSION)s/icons/tilitin-32x32.png'),
