@@ -2,6 +2,8 @@ package kirjanpito.ui;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -13,11 +15,13 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.TableCellEditor;
 
 import kirjanpito.db.Account;
+import kirjanpito.util.ChartOfAccounts;
 import kirjanpito.util.Registry;
 
 /**
@@ -29,7 +33,7 @@ import kirjanpito.util.Registry;
 public class AccountCellEditor extends AbstractCellEditor
 	implements TableCellEditor
 {
-	private JTextField textField;
+	private AccountTextField textField;
 	private ActionListener listener;
 	private Registry registry;
 
@@ -37,7 +41,7 @@ public class AccountCellEditor extends AbstractCellEditor
 	
 	public AccountCellEditor(Registry registry, ActionListener listener)
 	{
-		this.textField = new JTextField();
+		this.textField = new AccountTextField();
 		this.textField.getDocument().addDocumentListener(documentListener);
 		this.textField.addKeyListener(keyListener);
 		this.textField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -89,6 +93,7 @@ public class AccountCellEditor extends AbstractCellEditor
 			textField.setSelectionEnd(account.getNumber().length());
 		}
 		
+		textField.clearAccountName();
 		return textField;
 	}
 
@@ -133,4 +138,76 @@ public class AccountCellEditor extends AbstractCellEditor
 			}
 		}
 	};
+	
+	private class AccountTextField extends JTextField implements ActionListener {
+		private Timer timer;
+		private String accountName;
+		private static final long serialVersionUID = 1L;
+
+		public AccountTextField() {
+			timer = new Timer(400, this);
+			timer.setRepeats(false);
+			clearAccountName();
+		}
+		
+		public void clearAccountName() {
+			accountName = "";
+		}
+		
+		@Override
+		protected void paintComponent(Graphics g) {
+			super.paintComponent(g);
+			
+			if (!accountName.isEmpty()) {
+				Insets insets = getBorder().getBorderInsets(this);
+				StringBuilder sb = new StringBuilder(getText());
+				while (sb.length() < 4) sb.append('0');
+				sb.append(' ');
+				int x = g.getFontMetrics().stringWidth(sb.toString());
+				int y = insets.top + g.getFontMetrics().getAscent() + 1;
+				g.setColor(Color.gray);
+				g.drawString(accountName, x, y);
+			}
+		}
+
+		@Override
+		protected void processKeyEvent(KeyEvent e) {
+			super.processKeyEvent(e);
+			
+			if (e.getID() == KeyEvent.KEY_TYPED && Character.isLetterOrDigit(e.getKeyChar()) &&
+					getText().length() >= 2) {
+				clearAccountName();
+				timer.restart();
+			}
+			else if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+				clearAccountName();
+			}
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String text = getText();
+			
+			if (text.length() < 2) {
+				clearAccountName();
+			}
+			else {
+				ChartOfAccounts coa = registry.getChartOfAccounts();
+				int index = coa.search(text);
+				
+				if (coa.getType(index) == ChartOfAccounts.TYPE_ACCOUNT) {
+					Account account = coa.getAccount(index);
+					accountName = account.getName();
+					setText(account.getNumber());
+					setCaretPosition(text.length());
+					moveCaretPosition(account.getNumber().length());
+				}
+				else {
+					clearAccountName();
+				}
+			}
+			
+			repaint();
+		}
+	}
 }
