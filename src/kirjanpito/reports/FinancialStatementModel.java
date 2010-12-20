@@ -257,6 +257,7 @@ public class FinancialStatementModel implements PrintModel {
 		 * erottimena käytetään ;-merkkiä. Ensimmäinen kenttä sisältää
 		 * kolme merkkiä:
 		 * 
+		 * 1. merkki 'D': Tilierittelyt.
 		 * 1. merkki 'H': Tulostetaan otsikkorivi, ei rahamäärää.
 		 *                Rivi näytetään aina.
 		 * 1. merkki 'G': Tulostetaan otsikkorivi, ei rahamäärää. Rivi
@@ -309,7 +310,14 @@ public class FinancialStatementModel implements PrintModel {
 		int style, level;
 		char typeChar = line.charAt(0);
 		char styleChar = line.charAt(1);
-		level = line.charAt(2) - '0';
+		int offset = 1;
+		
+		if (typeChar == 'D' && (styleChar == '+' || styleChar == '-' || styleChar == '0')) {
+			offset = 2;
+			styleChar = line.charAt(offset);
+		}
+		
+		level = line.charAt(offset + 1) - '0';
 		
 		if (styleChar == 'B') {
 			style = STYLE_BOLD;
@@ -325,7 +333,7 @@ public class FinancialStatementModel implements PrintModel {
 		BigDecimal amountPrev = BigDecimal.ZERO;
 		
 		if (typeChar == 'F') {
-			String[] fields = line.substring(4).split(";");
+			String[] fields = line.substring(offset + 3).split(";");
 			
 			try {
 				amount = (fields.length >= 2) ? (BigDecimal)numberFormat.parse(fields[1]) : null;
@@ -348,7 +356,7 @@ public class FinancialStatementModel implements PrintModel {
 		
 		/* Luetaan tilinumerot ja lasketaan rivin rahamäärä. */
 		int pos1, pos2, pos3;
-		pos1 = 4;
+		pos1 = offset + 3;
 		pos2 = line.indexOf(';', pos1);
 		pos3 = line.indexOf(';', pos2 + 1);
 		
@@ -357,7 +365,7 @@ public class FinancialStatementModel implements PrintModel {
 			String stop = line.substring(pos2 + 1, pos3);
 			
 			if (typeChar == 'D') {
-				addDetailRows(start, stop, style, level);
+				addDetailRows(start, stop, style, level, line.charAt(1));
 			}
 			else {
 				amount = amount.add(calculateBalance(balances, start, stop));
@@ -434,7 +442,7 @@ public class FinancialStatementModel implements PrintModel {
 		return sum;
 	}
 	
-	private void addDetailRows(String start, String stop, int style, int level) {
+	private void addDetailRows(String start, String stop, int style, int level, char filterChar) {
 		String number;
 		BigDecimal balance;
 		BigDecimal balancePrev;
@@ -452,18 +460,36 @@ public class FinancialStatementModel implements PrintModel {
 				
 				balance = balances.getBalance(account.getId());
 				
+				if (balance == null && filterChar == '0') {
+					balance = BigDecimal.ZERO;
+				}
+				
+				if (balance == null && balancePrev == null) {
+					continue;
+				}
+				
 				if (account.getType() == Account.TYPE_EXPENSE) {
 					if (balance != null) balance = balance.negate();
 					if (balancePrev != null) balancePrev = balancePrev.negate();
 				}
 				
-				if (balance != null || balancePrev != null) {
-					details = true;
-					emptyRow = false;
-					rows.add(new FinancialStatementRow(account.getNumber(),
-							account.getName(), style, level,
-							balance, balancePrev));
+				if (balance != null) {
+					if (filterChar == '+' && balance.compareTo(BigDecimal.ZERO) < 0) {
+						continue;
+					}
+					else if (filterChar == '-' && balance.compareTo(BigDecimal.ZERO) > 0) {
+						continue;
+					}
+					else if (filterChar == '0' && balance.compareTo(BigDecimal.ZERO) != 0) {
+						continue;
+					}
 				}
+				
+				details = true;
+				emptyRow = false;
+				rows.add(new FinancialStatementRow(account.getNumber(),
+						account.getName(), style, level,
+						balance, balancePrev));
 			}
 		}
 	}

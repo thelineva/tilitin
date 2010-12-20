@@ -162,37 +162,51 @@ public class ReportEditorModel {
 					continue;
 				}
 				
-				if (line.length() < 4 || line.charAt(3) != ';') {
-					throw new ParseException("Ensimmäisessä kentässä on oltava kolme merkkiä", number);
+				if (line.length() < 4) {
+					throw new ParseException("Ensimmäisessä kentässä on oltava vähintään kolme merkkiä", number);
+				}
+				
+				int offset = 1;
+				
+				if (line.charAt(0) == 'D') {
+					ch = line.charAt(1);
+					
+					if (ch == '+' || ch == '-' || ch == '0') {
+						offset = 2;
+					}
+				}
+				
+				if (line.length() < offset + 3 || line.charAt(offset + 2) != ';') {
+					throw new ParseException(String.format("Ensimmäisessä kentässä on oltava %d merkkiä", offset + 3), number);
 				}
 				
 				ch = line.charAt(0);
 				boolean accountNumbers = (ch != 'F');
 				
 				if (ch != 'F' && ch != 'G' && ch != 'H' && ch != 'S' && ch != 'T' && ch != 'D') {
-					throw new ParseException("Ensimmäisen merkin on oltava D, F, G, H, S tai T.", number);
+					throw new ParseException("Merkki 1: D, F, G, H, S tai T.", number);
 				}
 				
-				ch = line.charAt(1);
+				ch = line.charAt(offset);
 				
 				if (ch != 'P' && ch != 'B' && ch != 'I') {
-					throw new ParseException("Toisen merkin on oltava P, B tai I.", number);
+					throw new ParseException(String.format("Merkki %d: P, B tai I.", offset + 1), number);
 				}
 				
-				ch = line.charAt(2);
+				ch = line.charAt(offset + 1);
 				
 				if (!Character.isDigit(ch)) {
-					throw new ParseException("Kolmannen merkin on oltava numero.", number);
+					throw new ParseException(String.format("Merkki %d: 0..9.", offset + 2), number);
 				}
 				
 				if (accountNumbers) {
 					count = 0;
 					
-					for (int i = 4; i < len; i++) {
+					for (int i = offset + 3; i < len; i++) {
 						if (line.charAt(i) == ';') count++;
 					}
 					
-					if (ch != 'F' && (count % 2) != 0) {
+					if ((count % 2) != 0) {
 						throw new ParseException("Tilinumeroita on oltava parillinen määrä.", number);
 					}
 				}
