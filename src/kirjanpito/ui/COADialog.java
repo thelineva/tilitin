@@ -214,6 +214,8 @@ public class COADialog extends JDialog {
 				else {
 					model.setDefaultAccount(coa.getAccount(index));
 				}
+				
+				saveMenuItem.setEnabled(true);
 			}
 		});
 		
