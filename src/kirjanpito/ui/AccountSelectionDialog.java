@@ -138,7 +138,7 @@ public class AccountSelectionDialog extends JDialog {
 		rootPane.getActionMap().put("cancel", cancelButtonListener);
 
 		pack();
-		setLocationRelativeTo(null);
+		setLocationRelativeTo(getOwner());
 		
 		registry.addListener(new RegistryAdapter() {
 			public void chartOfAccountsChanged() {
