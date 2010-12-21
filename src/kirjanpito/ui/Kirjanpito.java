@@ -25,7 +25,7 @@ public class Kirjanpito implements Runnable {
 	private File configFile;
 	
 	public static final String APP_NAME = "Tilitin";
-	public static final String APP_VERSION = "0.8.10";
+	public static final String APP_VERSION = "0.9.0";
 	public static final String LOGGER_NAME = "kirjanpito";
 	
 	private Kirjanpito() {
