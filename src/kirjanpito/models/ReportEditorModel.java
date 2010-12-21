@@ -177,7 +177,7 @@ public class ReportEditorModel {
 				}
 				
 				if (line.length() < offset + 3 || line.charAt(offset + 2) != ';') {
-					throw new ParseException(String.format("Ensimmäisessä kentässä on oltava %d merkkiä", offset + 3), number);
+					throw new ParseException(String.format("Ensimmäisessä kentässä on oltava %d merkkiä", offset + 2), number);
 				}
 				
 				ch = line.charAt(0);
