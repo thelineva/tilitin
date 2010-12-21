@@ -6,6 +6,7 @@ import java.io.StringReader;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -20,6 +21,7 @@ import kirjanpito.db.ReportStructure;
 import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
 import kirjanpito.util.AccountBalances;
+import kirjanpito.util.CSVWriter;
 
 /**
  * Malli tuloslaskelmalle ja taseelle.
@@ -33,6 +35,7 @@ public class FinancialStatementModel implements PrintModel {
 	private Period periodPrev;
 	private Date startDate;
 	private Date endDate;
+	private String title;
 	private String reportId;
 	private boolean previousPeriodVisible;
 	private ReportStructure structure;
@@ -159,6 +162,24 @@ public class FinancialStatementModel implements PrintModel {
 	 */
 	public void setAccounts(List<Account> accounts) {
 		this.accounts = accounts;
+	}
+
+	/**
+	 * Palauttaa tulosteen nimen.
+	 * 
+	 * @return tulosteen nimi
+	 */
+	public String getTitle() {
+		return title;
+	}
+
+	/**
+	 * Asettaa tulosteen nimen.
+	 * 
+	 * @param title tulosteen nimi
+	 */
+	public void setTitle(String title) {
+		this.title = title;
 	}
 
 	/**
@@ -292,6 +313,42 @@ public class FinancialStatementModel implements PrintModel {
 		}
 		catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+	
+	public void writeCSV(CSVWriter writer) throws IOException {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
+		DecimalFormat numberFormat = new DecimalFormat();
+		numberFormat.setMinimumFractionDigits(2);
+		numberFormat.setMaximumFractionDigits(2);
+		
+		writer.writeField(title);
+		writer.writeLine();
+		writer.writeField("Nimi");
+		writer.writeField(settings.getName());
+		writer.writeLine();
+		writer.writeField("Y-tunnus");
+		writer.writeField(settings.getBusinessId());
+		writer.writeLine();
+		writer.writeField("Alkaa");
+		writer.writeField(dateFormat.format(startDate));
+		writer.writeLine();
+		writer.writeField("Päättyy");
+		writer.writeField(dateFormat.format(endDate));
+		writer.writeLine();
+		writer.writeLine();
+		
+		for (FinancialStatementRow row : rows) {
+			writer.writeField(row.text.isEmpty() ? "" : Integer.toString(row.level));
+			writer.writeField((row.number == null) ? "" : row.number);
+			writer.writeField(row.text);
+			writer.writeField((row.amount == null) ? "" : numberFormat.format(row.amount));
+			
+			if (previousPeriodVisible) {
+				writer.writeField((row.amountPrev == null) ? "" : numberFormat.format(row.amountPrev));
+			}
+			
+			writer.writeLine();
 		}
 	}
 	

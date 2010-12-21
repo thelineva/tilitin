@@ -1408,11 +1408,11 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			printModel.setAccounts(registry.getAccounts());
 			printModel.setStartDate(dialog.getStartDate());
 			printModel.setEndDate(dialog.getEndDate());
+			printModel.setTitle("Tuloslaskelma");
 			printModel.setReportId(detailed ? "income-statement-detailed" : "income-statement");
 			printModel.setPreviousPeriodVisible(previousPeriodVisible);
 			showPrintPreview(printModel, new FinancialStatementPrint(
-					printModel, detailed ? "incomeStatementDetailed" : "incomeStatement",
-							"Tuloslaskelma", true));
+					printModel, detailed ? "incomeStatementDetailed" : "incomeStatement", true));
 		}
 	}
 	
@@ -1443,11 +1443,11 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			printModel.setAccounts(registry.getAccounts());
 			printModel.setStartDate(dialog.getStartDate());
 			printModel.setEndDate(dialog.getEndDate());
+			printModel.setTitle("Tase");
 			printModel.setReportId(detailed ? "balance-sheet-detailed" : "balance-sheet");
 			printModel.setPreviousPeriodVisible(previousPeriodVisible);
 			showPrintPreview(printModel, new FinancialStatementPrint(
-					printModel, detailed ? "balanceSheetDetailed" : "balanceSheet",
-							"Tase", false));
+					printModel, detailed ? "balanceSheetDetailed" : "balanceSheet", false));
 		}
 	}
 	
@@ -2181,6 +2181,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		
 		print.setSettings(registry.getSettings());
 		PrintPreviewModel previewModel = new PrintPreviewModel();
+		previewModel.setPrintModel(printModel);
 		previewModel.setPrint(print);
 		PrintPreviewDialog frame = new PrintPreviewDialog(this, previewModel);
 		frame.create();

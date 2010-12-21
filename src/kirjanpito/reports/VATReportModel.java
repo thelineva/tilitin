@@ -1,6 +1,9 @@
 package kirjanpito.reports;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -16,6 +19,7 @@ import kirjanpito.db.Period;
 import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
 import kirjanpito.util.AccountBalances;
+import kirjanpito.util.CSVWriter;
 import kirjanpito.util.VATUtil;
 
 /**
@@ -315,6 +319,54 @@ public class VATReportModel implements PrintModel {
 			vatExcluded = vatExcludedR = BigDecimal.ZERO;
 			vatIncluded = vatIncludedR = BigDecimal.ZERO;
 			vatAmount = vatAmountR = BigDecimal.ZERO;
+		}
+	}
+	
+	public void writeCSV(CSVWriter writer) throws IOException {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
+		DecimalFormat numberFormat = new DecimalFormat();
+		numberFormat.setMinimumFractionDigits(2);
+		numberFormat.setMaximumFractionDigits(2);
+		
+		writer.writeField("ALV-laskelma tileittäin");
+		writer.writeLine();
+		writer.writeField("Nimi");
+		writer.writeField(settings.getName());
+		writer.writeLine();
+		writer.writeField("Y-tunnus");
+		writer.writeField(settings.getBusinessId());
+		writer.writeLine();
+		writer.writeField("Alkaa");
+		writer.writeField(dateFormat.format(startDate));
+		writer.writeLine();
+		writer.writeField("Päättyy");
+		writer.writeField(dateFormat.format(endDate));
+		writer.writeLine();
+		writer.writeLine();
+		writer.writeField("Tilinumero");
+		writer.writeField("Tilin nimi");
+		writer.writeField("Veron peruste");
+		writer.writeField("Vero");
+		writer.writeField("Verollinen summa");
+		writer.writeLine();
+		
+		for (VATReportRow row : rows) {
+			if (row.type == 1) {
+				writer.writeField(row.account.getNumber());
+				writer.writeField(row.account.getName());
+				writer.writeField(numberFormat.format(row.vatExcludedTotal));
+				writer.writeField(numberFormat.format(row.vatAmountTotal));
+				writer.writeField(numberFormat.format(row.vatIncludedTotal));
+			}
+			else if (row.type == 2) {
+				writer.writeField("");
+				writer.writeField(row.text);
+				writer.writeField("");
+				writer.writeField("");
+				writer.writeField("");
+			}
+			
+			writer.writeLine();
 		}
 	}
 	

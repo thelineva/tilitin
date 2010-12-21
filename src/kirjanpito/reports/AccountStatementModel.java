@@ -1,6 +1,9 @@
 package kirjanpito.reports;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -16,6 +19,7 @@ import kirjanpito.db.Period;
 import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
 import kirjanpito.util.AccountBalances;
+import kirjanpito.util.CSVWriter;
 
 /**
  * Malli tiliotetulosteelle.
@@ -200,6 +204,64 @@ public class AccountStatementModel implements PrintModel {
 		rowList.toArray(rows);
 	}
 	
+	public void writeCSV(CSVWriter writer) throws IOException {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
+		DecimalFormat numberFormat = new DecimalFormat();
+		numberFormat.setMinimumFractionDigits(2);
+		numberFormat.setMaximumFractionDigits(2);
+		
+		writer.writeField("Tiliote");
+		writer.writeLine();
+		writer.writeField("Nimi");
+		writer.writeField(settings.getName());
+		writer.writeLine();
+		writer.writeField("Y-tunnus");
+		writer.writeField(settings.getBusinessId());
+		writer.writeLine();
+		writer.writeField("Tilinumero");
+		writer.writeField(account.getNumber());
+		writer.writeLine();
+		writer.writeField("Tilin nimi");
+		writer.writeField(account.getName());
+		writer.writeLine();
+		writer.writeField("Alkaa");
+		writer.writeField(dateFormat.format(startDate));
+		writer.writeLine();
+		writer.writeField("Päättyy");
+		writer.writeField(dateFormat.format(endDate));
+		writer.writeLine();
+		writer.writeLine();
+		writer.writeField("Nro");
+		writer.writeField("Päivämäärä");
+		writer.writeField("Debet");
+		writer.writeField("Kredit");
+		writer.writeField("Saldo");
+		writer.writeField("Selite");
+		writer.writeLine();
+		
+		for (AccountStatementRow row : rows) {
+			if (row.documentNumber < 0) {
+				continue;
+			}
+			
+			writer.writeField((row.documentNumber == 0) ? "" : Integer.toString(row.documentNumber));
+			writer.writeField(dateFormat.format(row.date));
+			
+			if (row.entry.isDebit()) {
+				writer.writeField(numberFormat.format(row.entry.getAmount()));
+				writer.writeField("");
+			}
+			else {
+				writer.writeField("");
+				writer.writeField(numberFormat.format(row.entry.getAmount()));
+			}
+			
+			writer.writeField(numberFormat.format(row.balance));
+			writer.writeField(row.entry.getDescription());
+			writer.writeLine();
+		}
+	}
+
 	/**
 	 * Palauttaa käyttäjän nimen.
 	 * 

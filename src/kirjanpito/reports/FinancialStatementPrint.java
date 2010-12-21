@@ -12,7 +12,6 @@ import kirjanpito.db.Period;
  */
 public class FinancialStatementPrint extends Print {
 	private FinancialStatementModel model;
-	private String title;
 	private DecimalFormat numberFormat;
 	private int[] columns;
 	private int numRowsPerPage;
@@ -27,9 +26,8 @@ public class FinancialStatementPrint extends Print {
 	 * @param printStartDate määrittää, tulostetaanko tilikauden alkamispäivä
 	 */
 	public FinancialStatementPrint(FinancialStatementModel model,
-			String printId, String title, boolean printStartDate) {
+			String printId, boolean printStartDate) {
 		this.model = model;
-		this.title = title;
 		this.printStartDate = printStartDate;
 		setPrintId(printId);
 		numberFormat = new DecimalFormat();
@@ -39,7 +37,7 @@ public class FinancialStatementPrint extends Print {
 	}
 	
 	public String getTitle() {
-		return title;
+		return model.getTitle();
 	}
 
 	public int getPageCount() {

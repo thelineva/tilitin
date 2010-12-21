@@ -1,6 +1,9 @@
 package kirjanpito.reports;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -15,6 +18,7 @@ import kirjanpito.db.Period;
 import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
 import kirjanpito.util.AccountBalances;
+import kirjanpito.util.CSVWriter;
 import kirjanpito.util.ChartOfAccounts;
 import kirjanpito.util.Registry;
 
@@ -264,6 +268,67 @@ public class AccountSummaryModel implements PrintModel {
 						heading.getText(), heading.getLevel());
 				}
 			}
+		}
+	}
+	
+	public void writeCSV(CSVWriter writer) throws IOException {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
+		DecimalFormat numberFormat = new DecimalFormat();
+		numberFormat.setMinimumFractionDigits(2);
+		numberFormat.setMaximumFractionDigits(2);
+		
+		writer.writeField("Tilien saldot");
+		writer.writeLine();
+		writer.writeField("Nimi");
+		writer.writeField(settings.getName());
+		writer.writeLine();
+		writer.writeField("Y-tunnus");
+		writer.writeField(settings.getBusinessId());
+		writer.writeLine();
+		writer.writeField("Päivämäärä");
+		writer.writeField(dateFormat.format(endDate));
+		writer.writeLine();
+		writer.writeLine();
+		writer.writeField("");
+		writer.writeField("Tilinumero");
+		writer.writeField("Tilin nimi");
+		writer.writeField("Saldo");
+		writer.writeLine();
+		
+		for (AccountSummaryRow row : rows) {
+			if (row.text == null) {
+				writer.writeField("");
+				writer.writeField(row.account.getNumber());
+				writer.writeField(row.account.getName());
+				
+				if (row.balance == null) {
+					writer.writeField("");
+				}
+				else {
+					writer.writeField(numberFormat.format(row.balance));
+				}
+				
+				if (previousPeriodVisible) {
+					if (row.balancePrev == null) {
+						writer.writeField("");
+					}
+					else {
+						writer.writeField(numberFormat.format(row.balancePrev));
+					}
+				}
+			}
+			else {
+				writer.writeField(Integer.toString(row.level));
+				writer.writeField("");
+				writer.writeField(row.text);
+				writer.writeField("");
+				
+				if (previousPeriodVisible) {
+					writer.writeField("");
+				}
+			}
+			
+			writer.writeLine();
 		}
 	}
 	

@@ -4,6 +4,7 @@ import java.awt.print.PageFormat;
 import java.awt.print.Paper;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -26,8 +27,10 @@ import kirjanpito.reports.AWTPrintable;
 import kirjanpito.reports.PDFCanvas;
 import kirjanpito.reports.Print;
 import kirjanpito.reports.PrintCanvas;
+import kirjanpito.reports.PrintModel;
 import kirjanpito.ui.Kirjanpito;
 import kirjanpito.util.AppSettings;
+import kirjanpito.util.CSVWriter;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
@@ -43,6 +46,7 @@ public class PrintPreviewModel {
 	private PrintService printService;
 	private PrintRequestAttributeSet aset;
 	private Print print;
+	private PrintModel printModel;
 	private int pageIndex;
 
 	/**
@@ -65,6 +69,24 @@ public class PrintPreviewModel {
 		this.print = print;
 	}
 	
+	/**
+	 * Palauttaa tulosteen mallin.
+	 * 
+	 * @return tulosteen malli
+	 */
+	public PrintModel getPrintModel() {
+		return printModel;
+	}
+
+	/**
+	 * Asettaa tulosteen mallin.
+	 * 
+	 * @param printModel tulosteen malli
+	 */
+	public void setPrintModel(PrintModel printModel) {
+		this.printModel = printModel;
+	}
+
 	/**
 	 * Palauttaa sivunumeron.
 	 * 
@@ -266,7 +288,7 @@ public class PrintPreviewModel {
 	 * 
 	 * @param file PDF-tiedosto
 	 */
-	public void save(File file) throws IOException {
+	public void writePDF(File file) throws IOException {
 		PrintCanvas oldCanvas = print.getCanvas();
 		AppSettings settings = AppSettings.getInstance();
 		String orientation = settings.getString("paper.orientation", "");
@@ -311,5 +333,13 @@ public class PrintPreviewModel {
 		finally {
 			print.setCanvas(oldCanvas);
 		}
+	}
+	
+	public void writeCSV(File file, char delimiter) throws IOException {
+		FileWriter writer = new FileWriter(file);
+		CSVWriter csv = new CSVWriter(writer);
+		csv.setDelimiter(delimiter);
+		printModel.writeCSV(csv);
+		writer.close();
 	}
 }

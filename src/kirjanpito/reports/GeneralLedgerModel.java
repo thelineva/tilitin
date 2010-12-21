@@ -1,6 +1,9 @@
 package kirjanpito.reports;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +20,7 @@ import kirjanpito.db.Period;
 import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
 import kirjanpito.util.AccountBalances;
+import kirjanpito.util.CSVWriter;
 import kirjanpito.util.Registry;
 
 /**
@@ -28,7 +32,7 @@ public class GeneralLedgerModel implements PrintModel {
 	protected Registry registry;
 	protected Period period;
 	protected Settings settings;
-	private List<GeneralLedgerRow> rows;
+	protected List<GeneralLedgerRow> rows;
 	private int prevAccountId;
 
 	public Registry getRegistry() {
@@ -95,12 +99,12 @@ public class GeneralLedgerModel implements PrintModel {
 						
 						if (prevAccountId != account.getId()) {
 							if (prevAccountId != -1)
-								rows.add(new GeneralLedgerRow(0, null, null, null, null));
+								rows.add(new GeneralLedgerRow(0, null, null, null, null, null));
 							
-							rows.add(new GeneralLedgerRow(2, null, account, null, null));
+							rows.add(new GeneralLedgerRow(2, null, null, account, null, null));
 						}
 
-						rows.add(new GeneralLedgerRow(1, document, account, entry,
+						rows.add(new GeneralLedgerRow(1, document, null, account, entry,
 								balances.getBalance(entry.getAccountId())));
 						
 						prevAccountId = account.getId();
@@ -109,6 +113,90 @@ public class GeneralLedgerModel implements PrintModel {
 		}
 		finally {
 			if (sess != null) sess.close();
+		}
+	}
+	
+	public void writeCSV(CSVWriter writer) throws IOException {
+		writeCSV(writer, false);
+	}
+	
+	protected void writeCSV(CSVWriter writer, boolean documentTypes) throws IOException {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
+		DecimalFormat numberFormat = new DecimalFormat();
+		numberFormat.setMinimumFractionDigits(2);
+		numberFormat.setMaximumFractionDigits(2);
+		
+		if (documentTypes) {
+			writer.writeField("Pääkirja tositelajeittain");
+		}
+		else {
+			writer.writeField("Pääkirja");
+		}
+		
+		writer.writeLine();
+		writer.writeField("Nimi");
+		writer.writeField(settings.getName());
+		writer.writeLine();
+		writer.writeField("Y-tunnus");
+		writer.writeField(settings.getBusinessId());
+		writer.writeLine();
+		writer.writeField("Alkaa");
+		writer.writeField(dateFormat.format(period.getStartDate()));
+		writer.writeLine();
+		writer.writeField("Päättyy");
+		writer.writeField(dateFormat.format(period.getEndDate()));
+		writer.writeLine();
+		writer.writeLine();
+		
+		if (documentTypes) {
+			writer.writeField("Tositelaji");
+		}
+		
+		writer.writeField("Tilinumero");
+		writer.writeField("Tilin nimi");
+		writer.writeField("Tositenumero");
+		writer.writeField("Päivämäärä");
+		writer.writeField("Debet");
+		writer.writeField("Kredit");
+		writer.writeField("Saldo");
+		writer.writeField("Selite");
+		writer.writeLine();
+		
+		for (GeneralLedgerRow row : rows) {
+			if (row.type != 1) {
+				continue;
+			}
+			
+			if (documentTypes) {
+				writer.writeField(row.documentType.getName());
+			}
+			
+			writer.writeField(row.account.getNumber());
+			writer.writeField(row.account.getName());
+			
+			if (row.document.getNumber() == 0) {
+				writer.writeField("");
+				writer.writeField("");
+				writer.writeField("");
+				writer.writeField("");
+			}
+			else {
+				writer.writeField(Integer.toString(row.document.getNumber()));
+				writer.writeField(dateFormat.format(row.document.getDate()));
+				
+				if (row.entry.isDebit()) {
+					writer.writeField(numberFormat.format(row.entry.getAmount()));
+					writer.writeField("");
+				}
+				else {
+					writer.writeField("");
+					writer.writeField(numberFormat.format(row.entry.getAmount()));
+				}
+			}
+			
+			writer.writeField(numberFormat.format(row.balance));
+			writer.writeField(row.entry.getDescription());
+			writer.writeLine();
 		}
 	}
 	
@@ -201,21 +289,37 @@ public class GeneralLedgerModel implements PrintModel {
 		return null;
 	}
 	
-	private class GeneralLedgerRow {
+	protected class GeneralLedgerRow implements Comparable<GeneralLedgerRow> {
 		public int type;
 		public Document document;
+		public DocumentType documentType;
 		public Account account;
 		public Entry entry;
 		public BigDecimal balance;
 		
-		public GeneralLedgerRow(int type, Document document, Account account,
-				Entry entry, BigDecimal balance) {
+		public GeneralLedgerRow(int type, Document document, DocumentType documentType,
+				Account account, Entry entry, BigDecimal balance) {
 			
 			this.type = type;
 			this.document = document;
+			this.documentType = documentType;
 			this.account = account;
 			this.entry = entry;
 			this.balance = balance;
+		}
+
+		public int compareTo(GeneralLedgerRow o) {
+			if (documentType.getNumber() == o.documentType.getNumber()) {
+				if (account.getNumber().equals(o.account.getNumber())) {
+					return entry.getRowNumber() - o.entry.getRowNumber();
+				}
+				else {
+					return account.getNumber().compareTo(o.account.getNumber());
+				}
+			}
+			else {
+				return documentType.getNumber() - o.documentType.getNumber();
+			}
 		}
 	}
 }

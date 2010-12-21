@@ -1,5 +1,6 @@
 package kirjanpito.reports;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -16,10 +17,12 @@ import kirjanpito.db.Period;
 import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
 import kirjanpito.util.AccountBalances;
+import kirjanpito.util.CSVWriter;
 import kirjanpito.util.ChartOfAccounts;
 import kirjanpito.util.Registry;
+import kirjanpito.util.VATUtil;
 
-public class COAPrintModel {
+public class COAPrintModel implements PrintModel {
 	private Registry registry;
 	private ChartOfAccounts coa;
 	private int accountLevel;
@@ -59,6 +62,50 @@ public class COAPrintModel {
 		}
 	}
 	
+	public void writeCSV(CSVWriter writer) throws IOException {
+		Settings settings = registry.getSettings();
+		writer.writeField("Tilien saldot");
+		writer.writeLine();
+		writer.writeField("Nimi");
+		writer.writeField(settings.getName());
+		writer.writeLine();
+		writer.writeField("Y-tunnus");
+		writer.writeField(settings.getBusinessId());
+		writer.writeLine();
+		writer.writeLine();
+		writer.writeField("");
+		writer.writeField("Tilinumero");
+		writer.writeField("Tilin nimi");
+		writer.writeField("ALV");
+		writer.writeLine();
+		
+		for (int i = 0; i < coa.getSize(); i++) {
+			if (coa.getType(i) == ChartOfAccounts.TYPE_ACCOUNT) {
+				Account account = coa.getAccount(i);
+				writer.writeField("");
+				writer.writeField(account.getNumber());
+				writer.writeField(account.getName());
+				int vatRate = account.getVatRate();
+				
+				if (vatRate > 0 && vatRate < VATUtil.VAT_RATE_M2V.length) {
+					writer.writeField(VATUtil.VAT_RATE_TEXTS[VATUtil.VAT_RATE_M2V[vatRate]]);
+				}
+				else {
+					writer.writeField("");
+				}
+			}
+			else {
+				COAHeading heading = coa.getHeading(i);
+				writer.writeField(Integer.toString(heading.getLevel()));
+				writer.writeField("");
+				writer.writeField(heading.getText());
+				writer.writeField("");
+			}
+			
+			writer.writeLine();
+		}
+	}
+
 	private ChartOfAccounts createChartOfAccounts() throws DataAccessException {
 		AccountBalances balances = fetchAccountBalances();
 		ChartOfAccounts coa = registry.getChartOfAccounts();

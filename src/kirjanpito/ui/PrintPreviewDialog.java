@@ -332,17 +332,58 @@ public class PrintPreviewDialog extends JDialog {
 			}
 		});
 		
+		FileFilter csvCommaFilter = new FileFilter() {
+			public boolean accept(File file) {
+				return file.isDirectory() || file.getName().endsWith(".csv");
+			}
+
+			public String getDescription() {
+				return "CSV-tiedostot, erottimena pilkku";
+			}
+		};
+		
+		FileFilter csvSemicolonFilter = new FileFilter() {
+			public boolean accept(File file) {
+				return file.isDirectory() || file.getName().endsWith(".csv");
+			}
+
+			public String getDescription() {
+				return "CSV-tiedostot, erottimena puolipiste";
+			}
+		};
+		
+		fc.addChoosableFileFilter(csvCommaFilter);
+		fc.addChoosableFileFilter(csvSemicolonFilter);
+		
 		if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
 			File file = fc.getSelectedFile();
 			settings.set("pdf-directory",
 					file.getParentFile().getAbsolutePath());
 			
-			if (!file.getName().endsWith(".pdf")) {
-				file = new File(file.getAbsolutePath() + ".pdf");
-			}
-			
 			try {
-				model.save(file);
+				if (file.getName().endsWith(".csv") ||
+						fc.getFileFilter() == csvCommaFilter ||
+						fc.getFileFilter() == csvSemicolonFilter) {
+					
+					if (!file.getName().endsWith(".csv")) {
+						file = new File(file.getAbsolutePath() + ".csv");
+					}
+					
+					char delimiter = ';';
+					
+					if (fc.getFileFilter() == csvCommaFilter) {
+						delimiter = ',';
+					}
+					
+					model.writeCSV(file, delimiter);
+				}
+				else {
+					if (!file.getName().endsWith(".pdf")) {
+						file = new File(file.getAbsolutePath() + ".pdf");
+					}
+					
+					model.writePDF(file);
+				}
 			}
 			catch (IOException e) {
 				logger.log(Level.SEVERE, "Tallentaminen epäonnistui", e);

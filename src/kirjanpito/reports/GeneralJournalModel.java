@@ -1,5 +1,8 @@
 package kirjanpito.reports;
 
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +18,7 @@ import kirjanpito.db.EntryDAO;
 import kirjanpito.db.Period;
 import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
+import kirjanpito.util.CSVWriter;
 import kirjanpito.util.Registry;
 
 /**
@@ -111,6 +115,60 @@ public class GeneralJournalModel implements PrintModel {
 		}
 		finally {
 			if (sess != null) sess.close();
+		}
+	}
+	
+	public void writeCSV(CSVWriter writer) throws IOException {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
+		DecimalFormat numberFormat = new DecimalFormat();
+		numberFormat.setMinimumFractionDigits(2);
+		numberFormat.setMaximumFractionDigits(2);
+		
+		writer.writeField("Päiväkirja");
+		writer.writeLine();
+		writer.writeField("Nimi");
+		writer.writeField(settings.getName());
+		writer.writeLine();
+		writer.writeField("Y-tunnus");
+		writer.writeField(settings.getBusinessId());
+		writer.writeLine();
+		writer.writeField("Alkaa");
+		writer.writeField(dateFormat.format(period.getStartDate()));
+		writer.writeLine();
+		writer.writeField("Päättyy");
+		writer.writeField(dateFormat.format(period.getEndDate()));
+		writer.writeLine();
+		writer.writeLine();
+		writer.writeField("Tositenumero");
+		writer.writeField("Päivämäärä");
+		writer.writeField("Tilinumero");
+		writer.writeField("Tilin nimi");
+		writer.writeField("Debet");
+		writer.writeField("Kredit");
+		writer.writeField("Selite");
+		writer.writeLine();
+		
+		for (GeneralJournalRow row : rows) {
+			if (row.type != 1) {
+				continue;
+			}
+			
+			writer.writeField(Integer.toString(row.document.getNumber()));
+			writer.writeField(dateFormat.format(row.document.getDate()));
+			writer.writeField(row.account.getNumber());
+			writer.writeField(row.account.getName());
+			
+			if (row.entry.isDebit()) {
+				writer.writeField(numberFormat.format(row.entry.getAmount()));
+				writer.writeField("");
+			}
+			else {
+				writer.writeField("");
+				writer.writeField(numberFormat.format(row.entry.getAmount()));
+			}
+			
+			writer.writeField(row.entry.getDescription());
+			writer.writeLine();
 		}
 	}
 	

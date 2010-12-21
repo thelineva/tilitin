@@ -1,6 +1,6 @@
 package kirjanpito.reports;
 
-import java.math.BigDecimal;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,6 +16,7 @@ import kirjanpito.db.Entry;
 import kirjanpito.db.EntryDAO;
 import kirjanpito.db.Session;
 import kirjanpito.util.AccountBalances;
+import kirjanpito.util.CSVWriter;
 
 /**
  * Malli pääkirja tositelajeittain -tulosteelle.
@@ -23,7 +24,6 @@ import kirjanpito.util.AccountBalances;
  * @author Tommi Helineva
  */
 public class GeneralLedgerModelT extends GeneralLedgerModel {
-	private List<GeneralLedgerRow> rows;
 	private List<DocumentType> documentTypes;
 
 	public void run() throws DataAccessException {
@@ -117,6 +117,10 @@ public class GeneralLedgerModelT extends GeneralLedgerModel {
 		}
 	}
 	
+	public void writeCSV(CSVWriter writer) throws IOException {
+		writeCSV(writer, true);
+	}
+
 	/**
 	 * Palauttaa käyttäjän nimen.
 	 * 
@@ -133,66 +137,6 @@ public class GeneralLedgerModelT extends GeneralLedgerModel {
 	 */
 	public String getBusinessId() {
 		return settings.getBusinessId();
-	}
-	
-	/**
-	 * Palauttaa tulosteessa olevien rivien lukumäärän.
-	 * 
-	 * @return rivien lukumäärä
-	 */
-	public int getRowCount() {
-		return rows.size();
-	}
-	
-	/**
-	 * Palauttaa rivin <code>index</code> tyypin.
-	 * 
-	 * @param index rivinumero
-	 * @return tyyppi
-	 */
-	public int getType(int index) {
-		return rows.get(index).type;
-	}
-	
-	/**
-	 * Palauttaa rivillä <code>index</code> olevan tositteen.
-	 * 
-	 * @param index rivinumero
-	 * @return tosite
-	 */
-	public Document getDocument(int index) {
-		return rows.get(index).document;
-	}
-	
-	/**
-	 * Palauttaa rivillä <code>index</code> olevan tilin.
-	 * 
-	 * @param index rivinumero
-	 * @return tili
-	 */
-	public Account getAccount(int index) {
-		return rows.get(index).account;
-	}
-	
-	/**
-	 * Palauttaa rivillä <code>index</code> olevan viennin.
-	 * 
-	 * @param index rivinumero
-	 * @return vienti
-	 */
-	public Entry getEntry(int index) {
-		return rows.get(index).entry;
-	}
-	
-	/**
-	 * Palauttaa rivillä <code>index</code> olevan tilin
-	 * saldon.
-	 * 
-	 * @param index rivinumero
-	 * @return tilin saldo
-	 */
-	public BigDecimal getBalance(int index) {
-		return rows.get(index).balance;
 	}
 	
 	/**
@@ -214,39 +158,5 @@ public class GeneralLedgerModelT extends GeneralLedgerModel {
 		}
 		
 		return null;
-	}
-	
-	private class GeneralLedgerRow implements Comparable<GeneralLedgerRow> {
-		public int type;
-		public Document document;
-		public DocumentType documentType;
-		public Account account;
-		public Entry entry;
-		public BigDecimal balance;
-		
-		public GeneralLedgerRow(int type, Document document, DocumentType documentType,
-				Account account, Entry entry, BigDecimal balance) {
-			
-			this.type = type;
-			this.document = document;
-			this.documentType = documentType;
-			this.account = account;
-			this.entry = entry;
-			this.balance = balance;
-		}
-
-		public int compareTo(GeneralLedgerRow o) {
-			if (documentType.getNumber() == o.documentType.getNumber()) {
-				if (account.getNumber().equals(o.account.getNumber())) {
-					return entry.getRowNumber() - o.entry.getRowNumber();
-				}
-				else {
-					return account.getNumber().compareTo(o.account.getNumber());
-				}
-			}
-			else {
-				return documentType.getNumber() - o.documentType.getNumber();
-			}
-		}
 	}
 }

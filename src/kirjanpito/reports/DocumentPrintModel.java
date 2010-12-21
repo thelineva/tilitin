@@ -1,5 +1,8 @@
 package kirjanpito.reports;
 
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 import kirjanpito.db.Account;
@@ -9,6 +12,7 @@ import kirjanpito.db.Document;
 import kirjanpito.db.Entry;
 import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
+import kirjanpito.util.CSVWriter;
 import kirjanpito.util.Registry;
 
 public class DocumentPrintModel implements PrintModel {
@@ -46,6 +50,53 @@ public class DocumentPrintModel implements PrintModel {
 		}
 		finally {
 			if (sess != null) sess.close();
+		}
+	}
+	
+	public void writeCSV(CSVWriter writer) throws IOException {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
+		DecimalFormat numberFormat = new DecimalFormat();
+		numberFormat.setMinimumFractionDigits(2);
+		numberFormat.setMaximumFractionDigits(2);
+		
+		writer.writeField("Tosite");
+		writer.writeLine();
+		writer.writeField("Nimi");
+		writer.writeField(settings.getName());
+		writer.writeLine();
+		writer.writeField("Y-tunnus");
+		writer.writeField(settings.getBusinessId());
+		writer.writeLine();
+		writer.writeField("Tositenumero");
+		writer.writeField(Integer.toString(document.getNumber()));
+		writer.writeLine();
+		writer.writeField("Päivämäärä");
+		writer.writeField(dateFormat.format(document.getDate()));
+		writer.writeLine();
+		writer.writeLine();
+		writer.writeField("");
+		writer.writeField("Tili");
+		writer.writeField("Debet");
+		writer.writeField("Kredit");
+		writer.writeField("Selite");
+		writer.writeLine();
+		
+		for (Entry entry : entries) {
+			Account account = registry.getAccountById(entry.getAccountId());
+			writer.writeField(account.getNumber());
+			writer.writeField(account.getName());
+			
+			if (entry.isDebit()) {
+				writer.writeField(numberFormat.format(entry.getAmount()));
+				writer.writeField("");
+			}
+			else {
+				writer.writeField("");
+				writer.writeField(numberFormat.format(entry.getAmount()));
+			}
+			
+			writer.writeField(entry.getDescription());
+			writer.writeLine();
 		}
 	}
 
