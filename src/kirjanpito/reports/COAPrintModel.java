@@ -64,7 +64,7 @@ public class COAPrintModel implements PrintModel {
 	
 	public void writeCSV(CSVWriter writer) throws IOException {
 		Settings settings = registry.getSettings();
-		writer.writeField("Tilien saldot");
+		writer.writeField("Tilikartta");
 		writer.writeLine();
 		writer.writeField("Nimi");
 		writer.writeField(settings.getName());
