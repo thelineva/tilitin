@@ -195,7 +195,7 @@ public class AccountCellEditor extends AbstractCellEditor
 				ChartOfAccounts coa = registry.getChartOfAccounts();
 				int index = coa.search(text);
 				
-				if (coa.getType(index) == ChartOfAccounts.TYPE_ACCOUNT) {
+				if (index >= 0 && coa.getType(index) == ChartOfAccounts.TYPE_ACCOUNT) {
 					Account account = coa.getAccount(index);
 					accountName = account.getName();
 					setText(account.getNumber());
