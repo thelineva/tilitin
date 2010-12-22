@@ -11,6 +11,8 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.logging.Level;
@@ -20,6 +22,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -27,10 +30,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
+import javax.swing.filechooser.FileFilter;
 
 import kirjanpito.db.DataAccessException;
 import kirjanpito.models.ReportEditorModel;
 import kirjanpito.reports.DrawCommandParser;
+import kirjanpito.util.AppSettings;
 
 public class ReportEditorDialog extends JDialog {
 	private ReportEditorModel model;
@@ -87,6 +92,26 @@ public class ReportEditorDialog extends JDialog {
 		GridBagConstraints c = new GridBagConstraints();
 		JPanel panel = new JPanel(new GridBagLayout());
 		
+		JButton exportButton = new JButton("Vie");
+		exportButton.setMnemonic('V');
+		exportButton.setEnabled(Desktop.isDesktopSupported());
+		exportButton.setPreferredSize(new Dimension(100, 30));
+		exportButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				saveToZip();
+			}
+		});
+		
+		JButton importButton = new JButton("Tuo");
+		importButton.setMnemonic('T');
+		importButton.setEnabled(Desktop.isDesktopSupported());
+		importButton.setPreferredSize(new Dimension(100, 30));
+		importButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				loadFromZip();
+			}
+		});
+		
 		JButton helpButton = new JButton("Ohjeet");
 		helpButton.setMnemonic('O');
 		helpButton.setEnabled(Desktop.isDesktopSupported());
@@ -117,17 +142,24 @@ public class ReportEditorDialog extends JDialog {
 		
 		c.anchor = GridBagConstraints.EAST;
 		c.insets = new Insets(5, 10, 10, 5);
+		c.gridx = 1;
+		c.weightx = 0.0;
+		panel.add(exportButton, c);
+		
+		c.gridx = 2;
+		c.insets = new Insets(5, 5, 10, 5);
+		panel.add(importButton, c);
+		
+		c.gridx = 3;
 		c.weightx = 1.0;
 		panel.add(helpButton, c);
 		
-		c.gridx = 1;
-		c.insets = new Insets(5, 5, 10, 5);
+		c.gridx = 4;
 		c.weightx = 0.0;
 		panel.add(saveButton, c);
 		
-		c.gridx = 2;
+		c.gridx = 5;
 		c.insets = new Insets(5, 5, 10, 10);
-		c.weightx = 0.0;
 		panel.add(cancelButton, c);
 		add(panel, BorderLayout.SOUTH);
 	}
@@ -289,5 +321,84 @@ public class ReportEditorDialog extends JDialog {
 		printIndex = printComboBox.getSelectedIndex();
 		headerTextArea.setText(model.getHeader(printIndex));
 		footerTextArea.setText(model.getFooter(printIndex));
+	}
+	
+	public void saveToZip() {
+		saveHeaderAndFooter();
+		AppSettings settings = AppSettings.getInstance();
+		String path = settings.getString("print-settings-directory", ".");
+		JFileChooser fc = new JFileChooser(path);
+		fc.setFileFilter(new FileFilter() {
+			public boolean accept(File file) {
+				return file.isDirectory() || file.getName().endsWith(".zip");
+			}
+
+			public String getDescription() {
+				return "Tulosteasetukset";
+			}
+		});
+		
+		if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+			File file = fc.getSelectedFile();
+			settings.set("print-settings-directory",
+					file.getParentFile().getAbsolutePath());
+			
+			try {
+				if (!file.getName().endsWith(".zip")) {
+					file = new File(file.getAbsolutePath() + ".zip");
+				}
+				
+				model.saveToZip(file);
+			}
+			catch (IOException e) {
+				logger.log(Level.SEVERE, "Tulosteasetusten vienti epäonnistui", e);
+				SwingUtils.showErrorMessage(this,
+						"Tulosteasetusten vienti epäonnistui. " + e.getMessage());
+			}
+		}
+	}
+	
+	public void loadFromZip() {
+		AppSettings settings = AppSettings.getInstance();
+		String path = settings.getString("print-settings-directory", ".");
+		JFileChooser fc = new JFileChooser(path);
+		fc.setFileFilter(new FileFilter() {
+			public boolean accept(File file) {
+				return file.isDirectory() || file.getName().endsWith(".zip");
+			}
+
+			public String getDescription() {
+				return "Tulosteasetukset";
+			}
+		});
+		
+		if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+			File file = fc.getSelectedFile();
+			settings.set("print-settings-directory",
+					file.getParentFile().getAbsolutePath());
+			
+			try {
+				if (!file.getName().endsWith(".zip")) {
+					file = new File(file.getAbsolutePath() + ".zip");
+				}
+				
+				model.loadFromZip(file);
+			}
+			catch (IOException e) {
+				logger.log(Level.SEVERE, "Tulosteasetusten tuonti epäonnistui", e);
+				SwingUtils.showErrorMessage(this,
+						"Tulosteasetusten tuonti epäonnistui. " + e.getMessage());
+				return;
+			}
+		}
+		
+		loadHeaderAndFooter();
+		int index = 0;
+		
+		for (String id : ReportEditorModel.REPORTS) {
+			textAreas[index].setText(model.getContent(id));
+			textAreas[index].setCaretPosition(0);
+			index++;
+		}
 	}
 }
