@@ -359,6 +359,7 @@ public class ReportEditorDialog extends JDialog {
 	}
 	
 	public void loadFromZip() {
+		saveHeaderAndFooter();
 		AppSettings settings = AppSettings.getInstance();
 		String path = settings.getString("print-settings-directory", ".");
 		JFileChooser fc = new JFileChooser(path);
