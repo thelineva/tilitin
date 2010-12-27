@@ -73,7 +73,8 @@ public class DescriptionCellEditor extends AbstractCellEditor
 		else {
 			String text = value.toString();
 			textField.setText(text);
-			textField.setCaretPosition(text.length());
+			textField.setCaretPosition(0);
+			textField.moveCaretPosition(text.length());
 		}
 
 		accountId = model.getEntry(rowIndex).getAccountId();
