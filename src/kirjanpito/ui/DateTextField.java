@@ -20,6 +20,7 @@ import javax.swing.JTextField;
  */
 public class DateTextField extends JTextField {
 	private DateFormat dateFormat;
+	private Date baseDate;
 	private static Pattern[] patterns;
 	
 	private static final long serialVersionUID = 1L;
@@ -49,6 +50,14 @@ public class DateTextField extends JTextField {
 		dateFormat = new SimpleDateFormat("d.M.yyyy");
 	}
 	
+	public Date getBaseDate() {
+		return baseDate;
+	}
+
+	public void setBaseDate(Date baseDate) {
+		this.baseDate = baseDate;
+	}
+
 	public void setDate(Date date) {
 		String str = (date == null) ? "" : dateFormat.format(date);
 		setText(str);
@@ -66,6 +75,11 @@ public class DateTextField extends JTextField {
 		cal.clear();
 		
 		Calendar now = Calendar.getInstance();
+		
+		if (baseDate != null) {
+			now.setTime(baseDate);
+		}
+		
 		Matcher matcher = patterns[0].matcher(str);
 		
 		if (matcher.matches()) {

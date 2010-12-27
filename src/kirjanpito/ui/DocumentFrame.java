@@ -852,6 +852,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			SwingUtils.showDataAccessErrorMessage(this, e, message);
 		}
 		
+		dateTextField.setBaseDate(model.getDocument().getDate());
 		updatePosition();
 		updateDocument();
 		updateTotalRow();
