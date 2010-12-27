@@ -2,6 +2,7 @@ package kirjanpito.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -65,6 +66,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
@@ -593,6 +595,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		entryTable.setPreferredScrollableViewportSize(new Dimension(680, 250));
 		entryTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		entryTable.setSurrendersFocusOnKeystroke(true);
+		entryTable.getTableHeader().setDefaultRenderer(new EntryTableHeaderRenderer(
+				entryTable.getTableHeader().getDefaultRenderer()));
 		
 		TableColumn column;
 		int[] widths = new int[] {190, 80, 80, 80, 190};
@@ -2220,6 +2224,32 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		public void periodChanged() {
 			updatePeriod();
 			refreshModel();
+		}
+	};
+	
+	private static class EntryTableHeaderRenderer extends DefaultTableCellRenderer {
+		private TableCellRenderer defaultRenderer;
+		private static final long serialVersionUID = 1L;
+		private static final int[] alignments = {
+			JLabel.LEFT, JLabel.RIGHT, JLabel.RIGHT, JLabel.RIGHT, JLabel.LEFT};
+		
+		public EntryTableHeaderRenderer(TableCellRenderer defaultRenderer) {
+			this.defaultRenderer = defaultRenderer;
+		}
+		
+		@Override
+		public Component getTableCellRendererComponent(JTable table,
+				Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+			
+			Component comp = defaultRenderer.getTableCellRendererComponent(table,
+					value, isSelected, hasFocus, row, column);
+			
+			if (comp instanceof JLabel) {
+				/* Muutetaan tekstin tasaus. */
+				((JLabel)comp).setHorizontalAlignment(alignments[column]);
+			}
+			
+			return comp;
 		}
 	};
 	
