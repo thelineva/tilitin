@@ -9,6 +9,7 @@ VERSION_FILE = 'src/kirjanpito/ui/Kirjanpito.java'
 FILES = (
 	('src+', 'tilitin-%(VERSION)s/src'),
 	('lib/sqlite-jdbc.jar', 'tilitin-%(VERSION)s/lib/sqlite-jdbc.jar'),
+	('lib/postgresql-jdbc.jar', 'tilitin-%(VERSION)s/lib/postgresql-jdbc.jar'),
 	('lib/itext.jar', 'tilitin-%(VERSION)s/lib/itext.jar'),
 	('build.xml', 'tilitin-%(VERSION)s/build.xml'),
 	('tilikarttamallit+', 'tilitin-%(VERSION)s/tilikarttamallit'),
