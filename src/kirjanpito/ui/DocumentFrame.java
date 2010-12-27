@@ -852,7 +852,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			SwingUtils.showDataAccessErrorMessage(this, e, message);
 		}
 		
-		dateTextField.setBaseDate(model.getDocument().getDate());
 		updatePosition();
 		updateDocument();
 		updateTotalRow();
@@ -1766,6 +1765,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		else {
 			numberTextField.setText(Integer.toString(document.getNumber()));
 			dateTextField.setDate(document.getDate());
+			dateTextField.setBaseDate(document.getDate());
 			
 			/* Uuden tositteen päivämäärä on kopioitu edellisestä
 			 * tositteesta. Valitaan päivämääräkentän teksti, jotta
