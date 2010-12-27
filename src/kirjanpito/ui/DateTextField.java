@@ -1,8 +1,6 @@
 package kirjanpito.ui;
 
-import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -49,7 +47,6 @@ public class DateTextField extends JTextField {
 	
 	public DateTextField() {
 		dateFormat = new SimpleDateFormat("d.M.yyyy");
-		addFocusListener(focusListener);
 	}
 	
 	public void setDate(Date date) {
@@ -155,9 +152,12 @@ public class DateTextField extends JTextField {
 		setDate(date);
 	}
 	
-	private FocusListener focusListener = new FocusAdapter() {
-		public void focusLost(FocusEvent arg0) {
+	@Override
+	protected void processFocusEvent(FocusEvent e) {
+		super.processFocusEvent(e);
+		
+		if (e.getID() == FocusEvent.FOCUS_LOST) {
 			autoComplete();
 		}
-	};
+	}
 }
