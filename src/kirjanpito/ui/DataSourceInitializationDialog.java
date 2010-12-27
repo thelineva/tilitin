@@ -41,9 +41,6 @@ public class DataSourceInitializationDialog extends JDialog {
 		GridBagConstraints c = new GridBagConstraints();
 		setLayout(new GridBagLayout());
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setSize(400, 150);
-		setResizable(false);
-		setLocationRelativeTo(getOwner());
 		
 		String[] comboBoxItems = new String[model.getFileCount()];
 		
@@ -92,6 +89,10 @@ public class DataSourceInitializationDialog extends JDialog {
 		c.insets = new Insets(5, 5, 10, 10);
 		c.weightx = 0.0;
 		add(cancelButton, c);
+		
+		pack();
+		setResizable(false);
+		setLocationRelativeTo(getOwner());
 	}
 	
 	public DataSourceInitializationWorker getWorker() {
