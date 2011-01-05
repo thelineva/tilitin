@@ -113,7 +113,7 @@ public class Kirjanpito implements Runnable {
 			if (!foundFileHandler) {
 				/* Kirjoitetaan loki tiedostoon. */
 				logFile = new File(dir, LOGGER_NAME + ".log.txt");
-				FileHandler fileHandler = new FileHandler(logFile.getAbsolutePath(), 20 * 1024, 1);
+				FileHandler fileHandler = new FileHandler(logFile.getAbsolutePath(), 20 * 1024, 1, true);
 				fileHandler.setLevel(level);
 				fileHandler.setFormatter(new SimpleFormatter());
 				Logger.getLogger(LOGGER_NAME).addHandler(fileHandler);
