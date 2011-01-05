@@ -1632,7 +1632,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		
 		if (file.exists()) {
 			try {
-				Desktop.getDesktop().browse(new URI("file://" + file.getAbsolutePath()));
+				Desktop.getDesktop().browse(new URI("file://" + file.getAbsolutePath().replace('\\', '/')));
 			}
 			catch (Exception e) {
 				SwingUtils.showErrorMessage(this, String.format(
