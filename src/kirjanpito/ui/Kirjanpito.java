@@ -83,7 +83,7 @@ public class Kirjanpito implements Runnable {
 		}
 		
 		try {
-			Handler[] handlers = Logger.getLogger(LOGGER_NAME).getHandlers();
+			Handler[] handlers = Logger.getLogger("").getHandlers();
 
 			/* Tarkistetaan, onko ConsoleHandler tai
 			 * FileHandler jo lisätty. */
