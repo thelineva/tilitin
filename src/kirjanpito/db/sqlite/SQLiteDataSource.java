@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import kirjanpito.db.AccountDAO;
@@ -206,124 +207,70 @@ public class SQLiteDataSource implements DataSource {
 			
 			stmt.close();
 		}
-		catch (SQLException e) {
+		catch (Exception e) {
+			try {
+				conn.rollback();
+			}
+			catch (SQLException exc) {
+			}
+			
+			Logger logger = Logger.getLogger("kirjanpito.db.sqlite");
+			logger.log(Level.SEVERE, "Tietokannan päivittäminen epäonnistui", e);
 			throw new DataAccessException(e.getMessage(), e);
 		}
 	}
 	
-	private static void upgrade1to2(Connection conn, Statement stmt)
-		throws DataAccessException {
-		
-		try {
-			stmt.execute("CREATE TABLE entry_template (id integer PRIMARY KEY AUTOINCREMENT NOT NULL, number integer NOT NULL, name varchar(100) NOT NULL, account_id integer NOT NULL, debit bool NOT NULL, amount numeric(10, 2) NOT NULL, description varchar(100) NOT NULL, row_number integer NOT NULL, FOREIGN KEY (account_id) REFERENCES account (id))");
-			stmt.executeUpdate("UPDATE settings SET version=2");
-			conn.commit();
-		}
-		catch (SQLException e) {
-			throw new DataAccessException("Tietokannan päivittäminen epäonnistui", e);
-		}
+	private static void upgrade1to2(Connection conn, Statement stmt) throws SQLException {
+		stmt.execute("CREATE TABLE entry_template (id integer PRIMARY KEY AUTOINCREMENT NOT NULL, number integer NOT NULL, name varchar(100) NOT NULL, account_id integer NOT NULL, debit bool NOT NULL, amount numeric(10, 2) NOT NULL, description varchar(100) NOT NULL, row_number integer NOT NULL, FOREIGN KEY (account_id) REFERENCES account (id))");
+		stmt.executeUpdate("UPDATE settings SET version=2");
+		conn.commit();
 		
 		Logger logger = Logger.getLogger("kirjanpito.db.sqlite");
 		logger.info("Tietokannan päivittäminen versioon 2 onnistui");
 	}
 	
-	private static void upgrade2to3(Connection conn, Statement stmt)
-		throws DataAccessException {
-		
-		try {
-			stmt.execute("CREATE TABLE document_type (id integer PRIMARY KEY AUTOINCREMENT NOT NULL, number integer NOT NULL, name varchar(100) NOT NULL, number_start integer NOT NULL, number_end integer NOT NULL)");
-			stmt.execute("ALTER TABLE settings ADD document_type_id integer REFERENCES document_type (id)");
-			stmt.executeUpdate("UPDATE settings SET version=3");
-			conn.commit();
-		}
-		catch (SQLException e) {
-			throw new DataAccessException("Tietokannan päivittäminen epäonnistui", e);
-		}
+	private static void upgrade2to3(Connection conn, Statement stmt) throws SQLException {
+		stmt.execute("CREATE TABLE document_type (id integer PRIMARY KEY AUTOINCREMENT NOT NULL, number integer NOT NULL, name varchar(100) NOT NULL, number_start integer NOT NULL, number_end integer NOT NULL)");
+		stmt.execute("ALTER TABLE settings ADD document_type_id integer REFERENCES document_type (id)");
+		stmt.executeUpdate("UPDATE settings SET version=3");
+		conn.commit();
 		
 		Logger logger = Logger.getLogger("kirjanpito.db.sqlite");
 		logger.info("Tietokannan päivittäminen versioon 3 onnistui");
 	}
 	
-	private static void upgrade3to4(Connection conn, Statement stmt)
-		throws DataAccessException {
-		
-		try {
-			DatabaseUpgradeUtil.upgrade3to4(conn, stmt);
-		}
-		catch (SQLException e) {
-			throw new DataAccessException("Tietokannan päivittäminen epäonnistui", e);
-		}
-		
+	private static void upgrade3to4(Connection conn, Statement stmt) throws SQLException {
+		DatabaseUpgradeUtil.upgrade3to4(conn, stmt);
 		Logger logger = Logger.getLogger("kirjanpito.db.sqlite");
 		logger.info("Tietokannan päivittäminen versioon 4 onnistui");
 	}
 	
-	private static void upgrade4to5(Connection conn, Statement stmt)
-		throws DataAccessException {
-		
-		try {
-			DatabaseUpgradeUtil.upgrade4to5(conn, stmt);
-		}
-		catch (SQLException e) {
-			throw new DataAccessException("Tietokannan päivittäminen epäonnistui", e);
-		}
-		
+	private static void upgrade4to5(Connection conn, Statement stmt) throws SQLException {
+		DatabaseUpgradeUtil.upgrade4to5(conn, stmt);
 		Logger logger = Logger.getLogger("kirjanpito.db.sqlite");
 		logger.info("Tietokannan päivittäminen versioon 5 onnistui");
 	}
 	
-	private static void upgrade5to6(Connection conn, Statement stmt)
-		throws DataAccessException {
-		
-		try {
-			DatabaseUpgradeUtil.upgrade5to6(conn, stmt);
-		}
-		catch (Exception e) {
-			throw new DataAccessException("Tietokannan päivittäminen epäonnistui", e);
-		}
-		
+	private static void upgrade5to6(Connection conn, Statement stmt) throws IOException, SQLException {
+		DatabaseUpgradeUtil.upgrade5to6(conn, stmt);
 		Logger logger = Logger.getLogger("kirjanpito.db.sqlite");
 		logger.info("Tietokannan päivittäminen versioon 6 onnistui");
 	}
 	
-	private static void upgrade6to7(Connection conn, Statement stmt)
-		throws DataAccessException {
-		
-		try {
-			DatabaseUpgradeUtil.upgrade6to7(conn, stmt);
-		}
-		catch (Exception e) {
-			throw new DataAccessException("Tietokannan päivittäminen epäonnistui", e);
-		}
-		
+	private static void upgrade6to7(Connection conn, Statement stmt) throws SQLException {
+		DatabaseUpgradeUtil.upgrade6to7(conn, stmt);
 		Logger logger = Logger.getLogger("kirjanpito.db.sqlite");
 		logger.info("Tietokannan päivittäminen versioon 7 onnistui");
 	}
 	
-	private static void upgrade7to8(Connection conn, Statement stmt)
-		throws DataAccessException {
-		
-		try {
-			DatabaseUpgradeUtil.upgrade7to8(conn, stmt);
-		}
-		catch (Exception e) {
-			throw new DataAccessException("Tietokannan päivittäminen epäonnistui", e);
-		}
-		
+	private static void upgrade7to8(Connection conn, Statement stmt) throws SQLException {
+		DatabaseUpgradeUtil.upgrade7to8(conn, stmt);
 		Logger logger = Logger.getLogger("kirjanpito.db.sqlite");
 		logger.info("Tietokannan päivittäminen versioon 8 onnistui");
 	}
 	
-	private static void upgrade8to9(Connection conn, Statement stmt)
-		throws DataAccessException {
-		
-		try {
-			DatabaseUpgradeUtil.upgrade8to9(conn, stmt);
-		}
-		catch (Exception e) {
-			throw new DataAccessException("Tietokannan päivittäminen epäonnistui", e);
-		}
-		
+	private static void upgrade8to9(Connection conn, Statement stmt) throws SQLException {
+		DatabaseUpgradeUtil.upgrade8to9(conn, stmt);
 		Logger logger = Logger.getLogger("kirjanpito.db.sqlite");
 		logger.info("Tietokannan päivittäminen versioon 9 onnistui");
 	}
@@ -345,7 +292,7 @@ public class SQLiteDataSource implements DataSource {
 			copyFile(file, destination);
 		}
 		catch (IOException e) {
-			logger.severe("Tietokannan varmuuskopiointi epäonnistui");
+			logger.log(Level.SEVERE, "Tietokannan varmuuskopiointi epäonnistui", e);
 		}
 	}
 	
