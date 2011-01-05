@@ -1,6 +1,7 @@
 package kirjanpito.ui;
 
 import java.io.File;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -21,6 +22,7 @@ import kirjanpito.util.Registry;
  * @author Tommi Helineva
  */
 public class Kirjanpito implements Runnable {
+	public static File logFile;
 	private boolean debug;
 	private File configFile;
 	
@@ -48,6 +50,7 @@ public class Kirjanpito implements Runnable {
 		}
 		
 		configureLogging(settings.getDirectoryPath());
+		Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
 		String osName = System.getProperty("os.name").toLowerCase();
 		
 		if (osName.startsWith("mac os x")) {
@@ -109,8 +112,8 @@ public class Kirjanpito implements Runnable {
 
 			if (!foundFileHandler) {
 				/* Kirjoitetaan loki tiedostoon. */
-				File file = new File(dir, LOGGER_NAME + ".log");
-				FileHandler fileHandler = new FileHandler(file.getAbsolutePath());
+				logFile = new File(dir, LOGGER_NAME + ".log.txt");
+				FileHandler fileHandler = new FileHandler(logFile.getAbsolutePath(), 20 * 1024, 1);
 				fileHandler.setLevel(level);
 				fileHandler.setFormatter(new SimpleFormatter());
 				Logger.getLogger(LOGGER_NAME).addHandler(fileHandler);
@@ -156,5 +159,11 @@ public class Kirjanpito implements Runnable {
 	
 	private static void printUsage() {
 		System.err.println("Käyttö: tilitin [--config CONFIG] [--debug]");
+	}
+	
+	private static class ExceptionHandler implements UncaughtExceptionHandler {
+		public void uncaughtException(Thread t, Throwable e) {
+			Logger.getLogger("kirjanpito").log(Level.SEVERE, "Uncaught exception", e);
+		}
 	}
 }
