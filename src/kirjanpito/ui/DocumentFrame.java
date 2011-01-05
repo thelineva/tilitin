@@ -430,11 +430,14 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		menu.setMnemonic('O');
 		menuBar.add(menu);
 		
-		menu.add(SwingUtils.createMenuItem("Sisältö", "help-16x16.png", 'S',
+		menu.add(SwingUtils.createMenuItem("Sisältö", null, 'S',
 				KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0),
 				helpListener));
 		
-		menu.add(SwingUtils.createMenuItem("Tietoja", "about-16x16.png", 'T',
+		menu.add(SwingUtils.createMenuItem("Virheenjäljitystietoja", null, 'V',
+				null, debugListener));
+		
+		menu.add(SwingUtils.createMenuItem("Tietoja ohjelmasta", null, 'T',
 				null, aboutListener));
 		
 		setJMenuBar(menuBar);
@@ -1622,6 +1625,26 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	}
 	
 	/**
+	 * Avaa lokitiedoston tekstieditorissa.
+	 */
+	public void showLogMessages() {
+		File file = Kirjanpito.logFile;
+		
+		if (file.exists()) {
+			try {
+				Desktop.getDesktop().browse(new URI("file://" + file.getAbsolutePath()));
+			}
+			catch (Exception e) {
+				SwingUtils.showErrorMessage(this, String.format(
+						"Lokitiedoston %s avaaminen epäonnistui.", file.getAbsolutePath()));
+			}
+		}
+		else {
+			SwingUtils.showInformationMessage(this, "Virheenjäljitystietoja ei löytynyt.");
+		}
+	}
+	
+	/**
 	 * Näyttää tietoja ohjelmasta.
 	 */
 	public void showAboutDialog() {
@@ -2500,7 +2523,13 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 	};
 	
-	/* Tietoja */
+	private ActionListener debugListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			showLogMessages();
+		}
+	};
+	
+	/* Tietoja ohjelmasta */
 	private ActionListener aboutListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			showAboutDialog();
