@@ -478,13 +478,15 @@ public class FinancialStatementModel implements PrintModel {
 		String number;
 		BigDecimal balance;
 		BigDecimal sum = BigDecimal.ZERO;
+		boolean singleAccount = start.equals(stop);
 		
 		for (Account account : accounts) {
 			number = account.getNumber();
 			
 			/* Jos tilinumero on välillä [start; stop[, lisätään tilin
-			 * saldo summaan. */ 
-			if (number.compareTo(start) >= 0 && number.compareTo(stop) < 0) {
+			 * saldo summaan. */
+			if ((number.compareTo(start) >= 0 && number.compareTo(stop) < 0) ||
+					(singleAccount && number.equals(start))) {
 				balance = balances.getBalance(account.getId());
 				
 				if (balance != null) {
@@ -503,11 +505,13 @@ public class FinancialStatementModel implements PrintModel {
 		String number;
 		BigDecimal balance;
 		BigDecimal balancePrev;
+		boolean singleAccount = start.equals(stop);
 		
 		for (Account account : accounts) {
 			number = account.getNumber();
 			
-			if (number.compareTo(start) >= 0 && number.compareTo(stop) < 0) {
+			if ((number.compareTo(start) >= 0 && number.compareTo(stop) < 0) ||
+					(singleAccount && number.equals(start))) {
 				if (previousPeriodVisible) {
 					balancePrev = balancesPrev.getBalance(account.getId());
 				}
