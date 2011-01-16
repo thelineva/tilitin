@@ -503,8 +503,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		numberTextField = new JTextField();
 		numberTextField.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
-				dateTextField.requestFocusInWindow();
-				e.consume();
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					dateTextField.requestFocusInWindow();
+					e.consume();
+				}
 			}
 			
 			public void keyReleased(KeyEvent e) {
