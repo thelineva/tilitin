@@ -448,6 +448,31 @@ public class DatabaseUpgradeUtil {
 		conn.commit();
 	}
 	
+	public static void upgrade9to10(Connection conn, Statement stmt) throws SQLException {
+		/* Päivitetään ammatinharjoittajan tuloslaskelma. */
+		String[] reportIds = {"income-statement", "income-statement-detailed"};
+		
+		for (String reportId : reportIds) {
+			ResultSet rs = stmt.executeQuery(String.format("SELECT data FROM report_structure WHERE id = '%s'", reportId));
+			
+			if (rs.next()) {
+				String content = rs.getString(1);
+				
+				if (content.indexOf("0;3000;3650;LIIKEVAIHTO") >= 0) {
+					content = content.replace("0;3000;3650;LIIKEVAIHTO", "0;3000;3600;LIIKEVAIHTO");
+					PreparedStatement upd = conn.prepareStatement(String.format(
+						"UPDATE report_structure SET data=? WHERE id = '%s'", reportId));
+					upd.setString(1, content);
+					upd.executeUpdate();
+					upd.close();
+				}
+			}
+		}
+		
+		stmt.executeUpdate("UPDATE settings SET version=10");
+		conn.commit();
+	}
+	
 	private static String readTextFile(JarFile jarFile, String name) throws IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(
 				jarFile.getInputStream(jarFile.getEntry(name)),
