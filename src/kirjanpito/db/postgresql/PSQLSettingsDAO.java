@@ -42,7 +42,7 @@ public class PSQLSettingsDAO extends SQLSettingsDAO {
 	 * @throws SQLException jos kyselyn luominen epäonnistuu
 	 */
 	protected PreparedStatement getInsertQuery() throws SQLException {
-		return sess.prepareStatement("INSERT INTO settings (version, name, business_id, current_period_id, document_type_id, properties) VALUES (9, ?, ?, ?, ?, ?)");
+		return sess.prepareStatement("INSERT INTO settings (version, name, business_id, current_period_id, document_type_id, properties) VALUES (10, ?, ?, ?, ?, ?)");
 	}
 	
 	/**
