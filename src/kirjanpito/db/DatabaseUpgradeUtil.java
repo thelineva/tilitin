@@ -473,6 +473,12 @@ public class DatabaseUpgradeUtil {
 		conn.commit();
 	}
 	
+	public static void upgrade10to11(Connection conn, Statement stmt) throws SQLException {
+		stmt.executeUpdate("ALTER TABLE account ADD flags integer NOT NULL DEFAULT 0");
+		stmt.executeUpdate("UPDATE settings SET version=11");
+		conn.commit();
+	}
+	
 	private static String readTextFile(JarFile jarFile, String name) throws IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(
 				jarFile.getInputStream(jarFile.getEntry(name)),

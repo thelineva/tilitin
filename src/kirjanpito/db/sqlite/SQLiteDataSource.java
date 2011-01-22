@@ -211,6 +211,12 @@ public class SQLiteDataSource implements DataSource {
 				version = 10;
 			}
 			
+			if (version == 10) {
+				backupDatabase(file);
+				upgrade10to11(conn, stmt);
+				version = 11;
+			}
+			
 			stmt.close();
 		}
 		catch (Exception e) {
@@ -285,6 +291,12 @@ public class SQLiteDataSource implements DataSource {
 		DatabaseUpgradeUtil.upgrade9to10(conn, stmt);
 		Logger logger = Logger.getLogger("kirjanpito.db.sqlite");
 		logger.info("Tietokannan päivittäminen versioon 10 onnistui");
+	}
+	
+	private static void upgrade10to11(Connection conn, Statement stmt) throws SQLException {
+		DatabaseUpgradeUtil.upgrade10to11(conn, stmt);
+		Logger logger = Logger.getLogger("kirjanpito.db.sqlite");
+		logger.info("Tietokannan päivittäminen versioon 11 onnistui");
 	}
 	
 	private static void backupDatabase(File file) {

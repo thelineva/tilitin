@@ -14,6 +14,7 @@ public class Account implements Comparable<Account> {
 	private int vatRate;
 	private int vatAccount1Id;
 	private int vatAccount2Id;
+	private int flags;
 	
 	/**
 	 * Vastaavaa
@@ -190,6 +191,14 @@ public class Account implements Comparable<Account> {
 	 */
 	public void setVatAccount2Id(int vatAccountId) {
 		this.vatAccount2Id = vatAccountId;
+	}
+
+	public int getFlags() {
+		return flags;
+	}
+
+	public void setFlags(int flags) {
+		this.flags = flags;
 	}
 
 	/**

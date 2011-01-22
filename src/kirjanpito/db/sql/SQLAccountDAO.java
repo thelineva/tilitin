@@ -109,7 +109,7 @@ public abstract class SQLAccountDAO implements AccountDAO {
 	protected void executeUpdateQuery(Account obj) throws SQLException {
 		PreparedStatement stmt = getUpdateQuery();
 		setValuesToStatement(stmt, obj);
-		stmt.setInt(8, obj.getId());
+		stmt.setInt(9, obj.getId());
 		stmt.executeUpdate();
 		stmt.close();
 	}
@@ -177,6 +177,7 @@ public abstract class SQLAccountDAO implements AccountDAO {
 			obj.setVatAccount2Id(-1);
 		}
 		
+		obj.setFlags(rs.getInt(9));
 		return obj;
 	}
 	
@@ -209,5 +210,7 @@ public abstract class SQLAccountDAO implements AccountDAO {
 		else {
 			stmt.setInt(7, obj.getVatAccount2Id());
 		}
+		
+		stmt.setInt(8, obj.getFlags());
 	}
 }

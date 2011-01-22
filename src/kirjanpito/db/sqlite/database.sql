@@ -3,10 +3,11 @@ CREATE TABLE account (
 	number varchar(10) NOT NULL,
 	name varchar(100) NOT NULL,
 	type integer NOT NULL,
-	vat_code int2 NOT NULL,
-	vat_rate int2 NOT NULL,
-	vat_account1_id int4,
-	vat_account2_id int4,
+	vat_code integer NOT NULL,
+	vat_rate integer NOT NULL,
+	vat_account1_id integer,
+	vat_account2_id integer,
+	flags integer NOT NULL,
 	FOREIGN KEY (vat_account1_id) REFERENCES account (id),
 	FOREIGN KEY (vat_account2_id) REFERENCES account (id)
 );

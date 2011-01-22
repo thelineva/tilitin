@@ -46,7 +46,7 @@ public class PSQLAccountDAO extends SQLAccountDAO {
 	 * @throws SQLException jos kyselyn luominen epäonnistuu
 	 */
 	protected PreparedStatement getSelectAllQuery() throws SQLException {
-		return sess.prepareStatement("SELECT id, number, name, type, vat_code, vat_rate, vat_account1_id, vat_account2_id FROM account ORDER BY number");
+		return sess.prepareStatement("SELECT id, number, name, type, vat_code, vat_rate, vat_account1_id, vat_account2_id, flags FROM account ORDER BY number");
 	}
 	
 	/**
@@ -56,7 +56,7 @@ public class PSQLAccountDAO extends SQLAccountDAO {
 	 * @throws SQLException jos kyselyn luominen epäonnistuu
 	 */
 	protected PreparedStatement getInsertQuery() throws SQLException {
-		return sess.prepareStatement("INSERT INTO account (id, number, name, type, vat_code, vat_rate, vat_account1_id, vat_account2_id) VALUES (nextval('account_id_seq'), ?, ?, ?, ?, ?, ?, ?)");
+		return sess.prepareStatement("INSERT INTO account (id, number, name, type, vat_code, vat_rate, vat_account1_id, vat_account2_id, flags) VALUES (nextval('account_id_seq'), ?, ?, ?, ?, ?, ?, ?, ?)");
 	}
 	
 	/**
@@ -66,7 +66,7 @@ public class PSQLAccountDAO extends SQLAccountDAO {
 	 * @throws SQLException jos kyselyn luominen epäonnistuu
 	 */
 	protected PreparedStatement getUpdateQuery() throws SQLException {
-		return sess.prepareStatement("UPDATE account SET number=?, name=?, type=?, vat_code=?, vat_rate=?, vat_account1_id=?, vat_account2_id=? WHERE id = ?");
+		return sess.prepareStatement("UPDATE account SET number=?, name=?, type=?, vat_code=?, vat_rate=?, vat_account1_id=?, vat_account2_id=?, flags=? WHERE id = ?");
 	}
 	
 	/**

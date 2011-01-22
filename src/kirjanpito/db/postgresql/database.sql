@@ -9,6 +9,7 @@ CREATE TABLE account (
 	vat_rate int2 NOT NULL,
 	vat_account1_id int4,
 	vat_account2_id int4,
+	flags int4 NOT NULL,
 	PRIMARY KEY (id),
 	FOREIGN KEY (vat_account1_id) REFERENCES account (id),
 	FOREIGN KEY (vat_account2_id) REFERENCES account (id)
