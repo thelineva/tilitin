@@ -1,5 +1,7 @@
 package kirjanpito.util;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import kirjanpito.db.Account;
@@ -35,12 +37,12 @@ public class ChartOfAccounts {
 		for (int i = 0; i < items.length; i++) {
 			/* Jos kaikki tilit jo lisätty, lisätään loput otsikot. */
 			if (ai >= accounts.size()) {
-				items[i] = new COAItem(null, headings.get(hi));
+				items[i] = new COAItem(headings.get(hi));
 				hi++;
 			}
 			/* Jos kaikki otsikot jo lisätty, lisätään loput tilit. */
 			else if (hi >= headings.size()) {
-				items[i] = new COAItem(accounts.get(ai), null);
+				items[i] = new COAItem(accounts.get(ai));
 				ai++;
 			}
 			else {
@@ -49,12 +51,12 @@ public class ChartOfAccounts {
 				
 				if (heading.getNumber().compareTo(account.getNumber()) <= 0) {
 					/* Otsikko on ennen tiliä. */
-					items[i] = new COAItem(null, heading);
+					items[i] = new COAItem(heading);
 					hi++;
 				}
 				else {
 					/* Tili on ennen otsikkoa. */
-					items[i] = new COAItem(account, null);
+					items[i] = new COAItem(account);
 					ai++;
 				}
 			}
@@ -193,12 +195,44 @@ public class ChartOfAccounts {
 		return match1;
 	}
 	
+	public void filterNonFavouriteAccounts() {
+		LinkedList<COAItem> headingList = new LinkedList<COAItem>();
+		ArrayList<COAItem> tmp = new ArrayList<COAItem>();
+		
+		for (COAItem item : items) {
+			if (item.account != null) {
+				if ((item.account.getFlags() & 0x01) == 0) {
+					continue;
+				}
+				
+				while (!headingList.isEmpty()) {
+					tmp.add(headingList.removeFirst());
+				}
+				
+				tmp.add(item);
+			}
+			else {
+				while (!headingList.isEmpty() && headingList.peekLast().heading.getLevel() >= item.heading.getLevel()) {
+					headingList.removeLast();
+				}
+				
+				headingList.add(item);
+			}
+		}
+		
+		items = new COAItem[tmp.size()];
+		tmp.toArray(items);
+	}
+	
 	private static class COAItem {
 		private Account account;
 		private COAHeading heading;
 		
-		public COAItem(Account account, COAHeading heading) {
+		public COAItem(Account account) {
 			this.account = account;
+		}
+		
+		public COAItem(COAHeading heading) {
 			this.heading = heading;
 		}
 	}
