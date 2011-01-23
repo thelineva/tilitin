@@ -3,10 +3,15 @@ package kirjanpito.ui;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
+import kirjanpito.ui.resources.Resources;
 import kirjanpito.util.ChartOfAccounts;
 
 /**
@@ -18,11 +23,24 @@ import kirjanpito.util.ChartOfAccounts;
 public class COATableCellRenderer extends DefaultTableCellRenderer {
 	private ChartOfAccounts coa;
 	private boolean indentEnabled;
+	private boolean highlightFavouriteAccounts;
+	private Color favouriteColor;
+	private BufferedImage favouriteImage;
+	private boolean imageVisible;
 	
 	private static final long serialVersionUID = 1L;
 	
 	public COATableCellRenderer() {
 		this.indentEnabled = true;
+		this.highlightFavouriteAccounts = true;
+		this.favouriteColor = new Color(245, 208, 169);
+		
+		try {
+			this.favouriteImage = ImageIO.read(Resources.load("favourite-16x16.png"));
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -51,24 +69,38 @@ public class COATableCellRenderer extends DefaultTableCellRenderer {
 		this.indentEnabled = indentEnabled;
 	}
 
+	public boolean isHighlightFavouriteAccounts() {
+		return highlightFavouriteAccounts;
+	}
+
+	public void setHighlightFavouriteAccounts(boolean highlightFavouriteAccounts) {
+		this.highlightFavouriteAccounts = highlightFavouriteAccounts;
+	}
+
 	public Component getTableCellRendererComponent(JTable table, Object value, 
 			boolean isSelected, boolean hasFocus, int row, int column)
 	{
-		Component comp = super.getTableCellRendererComponent(table, value, 
-				isSelected, hasFocus, row, column);
-
+		super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 		row = table.convertRowIndexToModel(row);
-		Font font = comp.getFont();
+		setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
+		Font font = getFont();
 		int level;
 
 		if (coa.getType(row) == ChartOfAccounts.TYPE_HEADING) {
-			comp.setForeground((coa.getHeading(row).getLevel() == 0) ? Color.RED : Color.BLACK);
-			comp.setFont(font.deriveFont(Font.BOLD));
+			imageVisible = false;
+			setForeground((coa.getHeading(row).getLevel() == 0) ? Color.RED : Color.BLACK);
+			setFont(font.deriveFont(Font.BOLD));
 			level = coa.getHeading(row).getLevel() * 2;
 		}
 		else {
-			comp.setForeground(Color.BLACK);
-			comp.setFont(font.deriveFont(Font.PLAIN));
+			imageVisible = highlightFavouriteAccounts && (coa.getAccount(row).getFlags() & 0x01) != 0;
+			
+			if (!isSelected && imageVisible) {
+				setBackground(favouriteColor);
+			}
+			
+			setForeground(Color.BLACK);
+			setFont(font.deriveFont(Font.PLAIN));
 			level = 12;
 		}
 		
@@ -85,6 +117,15 @@ public class COATableCellRenderer extends DefaultTableCellRenderer {
 			sb.append(value.toString());
 		
 		setText(sb.toString());
-		return comp;
+		return this;
+	}
+	
+	@Override
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		
+		if (imageVisible) {
+			g.drawImage(favouriteImage, getWidth() - 25, (getHeight() - 16) / 2, null);
+		}
 	}
 }
