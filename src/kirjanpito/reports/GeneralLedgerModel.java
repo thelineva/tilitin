@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -31,6 +32,8 @@ import kirjanpito.util.Registry;
 public class GeneralLedgerModel implements PrintModel {
 	protected Registry registry;
 	protected Period period;
+	protected Date startDate;
+	protected Date endDate;
 	protected Settings settings;
 	protected List<GeneralLedgerRow> rows;
 	private int prevAccountId;
@@ -60,6 +63,42 @@ public class GeneralLedgerModel implements PrintModel {
 	public void setPeriod(Period period) {
 		this.period = period;
 	}
+	
+	/**
+	 * Palauttaa alkamispäivämäärän.
+	 * 
+	 * @return alkamispäivämäärä
+	 */
+	public Date getStartDate() {
+		return startDate;
+	}
+
+	/**
+	 * Asettaa alkamispäivämäärän.
+	 * 
+	 * @param startDate alkamispäivämäärä
+	 */
+	public void setStartDate(Date startDate) {
+		this.startDate = startDate;
+	}
+
+	/**
+	 * Palauttaa päättymispäivämäärän.
+	 * 
+	 * @return päättymispäivämäärä
+	 */
+	public Date getEndDate() {
+		return endDate;
+	}
+
+	/**
+	 * Asettaa päättymispäivämäärän.
+	 * 
+	 * @param endDate päättymispäivämäärä
+	 */
+	public void setEndDate(Date endDate) {
+		this.endDate = endDate;
+	}
 
 	public void run() throws DataAccessException {
 		List<Document> documents;
@@ -78,7 +117,7 @@ public class GeneralLedgerModel implements PrintModel {
 		try {
 			sess = dataSource.openSession();
 			documents = dataSource.getDocumentDAO(
-					sess).getByPeriodId(period.getId(), 0);
+					sess).getByPeriodIdAndDate(period.getId(), startDate, endDate);
 			
 			for (Document d : documents) {
 				documentMap.put(d.getId(), d);

@@ -58,8 +58,8 @@ public class GeneralJournalPrint extends Print {
 	
 	public String getVariableValue(String name) {
 		if (name.equals("1")) {
-			return dateFormat.format(model.getPeriod().getStartDate()) +
-				" – " + dateFormat.format(model.getPeriod().getEndDate());
+			return dateFormat.format(model.getStartDate()) +
+				" – " + dateFormat.format(model.getEndDate());
 		}
 		
 		return super.getVariableValue(name);

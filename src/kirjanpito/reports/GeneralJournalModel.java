@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -30,6 +31,8 @@ public class GeneralJournalModel implements PrintModel {
 	private Registry registry;
 	private Settings settings;
 	private Period period;
+	private Date startDate;
+	private Date endDate;
 	private List<DocumentType> documentTypes;
 	private List<GeneralJournalRow> rows;
 	private int prevDocumentId;
@@ -60,6 +63,42 @@ public class GeneralJournalModel implements PrintModel {
 	public void setPeriod(Period period) {
 		this.period = period;
 	}
+	
+	/**
+	 * Palauttaa alkamispäivämäärän.
+	 * 
+	 * @return alkamispäivämäärä
+	 */
+	public Date getStartDate() {
+		return startDate;
+	}
+
+	/**
+	 * Asettaa alkamispäivämäärän.
+	 * 
+	 * @param startDate alkamispäivämäärä
+	 */
+	public void setStartDate(Date startDate) {
+		this.startDate = startDate;
+	}
+
+	/**
+	 * Palauttaa päättymispäivämäärän.
+	 * 
+	 * @return päättymispäivämäärä
+	 */
+	public Date getEndDate() {
+		return endDate;
+	}
+
+	/**
+	 * Asettaa päättymispäivämäärän.
+	 * 
+	 * @param endDate päättymispäivämäärä
+	 */
+	public void setEndDate(Date endDate) {
+		this.endDate = endDate;
+	}
 
 	public void run() throws DataAccessException {
 		List<Document> documents;
@@ -77,10 +116,12 @@ public class GeneralJournalModel implements PrintModel {
 		try {
 			sess = dataSource.openSession();
 			documents = dataSource.getDocumentDAO(
-					sess).getByPeriodId(period.getId(), 1);
+					sess).getByPeriodIdAndDate(period.getId(), startDate, endDate);
 			
 			for (Document d : documents) {
-				documentMap.put(d.getId(), d);
+				if (d.getNumber() >= 1) {
+					documentMap.put(d.getId(), d);
+				}
 			}
 			
 			documents = null;

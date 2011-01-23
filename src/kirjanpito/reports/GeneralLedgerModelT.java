@@ -46,7 +46,7 @@ public class GeneralLedgerModelT extends GeneralLedgerModel {
 		try {
 			sess = dataSource.openSession();
 			documents = dataSource.getDocumentDAO(
-					sess).getByPeriodId(period.getId(), 0);
+					sess).getByPeriodIdAndDate(period.getId(), startDate, endDate);
 			
 			for (Document d : documents) {
 				documentMap.put(d.getId(), d);

@@ -1468,10 +1468,19 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return;
 		}
 		
-		GeneralJournalModel printModel = new GeneralJournalModel();
-		printModel.setRegistry(registry);
-		printModel.setPeriod(registry.getPeriod());
-		showPrintPreview(printModel, new GeneralJournalPrint(printModel));
+		PrintOptionsDialog dialog = new PrintOptionsDialog(this, "Päiväkirja");
+		dialog.setPeriod(registry.getPeriod());
+		dialog.create();
+		dialog.setVisible(true);
+		
+		if (dialog.getResult() == JOptionPane.OK_OPTION) {
+			GeneralJournalModel printModel = new GeneralJournalModel();
+			printModel.setRegistry(registry);
+			printModel.setPeriod(registry.getPeriod());
+			printModel.setStartDate(dialog.getStartDate());
+			printModel.setEndDate(dialog.getEndDate());
+			showPrintPreview(printModel, new GeneralJournalPrint(printModel));
+		}
 	}
 	
 	/**
@@ -1482,10 +1491,19 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return;
 		}
 		
-		GeneralLedgerModel printModel = new GeneralLedgerModel();
-		printModel.setRegistry(registry);
-		printModel.setPeriod(registry.getPeriod());
-		showPrintPreview(printModel, new GeneralLedgerPrint(printModel));
+		PrintOptionsDialog dialog = new PrintOptionsDialog(this, "Pääkirja");
+		dialog.setPeriod(registry.getPeriod());
+		dialog.create();
+		dialog.setVisible(true);
+		
+		if (dialog.getResult() == JOptionPane.OK_OPTION) {
+			GeneralLedgerModel printModel = new GeneralLedgerModel();
+			printModel.setRegistry(registry);
+			printModel.setPeriod(registry.getPeriod());
+			printModel.setStartDate(dialog.getStartDate());
+			printModel.setEndDate(dialog.getEndDate());
+			showPrintPreview(printModel, new GeneralLedgerPrint(printModel));
+		}
 	}
 	
 	/**
@@ -1496,10 +1514,19 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return;
 		}
 		
-		GeneralLedgerModel printModel = new GeneralLedgerModelT();
-		printModel.setRegistry(registry);
-		printModel.setPeriod(registry.getPeriod());
-		showPrintPreview(printModel, new GeneralLedgerPrint(printModel));
+		PrintOptionsDialog dialog = new PrintOptionsDialog(this, "Pääkirja tositelajeittain");
+		dialog.setPeriod(registry.getPeriod());
+		dialog.create();
+		dialog.setVisible(true);
+		
+		if (dialog.getResult() == JOptionPane.OK_OPTION) {
+			GeneralLedgerModelT printModel = new GeneralLedgerModelT();
+			printModel.setRegistry(registry);
+			printModel.setPeriod(registry.getPeriod());
+			printModel.setStartDate(dialog.getStartDate());
+			printModel.setEndDate(dialog.getEndDate());
+			showPrintPreview(printModel, new GeneralLedgerPrint(printModel));
+		}
 	}
 	
 	/**
@@ -1510,9 +1537,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return;
 		}
 		
-		PrintOptionsDialog dialog =
-			new PrintOptionsDialog(this, "ALV-laskelma");
-		
+		PrintOptionsDialog dialog = new PrintOptionsDialog(this, "ALV-laskelma");
 		dialog.setPeriod(registry.getPeriod());
 		dialog.create();
 		dialog.showTab(1);
