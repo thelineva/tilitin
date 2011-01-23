@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Stack;
 
 import kirjanpito.db.Account;
 import kirjanpito.db.COAHeading;
@@ -201,36 +202,37 @@ public class AccountSummaryModel implements PrintModel {
 		COAHeading heading;
 		ChartOfAccounts coa = registry.getChartOfAccounts();
 		HashSet<Integer> headings = new HashSet<Integer>();
+		Stack<COAHeading> headingStack = new Stack<COAHeading>();
 		int maxLevel = 0;
-		int level;
 		
 		/* Etsitään tarvittavat otsikot. */
 		for (int i = 0; i < coa.getSize(); i++) {
-			if (coa.getType(i) != ChartOfAccounts.TYPE_ACCOUNT)
-				continue;
-			
-			if (previousPeriodVisible) {
-				if (balances.getBalance(coa.getAccount(i).getId()) == null &&
-						balancesPrev.getBalance(coa.getAccount(i).getId()) == null) {
+			if (coa.getType(i) == ChartOfAccounts.TYPE_HEADING) {
+				heading = coa.getHeading(i);
+				
+				while (!headingStack.isEmpty() && headingStack.peek().getLevel() >= heading.getLevel()) {
+					headingStack.pop();
+				}
+				
+				headingStack.add(heading);
+			}
+			else {
+				if (previousPeriodVisible) {
+					if (balances.getBalance(coa.getAccount(i).getId()) == null &&
+							balancesPrev.getBalance(coa.getAccount(i).getId()) == null) {
+						continue;
+					}
+				}
+				else if (balances.getBalance(coa.getAccount(i).getId()) == null) {
 					continue;
 				}
-			}
-			else if (balances.getBalance(coa.getAccount(i).getId()) == null) {
-				continue;
-			}
-			
-			level = Integer.MAX_VALUE;
-			
-			for (int j = i - 1; j >= 0; j--) {
-				if (coa.getType(j) == ChartOfAccounts.TYPE_HEADING) {
-					heading = coa.getHeading(j);
-					
-					if (heading.getLevel() < level) {
-						headings.add(heading.getId());
-						level = heading.getLevel();
-						maxLevel = Math.max(level, maxLevel);
-						if (level == 0) break;
-					}
+				
+				if (!headingStack.isEmpty()) {
+					maxLevel = Math.max(maxLevel, headingStack.peek().getLevel() + 1);
+				}
+				
+				for (COAHeading h : headingStack) {
+					headings.add(h.getId());
 				}
 			}
 		}
