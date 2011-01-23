@@ -6,6 +6,8 @@ import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -13,12 +15,16 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
+import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
@@ -27,6 +33,7 @@ import javax.swing.table.TableColumn;
 
 import kirjanpito.db.Account;
 import kirjanpito.models.COATableModel;
+import kirjanpito.util.AppSettings;
 import kirjanpito.util.ChartOfAccounts;
 import kirjanpito.util.Registry;
 
@@ -37,8 +44,10 @@ import kirjanpito.util.Registry;
  */
 public class AccountStatementOptionsDialog extends PrintOptionsDialog {
 	private Registry registry;
+	private ChartOfAccounts coa;
 	private JTextField searchTextField;
 	private JTable accountTable;
+	private JCheckBox hideNonFavAccountsCheckBox;
 	private COATableCellRenderer cellRenderer;
 	private COATableModel tableModel;
 	private Account account;
@@ -64,7 +73,7 @@ public class AccountStatementOptionsDialog extends PrintOptionsDialog {
 		
 		okButton.setEnabled(false);
 		JPanel container = new JPanel();
-		container.setLayout(new BorderLayout());
+		container.setLayout(new BorderLayout(0, 4));
 		GridBagConstraints c = new GridBagConstraints();
 		c.weightx = 1.0;
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -74,6 +83,14 @@ public class AccountStatementOptionsDialog extends PrintOptionsDialog {
 		panel.add(container, c);
 		createTable(container);
 		createSearchPanel(container);
+		
+		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0), "favAccounts");
+		rootPane.getActionMap().put("favAccounts", toggleFavAccountsAction);
+		
+		AppSettings settings = AppSettings.getInstance();
+		hideNonFavAccountsCheckBox.setSelected(settings.getBoolean("account-selection.hide-non-favourite-accounts", false));
+		hideNonFavAccountsCheckBoxListener.actionPerformed(null);
 		return 1;
 	}
 	
@@ -91,7 +108,7 @@ public class AccountStatementOptionsDialog extends PrintOptionsDialog {
 		accountTable = new JTable(tableModel);
 		accountTable.setFillsViewportHeight(true);
 		accountTable.setPreferredScrollableViewportSize(
-				new Dimension(400, 200));
+				new Dimension(450, 250));
 		
 		accountTable.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
@@ -107,7 +124,7 @@ public class AccountStatementOptionsDialog extends PrintOptionsDialog {
 				ChartOfAccounts coa = registry.getChartOfAccounts();
 				int index = accountTable.getSelectedRow();
 				
-				if (coa.getType(index) == ChartOfAccounts.TYPE_ACCOUNT) {
+				if (index >= 0 && coa.getType(index) == ChartOfAccounts.TYPE_ACCOUNT) {
 					account = coa.getAccount(index);
 					okButton.setEnabled(true);
 				}
@@ -131,6 +148,10 @@ public class AccountStatementOptionsDialog extends PrintOptionsDialog {
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER),
 				BorderLayout.CENTER);
+		
+		hideNonFavAccountsCheckBox = new JCheckBox("Vain suosikkitilit");
+		hideNonFavAccountsCheckBox.addActionListener(hideNonFavAccountsCheckBoxListener);
+		panel.add(hideNonFavAccountsCheckBox, BorderLayout.SOUTH);
 	}
 	
 	/**
@@ -199,6 +220,37 @@ public class AccountStatementOptionsDialog extends PrintOptionsDialog {
 		Rectangle rect = accountTable.getCellRect(position, 0, true);
 		accountTable.scrollRectToVisible(rect);
 	}
+	
+	private AbstractAction toggleFavAccountsAction = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
+		public void actionPerformed(ActionEvent e) {
+			hideNonFavAccountsCheckBox.setSelected(!hideNonFavAccountsCheckBox.isSelected());
+			hideNonFavAccountsCheckBoxListener.actionPerformed(null);
+		}
+	};
+	
+	private ActionListener hideNonFavAccountsCheckBoxListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			boolean enabled = hideNonFavAccountsCheckBox.isSelected();
+			
+			if (enabled) {
+				coa = new ChartOfAccounts();
+				coa.set(registry.getAccounts(), registry.getCOAHeadings());
+				coa.filterNonFavouriteAccounts();
+			}
+			else {
+				coa = registry.getChartOfAccounts();
+			}
+			
+			AppSettings settings = AppSettings.getInstance();
+			settings.set("account-selection.hide-non-favourite-accounts", enabled);
+			cellRenderer.setHighlightFavouriteAccounts(!enabled);
+			cellRenderer.setChartOfAccounts(coa);
+			tableModel.setChartOfAccounts(coa);
+			search();
+		}
+	};
 	
 	private DocumentListener searchTextFieldListener = new DocumentListener() {
 		public void changedUpdate(DocumentEvent e) { }
