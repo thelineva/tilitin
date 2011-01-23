@@ -321,7 +321,7 @@ public class AccountSelectionDialog extends JDialog {
 		searchPhrase = searchTextField.getText();
 		
 		if (!allAccountsCheckBox.isSelected()) {
-			int index = registry.getChartOfAccounts().search(searchTextField.getText());
+			int index = coa.search(searchTextField.getText());
 			
 			if (index >= 0) {
 				setSelectedRow(index);
