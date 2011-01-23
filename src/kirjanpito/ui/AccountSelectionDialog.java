@@ -54,11 +54,13 @@ import kirjanpito.util.RegistryAdapter;
 public class AccountSelectionDialog extends JDialog {
 	private AccountSelectionListener listener;
 	private Registry registry;
+	private ChartOfAccounts coa;
 	private JTable accountTable;
 	private TableRowSorter<COATableModel> sorter;
 	private JTextField searchTextField;
 	private JButton okButton;
 	private JCheckBox allAccountsCheckBox;
+	private JCheckBox hideNonFavAccountsCheckBox;
 	private COATableCellRenderer cellRenderer;
 	private COATableModel tableModel;
 	private String searchPhrase;
@@ -69,6 +71,7 @@ public class AccountSelectionDialog extends JDialog {
 	public AccountSelectionDialog(Window owner, Registry registry) {
 		super(owner, "Tilin valinta", Dialog.ModalityType.APPLICATION_MODAL);
 		this.registry = registry;
+		this.coa = registry.getChartOfAccounts();
 		this.searchPhrase = "";
 	}
 
@@ -151,6 +154,9 @@ public class AccountSelectionDialog extends JDialog {
 		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
 					KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "cancel");
 		rootPane.getActionMap().put("cancel", cancelButtonListener);
+		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0), "favAccounts");
+		rootPane.getActionMap().put("favAccounts", toggleFavAccountsAction);
 
 		pack();
 		setLocationRelativeTo(getOwner());
@@ -163,7 +169,9 @@ public class AccountSelectionDialog extends JDialog {
 		});
 		
 		AppSettings settings = AppSettings.getInstance();
-		allAccountsCheckBox.setSelected(settings.getBoolean("account-selection.all-accounts", false));
+		hideNonFavAccountsCheckBox.setSelected(settings.getBoolean("account-selection.hide-non-favourite-accounts", false));
+		hideNonFavAccountsCheckBoxListener.actionPerformed(null);
+		allAccountsCheckBox.setSelected(!settings.getBoolean("account-selection.all-accounts", true));
 		allAccountsCheckBoxListener.actionPerformed(null);
 	}
 
@@ -232,7 +240,7 @@ public class AccountSelectionDialog extends JDialog {
 		accountTable = new JTable(tableModel);
 		accountTable.setFillsViewportHeight(true);
 		accountTable.setPreferredScrollableViewportSize(
-				new Dimension(500, 200));
+				new Dimension(550, 250));
 		accountTable.getSelectionModel().addListSelectionListener(
 				selectionListener);
 		accountTable.addMouseListener(new MouseAdapter() {
@@ -259,7 +267,7 @@ public class AccountSelectionDialog extends JDialog {
 		column.setPreferredWidth(80);
 		
 		column = accountTable.getColumnModel().getColumn(1);
-		column.setPreferredWidth(420);
+		column.setPreferredWidth(470);
 		column.setCellRenderer(cellRenderer);
 		
 		add(new JScrollPane(accountTable,
@@ -274,9 +282,13 @@ public class AccountSelectionDialog extends JDialog {
 		panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		add(panel, BorderLayout.SOUTH);
 		
-		allAccountsCheckBox = new JCheckBox("Kaikki tilit");
-		allAccountsCheckBox.setMnemonic('K');
+		allAccountsCheckBox = new JCheckBox("Vain hakutulokset");
+		allAccountsCheckBox.setMnemonic('h');
 		allAccountsCheckBox.addActionListener(allAccountsCheckBoxListener);
+		
+		hideNonFavAccountsCheckBox = new JCheckBox("Vain suosikkitilit");
+		hideNonFavAccountsCheckBox.setMnemonic('s');
+		hideNonFavAccountsCheckBox.addActionListener(hideNonFavAccountsCheckBoxListener);
 		
 		okButton = new JButton("OK");
 		okButton.setMnemonic('O');
@@ -289,14 +301,16 @@ public class AccountSelectionDialog extends JDialog {
 		cancelButton.addActionListener(cancelButtonListener);
 		
 		c = new GridBagConstraints();
-		panel.add(allAccountsCheckBox);
-		c.weightx = 1.0;
 		c.anchor = GridBagConstraints.WEST;
 		panel.add(allAccountsCheckBox, c);
 		
+		c.weightx = 1.0;
+		c.insets = new Insets(0, 5, 0, 5);
+		panel.add(hideNonFavAccountsCheckBox, c);
+		
 		c.weightx = 0.0;
-		c.anchor = GridBagConstraints.EAST;
 		c.insets = new Insets(0, 0, 0, 5);
+		c.anchor = GridBagConstraints.EAST;
 		panel.add(okButton, c);
 		
 		c = new GridBagConstraints();
@@ -306,7 +320,7 @@ public class AccountSelectionDialog extends JDialog {
 	private void search() {
 		searchPhrase = searchTextField.getText();
 		
-		if (allAccountsCheckBox.isSelected()) {
+		if (!allAccountsCheckBox.isSelected()) {
 			int index = registry.getChartOfAccounts().search(searchTextField.getText());
 			
 			if (index >= 0) {
@@ -370,13 +384,45 @@ public class AccountSelectionDialog extends JDialog {
 	};
 	
 	private ActionListener allAccountsCheckBoxListener = new ActionListener() {
-		@Override
 		public void actionPerformed(ActionEvent e) {
-			boolean allAccounts = allAccountsCheckBox.isSelected();
-			accountTable.setRowSorter(allAccounts ? null : sorter);
-			cellRenderer.setIndentEnabled(allAccounts);
+			boolean results = allAccountsCheckBox.isSelected();
+			accountTable.setRowSorter(results ? sorter : null);
+			cellRenderer.setIndentEnabled(!results);
 			AppSettings settings = AppSettings.getInstance();
-			settings.set("account-selection.all-accounts", allAccounts);
+			settings.set("account-selection.all-accounts", !results);
+			search();
+		}
+	};
+	
+	private AbstractAction toggleFavAccountsAction = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
+		public void actionPerformed(ActionEvent e) {
+			hideNonFavAccountsCheckBox.setSelected(!hideNonFavAccountsCheckBox.isSelected());
+			hideNonFavAccountsCheckBoxListener.actionPerformed(null);
+		}
+	};
+	
+	private ActionListener hideNonFavAccountsCheckBoxListener = new ActionListener() {
+		private static final long serialVersionUID = 1L;
+
+		public void actionPerformed(ActionEvent e) {
+			boolean enabled = hideNonFavAccountsCheckBox.isSelected();
+			
+			if (enabled) {
+				coa = new ChartOfAccounts();
+				coa.set(registry.getAccounts(), registry.getCOAHeadings());
+				coa.filterNonFavouriteAccounts();
+			}
+			else {
+				coa = registry.getChartOfAccounts();
+			}
+			
+			AppSettings settings = AppSettings.getInstance();
+			settings.set("account-selection.hide-non-favourite-accounts", enabled);
+			cellRenderer.setHighlightFavouriteAccounts(!enabled);
+			cellRenderer.setChartOfAccounts(coa);
+			tableModel.setChartOfAccounts(coa);
 			search();
 		}
 	};
@@ -384,7 +430,7 @@ public class AccountSelectionDialog extends JDialog {
 	private RowFilter<COATableModel, Integer> accountFilter = new RowFilter<COATableModel, Integer>() {
 		@Override
 		public boolean include(Entry<? extends COATableModel, ? extends Integer> entry) {
-			if (registry.getChartOfAccounts().getType(entry.getIdentifier()) == ChartOfAccounts.TYPE_HEADING) {
+			if (coa.getType(entry.getIdentifier()) == ChartOfAccounts.TYPE_HEADING) {
 				return false;
 			}
 			
