@@ -36,6 +36,7 @@ public class COATableModel extends AbstractTableModel {
 	 */
 	public void setChartOfAccounts(ChartOfAccounts coa) {
 		this.coa = coa;
+		fireTableDataChanged();
 	}
 
 	/**

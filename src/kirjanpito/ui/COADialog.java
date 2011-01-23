@@ -44,6 +44,8 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.TransferHandler;
@@ -78,6 +80,7 @@ import kirjanpito.util.VATUtil;
 public class COADialog extends JDialog {
 	private Registry registry;
 	private COAModel model;
+	private JPanel topPanel;
 	private JPopupMenu accountPopupMenu;
 	private JPopupMenu headingPopupMenu;
 	private JCheckBoxMenuItem[] levelMenuItems;
@@ -89,7 +92,10 @@ public class COADialog extends JDialog {
 	private JTextField searchTextField;
 	private JMenuItem removeMenuItem;
 	private JMenuItem saveMenuItem;
+	private JToggleButton hideNonFavouriteAccountsButton;
+	private JCheckBoxMenuItem hideNonFavouriteAccountsMenuItem;
 	private JCheckBoxMenuItem defaultAccountMenuItem;
+	private JCheckBoxMenuItem favouriteAccountMenuItem;
 	private COATableCellRenderer cellRenderer;
 	private EditableCOATableModel tableModel;
 	
@@ -110,7 +116,7 @@ public class COADialog extends JDialog {
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 			public void windowOpened(WindowEvent e) {
-				accountTable.setRowHeight(getFontMetrics(accountTable.getFont()).getHeight() + 4);
+				accountTable.setRowHeight(Math.max(16, getFontMetrics(accountTable.getFont()).getHeight()) + 4);
 			}
 			
 			public void windowClosing(WindowEvent e) {
@@ -121,9 +127,16 @@ public class COADialog extends JDialog {
 		createMenuBar();
 		createPopupMenus();
 		createSearchPanel();
+		createToolBar();
 		createTable();
 		pack();
 		setLocationRelativeTo(getOwner());
+		
+		searchTextField.requestFocusInWindow();
+		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0), "toggleFavourite");
+		
+		rootPane.getActionMap().put("toggleFavourite", toggleFavAccountAction);
 	}
 	
 	/**
@@ -159,6 +172,13 @@ public class COADialog extends JDialog {
 		
 		saveMenuItem.setEnabled(false);
 		menu.add(saveMenuItem);
+		
+		hideNonFavouriteAccountsMenuItem = new JCheckBoxMenuItem("Näytä vain suosikkitilit");
+		hideNonFavouriteAccountsMenuItem.setMnemonic('s');
+		hideNonFavouriteAccountsMenuItem.addActionListener(hideNonFavAccountsListener);
+		hideNonFavouriteAccountsMenuItem.setState(model.isNonFavouriteAccountsHidden());
+		hideNonFavouriteAccountsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0));
+		menu.add(hideNonFavouriteAccountsMenuItem);
 		
 		JMenu printMenu = new JMenu("Tulosta");
 		printMenu.setMnemonic('T');
@@ -219,7 +239,12 @@ public class COADialog extends JDialog {
 			}
 		});
 		
+		favouriteAccountMenuItem = new JCheckBoxMenuItem("Suosikkitili");
+		favouriteAccountMenuItem.setMnemonic('S');
+		favouriteAccountMenuItem.addActionListener(toggleFavAccountAction);
+		
 		accountPopupMenu.add(defaultAccountMenuItem);
+		accountPopupMenu.add(favouriteAccountMenuItem);
 		
 		String[] codes = new String[] {"---", "Arvonlisäverovelka",
 				"Suoritettava ALV", "Vähennettävä ALV",
@@ -297,11 +322,12 @@ public class COADialog extends JDialog {
 	}
 
 	private void createSearchPanel() {
-		JPanel panel = new JPanel();
+		topPanel = new JPanel();
 		BorderLayout layout = new BorderLayout();
 		layout.setHgap(8);
-		panel.setLayout(layout);
-		panel.setBorder(BorderFactory.createEmptyBorder(4, 4, 8, 4));
+		layout.setVgap(8);
+		topPanel.setLayout(layout);
+		topPanel.setBorder(BorderFactory.createEmptyBorder(0, 4, 8, 4));
 		searchTextField = new JTextField();
 		searchTextField.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
@@ -330,9 +356,33 @@ public class COADialog extends JDialog {
 		
 		searchTextField.getDocument().addDocumentListener(
 				searchTextFieldListener);
-		panel.add(label, BorderLayout.LINE_START);
-		panel.add(searchTextField, BorderLayout.CENTER);
-		add(panel, BorderLayout.NORTH);
+		topPanel.add(label, BorderLayout.LINE_START);
+		topPanel.add(searchTextField, BorderLayout.CENTER);
+		add(topPanel, BorderLayout.NORTH);
+	}
+	
+	private void createToolBar() {
+		JToolBar toolBar = new JToolBar();
+		toolBar.setFloatable(false);
+		
+		toolBar.add(SwingUtils.createToolButton("list-add-22x22.png",
+				"Lisää tili", addAccountListener, true));
+		
+		toolBar.add(SwingUtils.createToolButton("list-add-22x22.png",
+				"Lisää otsikko", addHeadingListener, true));
+		
+		toolBar.add(SwingUtils.createToolButton("list-remove-22x22.png",
+				"Poista", removeListener, true));
+		
+		hideNonFavouriteAccountsButton = new JToggleButton(
+				"Vain suosikkitilit", new ImageIcon(Resources.load("favourite-22x22.png")));
+		hideNonFavouriteAccountsButton.addActionListener(hideNonFavAccountsListener);
+		hideNonFavouriteAccountsButton.setSelected(model.isNonFavouriteAccountsHidden());
+		
+		toolBar.addSeparator();
+		toolBar.add(hideNonFavouriteAccountsButton);
+		
+		topPanel.add(toolBar, BorderLayout.NORTH);
 	}
 	
 	/**
@@ -365,12 +415,18 @@ public class COADialog extends JDialog {
 		
 		accountTable.getActionMap().put("showMenu", showMenuAction);
 		
+		accountTable.getInputMap(JComponent.WHEN_FOCUSED).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0), "toggleFavourite");
+		
+		accountTable.getActionMap().put("toggleFavourite", toggleFavAccountAction);
+		
 		accountTable.setDropMode(DropMode.INSERT_ROWS);
 		accountTable.setTransferHandler(transferHandler);
 		accountTable.setDragEnabled(true);
 		
 		cellRenderer = new COATableCellRenderer();
 		cellRenderer.setChartOfAccounts(model.getChartOfAccounts());
+		cellRenderer.setHighlightFavouriteAccounts(!model.isNonFavouriteAccountsHidden());
 		
 		column = accountTable.getColumnModel().getColumn(0);
 		column.setPreferredWidth(80);
@@ -434,6 +490,7 @@ public class COADialog extends JDialog {
 			
 			vatAccountMenuItem.setEnabled(rateEnabled);
 			defaultAccountMenuItem.setState(account == model.getDefaultAccount());
+			favouriteAccountMenuItem.setState((account.getFlags() & 0x01) != 0);
 			accountPopupMenu.show(comp, x, y);
 		}
 		else {
@@ -525,32 +582,40 @@ public class COADialog extends JDialog {
 	public void removeRow() {
 		int index = accountTable.getSelectedRow();
 		
-		if (index >= 0) {
-			ChartOfAccounts coa = model.getChartOfAccounts();
-				
-			if (coa.getType(index) == ChartOfAccounts.TYPE_ACCOUNT) {
-				Account account = coa.getAccount(index);
-				boolean canRemove = false;
-				
-				try {
-					canRemove = model.canRemoveAccount(account);
-				}
-				catch (DataAccessException e) {
-					String message = "Tietojen hakeminen epäonnistui";
-					logger.log(Level.SEVERE, message, e);
-					SwingUtils.showDataAccessErrorMessage(this, e, message);
-					return;
-				}
-				
-				if (!canRemove) {
-					JOptionPane.showMessageDialog(this,
-							"Tiliä ei voi poistaa, koska jokin vienti kohdistuu valittuun tiliin.",
-							Kirjanpito.APP_NAME, JOptionPane.OK_OPTION);
-					return;
-				}
+		if (index < 0) {
+			return;
+		}
+		
+		ChartOfAccounts coa = model.getChartOfAccounts();
+			
+		if (coa.getType(index) == ChartOfAccounts.TYPE_ACCOUNT) {
+			Account account = coa.getAccount(index);
+			boolean canRemove = false;
+			
+			try {
+				canRemove = model.canRemoveAccount(account);
+			}
+			catch (DataAccessException e) {
+				String message = "Tietojen hakeminen epäonnistui";
+				logger.log(Level.SEVERE, message, e);
+				SwingUtils.showDataAccessErrorMessage(this, e, message);
+				return;
 			}
 			
-			model.removeRow(index);
+			if (!canRemove) {
+				JOptionPane.showMessageDialog(this,
+						"Tiliä ei voi poistaa, koska jokin vienti kohdistuu valittuun tiliin.",
+						Kirjanpito.APP_NAME, JOptionPane.OK_OPTION);
+				return;
+			}
+		}
+		
+		model.removeRow(index);
+		
+		if (model.isNonFavouriteAccountsHidden()) {
+			tableModel.fireTableDataChanged();
+		}
+		else {
 			tableModel.fireTableRowsDeleted(index, index);
 		}
 	}
@@ -565,6 +630,10 @@ public class COADialog extends JDialog {
 		
 		if (index < 0) {
 			return;
+		}
+		
+		if (model.isNonFavouriteAccountsHidden()) {
+			hideNonFavAccountsListener.actionPerformed(null);
 		}
 		
 		index = model.moveHeading(index, down);
@@ -987,6 +1056,53 @@ public class COADialog extends JDialog {
 			
 			Rectangle rect = accountTable.getCellRect(index, 1, false);
 			showPopupMenu(accountTable, rect.x + 15, rect.y + 15);
+		}
+	};
+	
+	private ActionListener hideNonFavAccountsListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			boolean enabled = !model.isNonFavouriteAccountsHidden();
+			hideNonFavouriteAccountsButton.setSelected(enabled);
+			hideNonFavouriteAccountsMenuItem.setSelected(enabled);
+			model.setNonFavouriteAccountsHidden(enabled);
+			cellRenderer.setHighlightFavouriteAccounts(!enabled);
+			tableModel.fireTableDataChanged();
+			search();
+		}
+	};
+	
+	private AbstractAction toggleFavAccountAction = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
+		public void actionPerformed(ActionEvent e) {
+			int index = accountTable.getSelectedRow();
+			if (index < 0) return;
+			ChartOfAccounts coa = model.getChartOfAccounts();
+			
+			if (coa.getType(index) != ChartOfAccounts.TYPE_ACCOUNT) {
+				return;
+			}
+			
+			Account account = coa.getAccount(index);
+			int flags = account.getFlags();
+			
+			if ((flags & 0x01) != 0) {
+				account.setFlags(flags & ~0x01);
+			}
+			else {
+				account.setFlags(flags | 0x01);
+			}
+			
+			if (model.isNonFavouriteAccountsHidden()) {
+				model.updateRow(index, true);
+				tableModel.fireTableDataChanged();
+			}
+			else {
+				model.updateRow(index, false);
+				tableModel.fireTableRowsUpdated(index, index);
+			}
+			
+			saveMenuItem.setEnabled(true);
 		}
 	};
 	

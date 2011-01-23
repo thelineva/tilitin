@@ -12,6 +12,7 @@ import kirjanpito.db.DataSource;
 import kirjanpito.db.Entry;
 import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
+import kirjanpito.util.AppSettings;
 import kirjanpito.util.ChartOfAccounts;
 import kirjanpito.util.Registry;
 
@@ -28,6 +29,7 @@ public class COAModel {
 	private ChartOfAccounts coa;
 	private Account defaultAccount;
 	private boolean changed;
+	private boolean nonFavouriteAccountsHidden;
 	
 	public COAModel(Registry registry) {
 		this.registry = registry;
@@ -50,6 +52,10 @@ public class COAModel {
 		this.accounts = accounts;
 		this.coaHeadings = headings;
 		coa.set(accounts, headings);
+		
+		if (nonFavouriteAccountsHidden) {
+			coa.filterNonFavouriteAccounts();
+		}
 	}
 	
 	/**
@@ -326,6 +332,25 @@ public class COAModel {
 	}
 	
 	/**
+	 * Ilmoittaa, piilotetaanko tilit, joita ei ole määritelty suosikkitileiksi.
+	 * 
+	 * @return <code>true</code>, jos näytetään vain suosikkitilit
+	 */
+	public boolean isNonFavouriteAccountsHidden() {
+		return nonFavouriteAccountsHidden;
+	}
+
+	/**
+	 * Määrittää, piilotetaanko tilit, joita ei ole määritelty suosikkitileiksi.
+	 * 
+	 * @param nonFavouriteAccountsHidden <code>true</code>, jos näytetään vain suosikkitilit
+	 */
+	public void setNonFavouriteAccountsHidden(boolean nonFavouriteAccountsHidden) {
+		this.nonFavouriteAccountsHidden = nonFavouriteAccountsHidden;
+		updateChartOfAccounts(accounts, coaHeadings);
+	}
+
+	/**
 	 * Ilmoittaa, voiko tilin <code>account</code> poistaa tietokannasta.
 	 * Tiliä ei voi poistaa, jos jossakin viennissä on viittaus tiliin.
 	 * 
@@ -415,6 +440,13 @@ public class COAModel {
 		catch (NumberFormatException e) {
 			defaultAccount = null;
 		}
+		
+		AppSettings appSettings = AppSettings.getInstance();
+		nonFavouriteAccountsHidden = appSettings.getBoolean("chart-of-accounts.hide-non-favourite-accounts", false);
+		
+		if (nonFavouriteAccountsHidden) {
+			coa.filterNonFavouriteAccounts();
+		}
 	}
 	
 	private void saveSettings(DataSource dataSource, Session sess) throws DataAccessException {
@@ -427,6 +459,9 @@ public class COAModel {
 		
 		settings.setProperty("defaultAccount", accountIdString);
 		dataSource.getSettingsDAO(sess).save(settings);
+		
+		AppSettings appSettings = AppSettings.getInstance();
+		appSettings.set("chart-of-accounts.hide-non-favourite-accounts", nonFavouriteAccountsHidden);
 	}
 	
 	private static interface DataSourceAction {
