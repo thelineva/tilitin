@@ -121,7 +121,6 @@ public class AccountStatementOptionsDialog extends PrintOptionsDialog {
 		/* OK-painiketta voi klikata, jos tilikartasta on valittu tili. */
 		accountTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
-				ChartOfAccounts coa = registry.getChartOfAccounts();
 				int index = accountTable.getSelectedRow();
 				
 				if (index >= 0 && coa.getType(index) == ChartOfAccounts.TYPE_ACCOUNT) {
@@ -205,8 +204,7 @@ public class AccountStatementOptionsDialog extends PrintOptionsDialog {
 	 * @param q hakusana
 	 */
 	public void search() {
-		int index = registry.getChartOfAccounts().search(
-				searchTextField.getText());
+		int index = coa.search(searchTextField.getText());
 		
 		if (index >= 0)
 			setSelectedRow(index);
