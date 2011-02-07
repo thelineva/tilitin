@@ -159,22 +159,17 @@ public class PrintPreviewPanel extends JPanel {
 		g.setColor(Color.BLACK);
 		g.fillRect(rect.x + 5, rect.y + 5, rect.width, rect.height);
 		
-		/* Piirretään tyhjä sivu. */
-		g.setColor(Color.WHITE);
-		g.fillRect(rect.x, rect.y, rect.width, rect.height);
-		
 		/* Piirretään sivun reunat. */
-		g.setColor(Color.BLACK);
 		g.drawRect(rect.x - 1, rect.y - 1, rect.width + 1, rect.height + 1);
 		
 		AffineTransform transform = new AffineTransform();
 		Image image = null;
 
-		image = createImage((int)dirtyPaperBounds.getWidth(),
-				(int)dirtyPaperBounds.getHeight());
-		
+		image = createImage(dirtyPaperBounds.width, dirtyPaperBounds.height);
 		Graphics2D g2 = (Graphics2D) image.getGraphics();
-		
+		g2.setColor(Color.WHITE);
+		g2.fillRect(0, 0, dirtyPaperBounds.width, dirtyPaperBounds.height);
+		g2.setColor(Color.BLACK);
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 				RenderingHints.VALUE_ANTIALIAS_ON);
 		
