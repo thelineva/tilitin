@@ -82,13 +82,18 @@ public class COATableCellRenderer extends DefaultTableCellRenderer {
 	{
 		super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 		row = table.convertRowIndexToModel(row);
+		setForeground(isSelected ? table.getSelectionForeground() : table.getForeground());
 		setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
 		Font font = getFont();
 		int level;
 
 		if (coa.getType(row) == ChartOfAccounts.TYPE_HEADING) {
 			imageVisible = false;
-			setForeground((coa.getHeading(row).getLevel() == 0) ? Color.RED : Color.BLACK);
+			
+			if (coa.getHeading(row).getLevel() == 0) {
+				setForeground(Color.RED);
+			}
+			
 			setFont(font.deriveFont(Font.BOLD));
 			level = coa.getHeading(row).getLevel() * 2;
 		}
@@ -99,7 +104,6 @@ public class COATableCellRenderer extends DefaultTableCellRenderer {
 				setBackground(favouriteColor);
 			}
 			
-			setForeground(Color.BLACK);
 			setFont(font.deriveFont(Font.PLAIN));
 			level = 12;
 		}
