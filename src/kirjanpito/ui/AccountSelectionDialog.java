@@ -105,7 +105,7 @@ public class AccountSelectionDialog extends JDialog {
 			index = accountTable.convertRowIndexToModel(index);
 		}
 		
-		return registry.getChartOfAccounts().getAccount(index);
+		return tableModel.getChartOfAccounts().getAccount(index);
 	}
 	
 	/**
@@ -363,7 +363,7 @@ public class AccountSelectionDialog extends JDialog {
 			
 			/* OK-painiketta voi painaa, jos taulukosta on valittu tili. */
 			okButton.setEnabled(index >= 0 &&
-				registry.getChartOfAccounts().getType(index) == ChartOfAccounts.TYPE_ACCOUNT);
+				tableModel.getChartOfAccounts().getType(index) == ChartOfAccounts.TYPE_ACCOUNT);
 		}
 	};
 	
