@@ -1310,6 +1310,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	 * Näyttää tositelajien muokkausikkunan.
 	 */
 	public void editDocumentTypes() {
+		if (!saveDocumentIfChanged()) {
+			return;
+		}
+		
 		DocumentTypeModel documentTypeModel = new DocumentTypeModel(registry);
 		
 		DocumentTypeDialog dialog = new DocumentTypeDialog(
