@@ -53,8 +53,8 @@ public class AccountSummaryPrint extends Print {
 		columns = new int[4];
 		columns[0] = getMargins().left;
 		columns[1] = columns[0] + 50;
-		columns[2] = columns[0] + 340;
-		columns[3] = columns[0] + 440;
+		columns[2] = columns[0] + 360;
+		columns[3] = columns[0] + 460;
 	}
 	
 	protected void printHeader() {
