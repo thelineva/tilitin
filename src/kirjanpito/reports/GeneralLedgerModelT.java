@@ -45,8 +45,7 @@ public class GeneralLedgerModelT extends GeneralLedgerModel {
 		
 		try {
 			sess = dataSource.openSession();
-			documents = dataSource.getDocumentDAO(
-					sess).getByPeriodIdAndDate(period.getId(), startDate, endDate);
+			documents = dataSource.getDocumentDAO(sess).getByPeriodId(period.getId(), 0);
 			
 			for (Document d : documents) {
 				documentMap.put(d.getId(), d);
@@ -63,8 +62,13 @@ public class GeneralLedgerModelT extends GeneralLedgerModel {
 							return;
 						}
 						
-						DocumentType type = getDocumentTypeByNumber(document.getNumber());
 						balances.addEntry(entry);
+						
+						if (document.getDate().before(startDate) || document.getDate().after(endDate)) {
+							return;
+						}
+						
+						DocumentType type = getDocumentTypeByNumber(document.getNumber());
 						
 						if (type != null && !documentTypeMap.containsKey(account.getId())) {
 							documentTypeMap.put(account.getId(), type);

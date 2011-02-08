@@ -116,8 +116,7 @@ public class GeneralLedgerModel implements PrintModel {
 		
 		try {
 			sess = dataSource.openSession();
-			documents = dataSource.getDocumentDAO(
-					sess).getByPeriodIdAndDate(period.getId(), startDate, endDate);
+			documents = dataSource.getDocumentDAO(sess).getByPeriodId(period.getId(), 0);
 			
 			for (Document d : documents) {
 				documentMap.put(d.getId(), d);
@@ -135,6 +134,10 @@ public class GeneralLedgerModel implements PrintModel {
 						}
 						
 						balances.addEntry(entry);
+						
+						if (document.getDate().before(startDate) || document.getDate().after(endDate)) {
+							return;
+						}
 						
 						if (prevAccountId != account.getId()) {
 							if (prevAccountId != -1)
