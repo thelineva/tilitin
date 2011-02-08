@@ -28,13 +28,14 @@ public class FinancialStatementOptionsDialog extends PrintOptionsDialog {
 		return new Dimension(450, 250);
 	}
 
-	protected int addExtraOptions(JPanel panel) {
+	protected void addExtraOptions(JPanel panel) {
 		previousPeriodCheckBox = new JCheckBox("Edellisen tilikauden vertailu");
 		previousPeriodCheckBox.setMnemonic('E');
 		GridBagConstraints c = new GridBagConstraints();
-		c.anchor = GridBagConstraints.WEST;
+		c.anchor = GridBagConstraints.SOUTHWEST;
+		c.gridy = 1;
 		c.insets = new Insets(8, 8, 8, 8);
+		c.weighty = 1.0;
 		panel.add(previousPeriodCheckBox, c);
-		return 1;
 	}
 }

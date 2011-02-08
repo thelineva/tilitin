@@ -37,6 +37,7 @@ import kirjanpito.db.Period;
 public class PrintOptionsDialog extends JDialog {
 	protected JButton okButton;
 	protected JButton cancelButton;
+	private JPanel contentPanel;
 	private JPanel[] panels;
 	private JRadioButton[] radioButtons;
 	private DateTextField[] startDateTextFields;
@@ -184,6 +185,11 @@ public class PrintOptionsDialog extends JDialog {
 		endDateTextFields[1].setDate(cal.getTime());
 		
 		createButtonPanel();
+		
+		contentPanel = new JPanel(new GridBagLayout());
+		add(contentPanel, BorderLayout.CENTER);
+		addExtraOptions(contentPanel);
+		
 		showTab(0);
 		pack();
 	}
@@ -294,7 +300,7 @@ public class PrintOptionsDialog extends JDialog {
 		
 		monthComboBox = new JComboBox(monthItems);
 		monthComboBox.setSelectedIndex(cal.get(Calendar.MONTH));
-		c.insets = new Insets(5, 5, 5, 5);
+		c.insets = new Insets(35, 5, 35, 5);
 		panel.add(monthComboBox, c);
 		
 		cal.setTime(period.getStartDate());
@@ -316,6 +322,46 @@ public class PrintOptionsDialog extends JDialog {
 		yearComboBox = new JComboBox(yearItems);
 		yearComboBox.setSelectedIndex(selectedIndex);
 		panel.add(yearComboBox, c);
+		
+		JButton prevMonthButton = new JButton("<<");
+		prevMonthButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int monthIndex = monthComboBox.getSelectedIndex();
+				int yearIndex = yearComboBox.getSelectedIndex();
+				
+				if (monthIndex == 0 && yearIndex > 0) {
+					yearComboBox.setSelectedIndex(yearIndex - 1);
+					monthComboBox.setSelectedIndex(monthComboBox.getItemCount() - 1);
+				}
+				else if (monthIndex > 0) {
+					monthComboBox.setSelectedIndex(monthIndex - 1);
+				}
+			}
+		});
+		
+		JButton nextMonthButton = new JButton(">>");
+		nextMonthButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int monthIndex = monthComboBox.getSelectedIndex();
+				int yearIndex = yearComboBox.getSelectedIndex();
+				
+				if (monthIndex == monthComboBox.getItemCount() - 1 && yearIndex < yearComboBox.getItemCount() - 1) {
+					yearComboBox.setSelectedIndex(yearIndex + 1);
+					monthComboBox.setSelectedIndex(0);
+				}
+				else if (monthIndex < monthComboBox.getItemCount() - 1) {
+					monthComboBox.setSelectedIndex(monthIndex + 1);
+				}
+			}
+		});
+		
+		c.insets = new Insets(5, 5, 5, 1);
+		panel.add(prevMonthButton, c);
+		c.insets = new Insets(5, 1, 5, 5);
+		panel.add(nextMonthButton, c);
+		
 		return panel;
 	}
 	
@@ -341,7 +387,6 @@ public class PrintOptionsDialog extends JDialog {
 		});
 		
 		c.gridx = 1;
-		c.gridy = addExtraOptions(panel);
 		c.anchor = GridBagConstraints.EAST;
 		c.insets = new Insets(5, 10, 10, 5);
 		c.weightx = 1.0;
@@ -359,8 +404,7 @@ public class PrintOptionsDialog extends JDialog {
 		return new Dimension(450, 200);
 	}
 	
-	protected int addExtraOptions(JPanel panel) {
-		return 0;
+	protected void addExtraOptions(JPanel panel) {
 	}
 	
 	public void accept() {
@@ -408,12 +452,16 @@ public class PrintOptionsDialog extends JDialog {
 		if (tab == index) return;
 		this.tab = index;
 		
+		GridBagConstraints c = new GridBagConstraints();
+		c.weightx = 1.0;
+		c.fill = GridBagConstraints.BOTH;
+		
 		for (int i = 0; i < panels.length; i++) {
 			if (i == index) {
-				add(panels[i], BorderLayout.CENTER);
+				contentPanel.add(panels[i], c);
 			}
 			else {
-				remove(panels[i]);
+				contentPanel.remove(panels[i]);
 			}
 		}
 		
