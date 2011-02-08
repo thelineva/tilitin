@@ -34,6 +34,7 @@ public class AccountStatementModel implements PrintModel {
 	private AccountStatementRow[] rows;
 	private BigDecimal debitTotal;
 	private BigDecimal kreditTotal;
+	private int lastDocumentNumber;
 	private Date startDate;
 	private Date endDate;
 	private AccountBalances balances;
@@ -153,6 +154,7 @@ public class AccountStatementModel implements PrintModel {
 		balances.addAccount(account);
 		debitTotal = BigDecimal.ZERO;
 		kreditTotal = BigDecimal.ZERO;
+		lastDocumentNumber = 0;
 		
 		/* Haetaan tilikauden tositteet ja viennit. */
 		try {
@@ -186,6 +188,8 @@ public class AccountStatementModel implements PrintModel {
 								else {
 									kreditTotal = kreditTotal.add(entry.getAmount());
 								}
+								
+								lastDocumentNumber = Math.max(lastDocumentNumber, document.getNumber());
 							}
 							
 							rowList.add(new AccountStatementRow(
@@ -358,6 +362,15 @@ public class AccountStatementModel implements PrintModel {
 	 */
 	public BigDecimal getKreditTotal() {
 		return kreditTotal;
+	}
+	
+	/**
+	 * Palauttaa viimeisen tositteen numeron.
+	 * 
+	 * @return viimeisen tositteen numero
+	 */
+	public int getLastDocumentNumber() {
+		return lastDocumentNumber;
 	}
 	
 	private class AccountStatementRow {

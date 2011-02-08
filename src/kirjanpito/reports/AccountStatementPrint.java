@@ -46,14 +46,8 @@ public class AccountStatementPrint extends Print {
 		else {
 			pageCount = 1;
 		}
-
-		columns = new int[6];
-		columns[0] = getMargins().left;
-		columns[1] = columns[0] + 40;
-		columns[2] = columns[0] + 175;
-		columns[3] = columns[0] + 235;
-		columns[4] = columns[0] + 310;
-		columns[5] = columns[0] + 325;
+		
+		columns = null;
 	}
 	
 	public String getVariableValue(String name) {
@@ -70,6 +64,19 @@ public class AccountStatementPrint extends Print {
 	
 	protected void printHeader() {
 		super.printHeader();
+		
+		if (columns == null) {
+			int numberColumnWidth = Math.max(30, stringWidth(
+					Integer.toString(model.getLastDocumentNumber())) + 20);
+
+			columns = new int[6];
+			columns[0] = getMargins().left;
+			columns[1] = columns[0] + numberColumnWidth;
+			columns[2] = columns[1] + 125;
+			columns[3] = columns[1] + 185;
+			columns[4] = columns[1] + 260;
+			columns[5] = columns[1] + 275;
+		}
 		
 		/* Tulostetaan sarakeotsikot. */
 		setBoldStyle();
@@ -98,6 +105,7 @@ public class AccountStatementPrint extends Print {
 		Entry entry;
 		int offset = getPageIndex() * numRowsPerPage;
 		int numRows = Math.min(model.getRowCount(), offset + numRowsPerPage);
+		int descriptionWidth = getPageWidth() - margins.right - columns[5];
 		y += 17;
 		
 		for (int i = offset; i < numRows; i++) {
@@ -126,7 +134,7 @@ public class AccountStatementPrint extends Print {
 				setX(columns[5]);
 				
 				setSmallStyle();
-				drawText(entry.getDescription());
+				drawText(cutString(entry.getDescription(), descriptionWidth));
 			}
 			else if (model.getEntryCount() > 0) {
 				String text = (model.getEntryCount() == 1) ? "1 vienti" :
