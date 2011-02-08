@@ -36,6 +36,7 @@ public class GeneralLedgerModel implements PrintModel {
 	protected Date endDate;
 	protected Settings settings;
 	protected List<GeneralLedgerRow> rows;
+	protected int lastDocumentNumber;
 	private int prevAccountId;
 
 	public Registry getRegistry() {
@@ -113,6 +114,7 @@ public class GeneralLedgerModel implements PrintModel {
 		settings = registry.getSettings();
 		prevAccountId = -1;
 		rows = new ArrayList<GeneralLedgerRow>();
+		lastDocumentNumber = 0;
 		
 		try {
 			sess = dataSource.openSession();
@@ -146,6 +148,7 @@ public class GeneralLedgerModel implements PrintModel {
 							rows.add(new GeneralLedgerRow(2, null, null, account, null, null));
 						}
 
+						lastDocumentNumber = Math.max(lastDocumentNumber, document.getNumber());
 						rows.add(new GeneralLedgerRow(1, document, null, account, entry,
 								balances.getBalance(entry.getAccountId())));
 						
@@ -329,6 +332,15 @@ public class GeneralLedgerModel implements PrintModel {
 	 */
 	public DocumentType getDocumentType(int index) {
 		return null;
+	}
+	
+	/**
+	 * Palauttaa viimeisen tositteen numeron.
+	 * 
+	 * @return viimeisen tositteen numero
+	 */
+	public int getLastDocumentNumber() {
+		return lastDocumentNumber;
 	}
 	
 	protected class GeneralLedgerRow implements Comparable<GeneralLedgerRow> {

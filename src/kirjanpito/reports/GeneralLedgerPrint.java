@@ -47,15 +47,7 @@ public class GeneralLedgerPrint extends Print {
 			pageCount = 1;
 		}
 		
-		columns = new int[8];
-		columns[0] = getMargins().left;
-		columns[1] = columns[0] + 50;
-		columns[2] = columns[0] + 50;
-		columns[3] = columns[0] + 95;
-		columns[4] = columns[0] + 210;
-		columns[5] = columns[0] + 270;
-		columns[6] = columns[0] + 330;
-		columns[7] = columns[0] + 340;
+		columns = null;
 	}
 	
 	public String getVariableValue(String name) {
@@ -69,6 +61,21 @@ public class GeneralLedgerPrint extends Print {
 	
 	protected void printHeader() {
 		super.printHeader();
+		
+		if (columns == null) {
+			int numberColumnWidth = Math.max(25, stringWidth(
+					Integer.toString(model.getLastDocumentNumber())) + 15);
+			
+			columns = new int[8];
+			columns[0] = getMargins().left;
+			columns[1] = columns[0] + 50;
+			columns[2] = columns[0] + 50;
+			columns[3] = columns[1] + numberColumnWidth;
+			columns[4] = columns[3] + 120;
+			columns[5] = columns[3] + 170;
+			columns[6] = columns[3] + 240;
+			columns[7] = columns[3] + 250;
+		}
 		
 		/* Tulostetaan sarakeotsikot. */
 		setBoldStyle();
@@ -105,6 +112,7 @@ public class GeneralLedgerPrint extends Print {
 		Entry entry;
 		int offset = getPageIndex() * numRowsPerPage;
 		int numRows = Math.min(model.getRowCount(), offset + numRowsPerPage);
+		int descriptionWidth = getPageWidth() - margins.right - columns[7];
 		setNormalStyle();
 		y += 13;
 		
@@ -134,7 +142,7 @@ public class GeneralLedgerPrint extends Print {
 				setX(columns[6]);
 				drawTextRight(numberFormat.format(model.getBalance(i)));
 				setX(columns[7]);
-				drawText(entry.getDescription());
+				drawText(cutString(entry.getDescription(), descriptionWidth));
 			}
 			else if (model.getType(i) == 2) {
 				setX(columns[0]);

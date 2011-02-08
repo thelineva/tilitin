@@ -74,6 +74,7 @@ public class GeneralLedgerModelT extends GeneralLedgerModel {
 							documentTypeMap.put(account.getId(), type);
 						}
 						
+						lastDocumentNumber = Math.max(lastDocumentNumber, document.getNumber());
 						rows.add(new GeneralLedgerRow(1, document, type, account, entry,
 								balances.getBalance(account.getId())));
 					}
