@@ -35,6 +35,7 @@ public class GeneralJournalModel implements PrintModel {
 	private Date endDate;
 	private List<DocumentType> documentTypes;
 	private List<GeneralJournalRow> rows;
+	private int lastDocumentNumber;
 	private int prevDocumentId;
 	private int prevDocumentTypeId;
 
@@ -112,6 +113,7 @@ public class GeneralJournalModel implements PrintModel {
 		documentTypes = registry.getDocumentTypes();
 		prevDocumentId = -1;
 		rows = new ArrayList<GeneralJournalRow>();
+		lastDocumentNumber = 0;
 		
 		try {
 			sess = dataSource.openSession();
@@ -146,6 +148,7 @@ public class GeneralJournalModel implements PrintModel {
 						}
 						
 						if (prevDocumentId != document.getId()) {
+							lastDocumentNumber = Math.max(lastDocumentNumber, document.getNumber());
 							rows.add(new GeneralJournalRow(2, document, null, null, null));
 						}
 						
@@ -291,6 +294,15 @@ public class GeneralJournalModel implements PrintModel {
 		return rows.get(index).documentType;
 	}
 	
+	/**
+	 * Palauttaa viimeisen tositteen numeron.
+	 * 
+	 * @return viimeisen tositteen numero
+	 */
+	public int getLastDocumentNumber() {
+		return lastDocumentNumber;
+	}
+
 	private DocumentType getDocumentTypeByNumber(int number) {
 		for (DocumentType type : documentTypes) {
 			if (number >= type.getNumberStart() && number <= type.getNumberEnd()) {

@@ -46,14 +46,7 @@ public class GeneralJournalPrint extends Print {
 			pageCount = 1;
 		}
 		
-		columns = new int[7];
-		columns[0] = getMargins().left;
-		columns[1] = columns[0] + 45;
-		columns[2] = columns[0] + 55;
-		columns[3] = columns[0] + 95;
-		columns[4] = columns[0] + 250;
-		columns[5] = columns[0] + 310;
-		columns[6] = columns[0] + 325;
+		columns = null;
 	}
 	
 	public String getVariableValue(String name) {
@@ -67,6 +60,20 @@ public class GeneralJournalPrint extends Print {
 	
 	protected void printHeader() {
 		super.printHeader();
+		
+		if (columns == null) {
+			int numberColumnWidth = Math.max(25, stringWidth(
+					Integer.toString(model.getLastDocumentNumber())) + 15);
+			
+			columns = new int[7];
+			columns[0] = getMargins().left;
+			columns[1] = columns[0] + numberColumnWidth;
+			columns[2] = columns[1] + 10;
+			columns[3] = columns[1] + 50;
+			columns[4] = columns[1] + 225;
+			columns[5] = columns[1] + 280;
+			columns[6] = columns[1] + 290;
+		}
 		
 		/* Tulostetaan sarakeotsikot. */
 		setBoldStyle();
@@ -99,6 +106,7 @@ public class GeneralJournalPrint extends Print {
 		String text;
 		int offset = getPageIndex() * numRowsPerPage;
 		int numRows = Math.min(model.getRowCount(), offset + numRowsPerPage);
+		int descriptionWidth = getPageWidth() - margins.right - columns[6];
 		setNormalStyle();
 		y += 13;
 		
@@ -127,7 +135,7 @@ public class GeneralJournalPrint extends Print {
 
 				/* Lasketaan tilin nimen enimmäispituus. */
 				String amountString = numberFormat.format(entry.getAmount());
-				int w = entry.isDebit() ? 145 - stringWidth(amountString) : 155;
+				int w = entry.isDebit() ? 155 - stringWidth(amountString) : 165;
 				text = cutString(text, w);
 				drawText(text);
 				
@@ -140,7 +148,7 @@ public class GeneralJournalPrint extends Print {
 				
 				drawTextRight(amountString);
 				setX(columns[6]);
-				drawText(entry.getDescription());
+				drawText(cutString(entry.getDescription(), descriptionWidth));
 			}
 			
 			setY(getY() + 13);
