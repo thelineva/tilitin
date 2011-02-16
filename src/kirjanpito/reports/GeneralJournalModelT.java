@@ -141,22 +141,16 @@ public class GeneralJournalModelT extends GeneralJournalModel {
 		public int compare(GeneralJournalRow o1, GeneralJournalRow o2) {
 			/* Vertaillaan
 			 * 1. tositelajia
-			 * 2. tilinumeroa
-			 * 3. tositenumeroa
-			 * 4. vientijärjestystä
+			 * 2. tositenumeroa
+			 * 3. vientijärjestystä
 			 */
 
 			if (o1.documentType.getNumber() == o2.documentType.getNumber()) {
-				if (o1.account.getNumber().equals(o2.account.getNumber())) {
-					if (o1.document.getNumber() == o2.document.getNumber()) {
-						return o1.entry.getRowNumber() - o2.entry.getRowNumber();
-					}
-					else {
-						return o1.document.getNumber() - o2.document.getNumber();
-					}
+				if (o1.document.getNumber() == o2.document.getNumber()) {
+					return o1.entry.getRowNumber() - o2.entry.getRowNumber();
 				}
 				else {
-					return o1.account.getNumber().compareTo(o2.account.getNumber());
+					return o1.document.getNumber() - o2.document.getNumber();
 				}
 			}
 			else {
@@ -170,28 +164,22 @@ public class GeneralJournalModelT extends GeneralJournalModel {
 		public int compare(GeneralJournalRow o1, GeneralJournalRow o2) {
 			/* Vertaillaan
 			 * 1. tositelajia
-			 * 2. tilinumeroa
-			 * 3. päivämäärää
-			 * 4. tositenumeroa
-			 * 5. vientijärjestystä
+			 * 2. päivämäärää
+			 * 3. tositenumeroa
+			 * 4. vientijärjestystä
 			 */
 
 			if (o1.documentType.getNumber() == o2.documentType.getNumber()) {
-				if (o1.account.getNumber().equals(o2.account.getNumber())) {
-					if (o1.document.getDate().equals(o2.document.getDate())) {
-						if (o1.document.getNumber() == o2.document.getNumber()) {
-							return o1.entry.getRowNumber() - o2.entry.getRowNumber();
-						}
-						else {
-							return o1.document.getNumber() - o2.document.getNumber();
-						}
+				if (o1.document.getDate().equals(o2.document.getDate())) {
+					if (o1.document.getNumber() == o2.document.getNumber()) {
+						return o1.entry.getRowNumber() - o2.entry.getRowNumber();
 					}
 					else {
-						return o1.document.getDate().compareTo(o2.document.getDate());
+						return o1.document.getNumber() - o2.document.getNumber();
 					}
 				}
 				else {
-					return o1.account.getNumber().compareTo(o2.account.getNumber());
+					return o1.document.getDate().compareTo(o2.document.getDate());
 				}
 			}
 			else {
