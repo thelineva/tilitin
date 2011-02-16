@@ -1472,7 +1472,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return;
 		}
 		
-		PrintOptionsDialog dialog = new PrintOptionsDialog(this, "Päiväkirja");
+		GeneralLJOptionsDialog dialog = new GeneralLJOptionsDialog(this, "Päiväkirja");
 		dialog.setPeriod(registry.getPeriod());
 		dialog.create();
 		dialog.setVisible(true);
@@ -1483,6 +1483,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			printModel.setPeriod(registry.getPeriod());
 			printModel.setStartDate(dialog.getStartDate());
 			printModel.setEndDate(dialog.getEndDate());
+			printModel.setOrderBy(dialog.isOrderByDate() ? GeneralJournalModel.ORDER_BY_DATE :
+				GeneralJournalModel.ORDER_BY_NUMBER);
 			showPrintPreview(printModel, new GeneralJournalPrint(printModel));
 		}
 	}
@@ -1495,7 +1497,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return;
 		}
 		
-		PrintOptionsDialog dialog = new PrintOptionsDialog(this, "Pääkirja");
+		GeneralLJOptionsDialog dialog = new GeneralLJOptionsDialog(this, "Pääkirja");
 		dialog.setPeriod(registry.getPeriod());
 		dialog.create();
 		dialog.setVisible(true);
@@ -1506,6 +1508,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			printModel.setPeriod(registry.getPeriod());
 			printModel.setStartDate(dialog.getStartDate());
 			printModel.setEndDate(dialog.getEndDate());
+			printModel.setOrderBy(dialog.isOrderByDate() ? GeneralLedgerModel.ORDER_BY_DATE :
+				GeneralLedgerModel.ORDER_BY_NUMBER);
 			showPrintPreview(printModel, new GeneralLedgerPrint(printModel));
 		}
 	}
@@ -1518,7 +1522,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return;
 		}
 		
-		PrintOptionsDialog dialog = new PrintOptionsDialog(this, "Pääkirja tositelajeittain");
+		GeneralLJOptionsDialog dialog = new GeneralLJOptionsDialog(this, "Pääkirja tositelajeittain");
 		dialog.setPeriod(registry.getPeriod());
 		dialog.create();
 		dialog.setVisible(true);
@@ -1529,6 +1533,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			printModel.setPeriod(registry.getPeriod());
 			printModel.setStartDate(dialog.getStartDate());
 			printModel.setEndDate(dialog.getEndDate());
+			printModel.setOrderBy(dialog.isOrderByDate() ? GeneralLedgerModel.ORDER_BY_DATE :
+				GeneralLedgerModel.ORDER_BY_NUMBER);
 			showPrintPreview(printModel, new GeneralLedgerPrint(printModel));
 		}
 	}

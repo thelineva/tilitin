@@ -15,7 +15,6 @@ import kirjanpito.db.DataSource;
 import kirjanpito.db.Document;
 import kirjanpito.db.DocumentType;
 import kirjanpito.db.Entry;
-import kirjanpito.db.EntryDAO;
 import kirjanpito.db.Period;
 import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
@@ -24,7 +23,7 @@ import kirjanpito.util.Registry;
 
 /**
  * Malli päiväkirjatulosteelle.
- * 
+ *
  * @author Tommi Helineva
  */
 public class GeneralJournalModel implements PrintModel {
@@ -33,11 +32,15 @@ public class GeneralJournalModel implements PrintModel {
 	private Period period;
 	private Date startDate;
 	private Date endDate;
+	private int orderBy;
 	private List<DocumentType> documentTypes;
 	private List<GeneralJournalRow> rows;
 	private int lastDocumentNumber;
 	private int prevDocumentId;
 	private int prevDocumentTypeId;
+
+	public static final int ORDER_BY_NUMBER = 1; // EntryDAO.ORDER_BY_DOCUMENT_NUMBER
+	public static final int ORDER_BY_DATE = 2; // EntryDAO.ORDER_BY_DOCUMENT_DATE
 
 	public Registry getRegistry() {
 		return registry;
@@ -49,7 +52,7 @@ public class GeneralJournalModel implements PrintModel {
 
 	/**
 	 * Palauttaa tilikauden.
-	 * 
+	 *
 	 * @return tilikausi
 	 */
 	public Period getPeriod() {
@@ -58,16 +61,16 @@ public class GeneralJournalModel implements PrintModel {
 
 	/**
 	 * Asettaa tilikauden.
-	 * 
+	 *
 	 * @param period tilikausi
 	 */
 	public void setPeriod(Period period) {
 		this.period = period;
 	}
-	
+
 	/**
 	 * Palauttaa alkamispäivämäärän.
-	 * 
+	 *
 	 * @return alkamispäivämäärä
 	 */
 	public Date getStartDate() {
@@ -76,7 +79,7 @@ public class GeneralJournalModel implements PrintModel {
 
 	/**
 	 * Asettaa alkamispäivämäärän.
-	 * 
+	 *
 	 * @param startDate alkamispäivämäärä
 	 */
 	public void setStartDate(Date startDate) {
@@ -85,7 +88,7 @@ public class GeneralJournalModel implements PrintModel {
 
 	/**
 	 * Palauttaa päättymispäivämäärän.
-	 * 
+	 *
 	 * @return päättymispäivämäärä
 	 */
 	public Date getEndDate() {
@@ -94,64 +97,82 @@ public class GeneralJournalModel implements PrintModel {
 
 	/**
 	 * Asettaa päättymispäivämäärän.
-	 * 
+	 *
 	 * @param endDate päättymispäivämäärä
 	 */
 	public void setEndDate(Date endDate) {
 		this.endDate = endDate;
 	}
 
+	/**
+	 * Palauttaa vientien järjestyksen.
+	 *
+	 * @return ORDER_BY_NUMBER tai ORDER_BY_DATE
+	 */
+	public int getOrderBy() {
+		return orderBy;
+	}
+
+	/**
+	 * Asettaa vientien järjestyksen.
+	 *
+	 * @param orderBy ORDER_BY_NUMBER tai ORDER_BY_DATE
+	 */
+	public void setOrderBy(int orderBy) {
+		this.orderBy = orderBy;
+	}
+
 	public void run() throws DataAccessException {
 		List<Document> documents;
 		DataSource dataSource = registry.getDataSource();
 		Session sess = null;
-		
+
 		final HashMap<Integer, Document> documentMap =
 			new HashMap<Integer, Document>();
-		
+
 		settings = registry.getSettings();
 		documentTypes = registry.getDocumentTypes();
 		prevDocumentId = -1;
 		rows = new ArrayList<GeneralJournalRow>();
 		lastDocumentNumber = 0;
-		
+
 		try {
 			sess = dataSource.openSession();
 			documents = dataSource.getDocumentDAO(
 					sess).getByPeriodIdAndDate(period.getId(), startDate, endDate);
-			
+
 			for (Document d : documents) {
 				if (d.getNumber() >= 1) {
 					documentMap.put(d.getId(), d);
 				}
 			}
-			
+
 			documents = null;
 			dataSource.getEntryDAO(sess).getByPeriodId(
-				period.getId(), EntryDAO.ORDER_BY_DOCUMENT_NUMBER,
+				period.getId(), orderBy,
 				new DTOCallback<Entry>() {
 					public void process(Entry entry) {
 						Account account = registry.getAccountById(entry.getAccountId());
 						Document document = documentMap.get(entry.getDocumentId());
-						
+
 						if (account == null || document == null) {
 							return;
 						}
-						
+
 						DocumentType documentType = getDocumentTypeByNumber(document.getNumber());
-						
+
 						if (documentType != null && documentType.getId() != prevDocumentTypeId) {
 							rows.add(new GeneralJournalRow(0, null, null, null, null));
 							rows.add(new GeneralJournalRow(3, null, documentType, null, null));
 							rows.add(new GeneralJournalRow(0, null, null, null, null));
 							prevDocumentTypeId = documentType.getId();
 						}
-						
+
 						if (prevDocumentId != document.getId()) {
 							lastDocumentNumber = Math.max(lastDocumentNumber, document.getNumber());
 							rows.add(new GeneralJournalRow(2, document, null, null, null));
 						}
-						
+
 						rows.add(new GeneralJournalRow(1, document, null, account, entry));
 						prevDocumentId = document.getId();
 					}
@@ -161,13 +182,13 @@ public class GeneralJournalModel implements PrintModel {
 			if (sess != null) sess.close();
 		}
 	}
-	
+
 	public void writeCSV(CSVWriter writer) throws IOException {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
 		DecimalFormat numberFormat = new DecimalFormat();
 		numberFormat.setMinimumFractionDigits(2);
 		numberFormat.setMaximumFractionDigits(2);
-		
+
 		writer.writeField("Päiväkirja");
 		writer.writeLine();
 		writer.writeField("Nimi");
@@ -191,17 +212,17 @@ public class GeneralJournalModel implements PrintModel {
 		writer.writeField("Kredit");
 		writer.writeField("Selite");
 		writer.writeLine();
-		
+
 		for (GeneralJournalRow row : rows) {
 			if (row.type != 1) {
 				continue;
 			}
-			
+
 			writer.writeField(Integer.toString(row.document.getNumber()));
 			writer.writeField(dateFormat.format(row.document.getDate()));
 			writer.writeField(row.account.getNumber());
 			writer.writeField(row.account.getName());
-			
+
 			if (row.entry.isDebit()) {
 				writer.writeField(numberFormat.format(row.entry.getAmount()));
 				writer.writeField("");
@@ -210,93 +231,75 @@ public class GeneralJournalModel implements PrintModel {
 				writer.writeField("");
 				writer.writeField(numberFormat.format(row.entry.getAmount()));
 			}
-			
+
 			writer.writeField(row.entry.getDescription());
 			writer.writeLine();
 		}
 	}
-	
-	/**
-	 * Palauttaa käyttäjän nimen.
-	 * 
-	 * @return käyttäjän nimi
-	 */
-	public String getName() {
-		return settings.getName();
-	}
-	
-	/**
-	 * Palauttaa Y-tunnuksen.
-	 * 
-	 * @return y-tunnus
-	 */
-	public String getBusinessId() {
-		return settings.getBusinessId();
-	}
-	
+
 	/**
 	 * Palauttaa tulosteessa olevien rivien lukumäärän.
-	 * 
+	 *
 	 * @return rivien lukumäärä
 	 */
 	public int getRowCount() {
 		return rows.size();
 	}
-	
+
 	/**
 	 * Palauttaa rivin <code>index</code> tyypin.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return tyyppi
 	 */
 	public int getType(int index) {
 		return rows.get(index).type;
 	}
-	
+
 	/**
 	 * Palauttaa rivillä <code>index</code> olevan tositteen.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return tosite
 	 */
 	public Document getDocument(int index) {
 		return rows.get(index).document;
 	}
-	
+
 	/**
 	 * Palauttaa rivillä <code>index</code> olevan tilin.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return tosite
 	 */
 	public Account getAccount(int index) {
 		return rows.get(index).account;
 	}
-	
+
 	/**
 	 * Palauttaa rivillä <code>index</code> olevan viennin.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return vienti
 	 */
 	public Entry getEntry(int index) {
 		return rows.get(index).entry;
 	}
-	
+
 	/**
 	 * Palauttaa rivillä <code>index</code> olevan tositteen
 	 * tositelajin
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return tositelaji
 	 */
 	public DocumentType getDocumentType(int index) {
 		return rows.get(index).documentType;
 	}
-	
+
 	/**
 	 * Palauttaa viimeisen tositteen numeron.
-	 * 
+	 *
 	 * @return viimeisen tositteen numero
 	 */
 	public int getLastDocumentNumber() {
@@ -309,20 +312,20 @@ public class GeneralJournalModel implements PrintModel {
 				return type;
 			}
 		}
-		
+
 		return null;
 	}
-	
+
 	private class GeneralJournalRow {
 		public int type;
 		public Document document;
 		public DocumentType documentType;
 		public Account account;
 		public Entry entry;
-		
+
 		public GeneralJournalRow(int type, Document document, DocumentType documentType,
 				Account account, Entry entry) {
-			
+
 			this.type = type;
 			this.document = document;
 			this.documentType = documentType;
