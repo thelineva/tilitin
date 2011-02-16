@@ -27,17 +27,15 @@ import kirjanpito.util.Registry;
  * @author Tommi Helineva
  */
 public class GeneralJournalModel implements PrintModel {
-	private Registry registry;
-	private Settings settings;
-	private Period period;
-	private Date startDate;
-	private Date endDate;
-	private int orderBy;
-	private List<DocumentType> documentTypes;
-	private List<GeneralJournalRow> rows;
-	private int lastDocumentNumber;
+	protected Registry registry;
+	protected Settings settings;
+	protected Period period;
+	protected Date startDate;
+	protected Date endDate;
+	protected int orderBy;
+	protected List<GeneralJournalRow> rows;
+	protected int lastDocumentNumber;
 	private int prevDocumentId;
-	private int prevDocumentTypeId;
 
 	public static final int ORDER_BY_NUMBER = 1; // EntryDAO.ORDER_BY_DOCUMENT_NUMBER
 	public static final int ORDER_BY_DATE = 2; // EntryDAO.ORDER_BY_DOCUMENT_DATE
@@ -131,7 +129,6 @@ public class GeneralJournalModel implements PrintModel {
 			new HashMap<Integer, Document>();
 
 		settings = registry.getSettings();
-		documentTypes = registry.getDocumentTypes();
 		prevDocumentId = -1;
 		rows = new ArrayList<GeneralJournalRow>();
 		lastDocumentNumber = 0;
@@ -159,15 +156,6 @@ public class GeneralJournalModel implements PrintModel {
 							return;
 						}
 
-						DocumentType documentType = getDocumentTypeByNumber(document.getNumber());
-
-						if (documentType != null && documentType.getId() != prevDocumentTypeId) {
-							rows.add(new GeneralJournalRow(0, null, null, null, null));
-							rows.add(new GeneralJournalRow(3, null, documentType, null, null));
-							rows.add(new GeneralJournalRow(0, null, null, null, null));
-							prevDocumentTypeId = documentType.getId();
-						}
-
 						if (prevDocumentId != document.getId()) {
 							lastDocumentNumber = Math.max(lastDocumentNumber, document.getNumber());
 							rows.add(new GeneralJournalRow(2, document, null, null, null));
@@ -184,12 +172,22 @@ public class GeneralJournalModel implements PrintModel {
 	}
 
 	public void writeCSV(CSVWriter writer) throws IOException {
+		writeCSV(writer, false);
+	}
+
+	protected void writeCSV(CSVWriter writer, boolean documentTypes) throws IOException {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
 		DecimalFormat numberFormat = new DecimalFormat();
 		numberFormat.setMinimumFractionDigits(2);
 		numberFormat.setMaximumFractionDigits(2);
 
-		writer.writeField("Päiväkirja");
+		if (documentTypes) {
+			writer.writeField("Päiväkirja tositelajeittain");
+		}
+		else {
+			writer.writeField("Päiväkirja");
+		}
+
 		writer.writeLine();
 		writer.writeField("Nimi");
 		writer.writeField(settings.getName());
@@ -204,6 +202,11 @@ public class GeneralJournalModel implements PrintModel {
 		writer.writeField(dateFormat.format(period.getEndDate()));
 		writer.writeLine();
 		writer.writeLine();
+
+		if (documentTypes) {
+			writer.writeField("Tositelaji");
+		}
+
 		writer.writeField("Tositenumero");
 		writer.writeField("Päivämäärä");
 		writer.writeField("Tilinumero");
@@ -216,6 +219,10 @@ public class GeneralJournalModel implements PrintModel {
 		for (GeneralJournalRow row : rows) {
 			if (row.type != 1) {
 				continue;
+			}
+
+			if (documentTypes) {
+				writer.writeField(row.documentType.getName());
 			}
 
 			writer.writeField(Integer.toString(row.document.getNumber()));
@@ -306,17 +313,7 @@ public class GeneralJournalModel implements PrintModel {
 		return lastDocumentNumber;
 	}
 
-	private DocumentType getDocumentTypeByNumber(int number) {
-		for (DocumentType type : documentTypes) {
-			if (number >= type.getNumberStart() && number <= type.getNumberEnd()) {
-				return type;
-			}
-		}
-
-		return null;
-	}
-
-	private class GeneralJournalRow {
+	protected class GeneralJournalRow {
 		public int type;
 		public Document document;
 		public DocumentType documentType;
