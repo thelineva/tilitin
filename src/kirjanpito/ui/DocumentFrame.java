@@ -418,6 +418,9 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		autoCompleteMenuItem.addActionListener(autoCompleteListener);
 		menu.add(autoCompleteMenuItem);
 
+		menu.add(SwingUtils.createMenuItem("Muuta tositenumeroita", null, 'n',
+				null, numberShiftListener));
+		
 		menu.add(SwingUtils.createMenuItem("ALV-kantojen muutokset", null, 'T',
 				null, vatChangeListener));
 
@@ -1616,9 +1619,37 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		dialog.create();
 		dialog.setVisible(true);
 	}
+	
+	public void showDocumentNumberShiftDialog() {
+		DocumentType documentType = model.getDocumentType();
+		int endNumber = Integer.MAX_VALUE;
+		
+		if (documentType != null) {
+			endNumber = documentType.getNumberEnd();
+		}
+		
+		DocumentNumberShiftDialog dialog = new DocumentNumberShiftDialog(this, registry);
+		dialog.create();
+		
+		try {
+			dialog.fetchDocuments(model.getDocument().getNumber(), endNumber);
+		}
+		catch (DataAccessException e) {
+			String message = "Tositetietojen hakeminen epäonnistui";
+			logger.log(Level.SEVERE, message, e);
+			SwingUtils.showDataAccessErrorMessage(this, e, message);
+			return;
+		}
+		
+		dialog.setVisible(true);
+		
+		if (dialog.getResult() == JOptionPane.OK_OPTION) {
+			refreshModel();
+		}
+	}
 
 	/**
-	 * Avaa ALV-kannan muutosikkunan.
+	 * Avaa ALV-kantojen muutosikkunan.
 	 */
 	public void showVATChangeDialog() {
 		VATChangeDialog dialog = new VATChangeDialog(this, registry);
@@ -2052,7 +2083,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			if (result == 1) { // Tositenumeroa muutettu
 				/* Kaikki tositetiedot on haettava tietokannasta uudelleen, koska
 				 * tositteiden järjestys on muuttunut. */
-				model.refresh();
+				model.fetchDocuments();
 			}
 		}
 		catch (DataAccessException e) {
@@ -2524,7 +2555,14 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 	};
 
-	/* ALV-kannan muutokset */
+	/* Muuta tositenumeroita */
+	private ActionListener numberShiftListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			showDocumentNumberShiftDialog();
+		}
+	};
+	
+	/* ALV-kantojen muutokset */
 	private ActionListener vatChangeListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			showVATChangeDialog();
@@ -2538,6 +2576,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 	};
 
+	/* Virheenjäljitystietoja */
 	private ActionListener debugListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			showLogMessages();
