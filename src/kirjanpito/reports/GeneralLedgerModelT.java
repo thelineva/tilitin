@@ -14,7 +14,6 @@ import kirjanpito.db.DataSource;
 import kirjanpito.db.Document;
 import kirjanpito.db.DocumentType;
 import kirjanpito.db.Entry;
-import kirjanpito.db.EntryDAO;
 import kirjanpito.db.Session;
 import kirjanpito.util.AccountBalances;
 import kirjanpito.util.CSVWriter;
@@ -52,7 +51,7 @@ public class GeneralLedgerModelT extends GeneralLedgerModel {
 			}
 
 			dataSource.getEntryDAO(sess).getByPeriodId(
-				period.getId(), EntryDAO.ORDER_BY_DOCUMENT_NUMBER,
+				period.getId(), orderBy,
 				new DTOCallback<Entry>() {
 					public void process(Entry entry) {
 						Account account = registry.getAccountById(entry.getAccountId());
