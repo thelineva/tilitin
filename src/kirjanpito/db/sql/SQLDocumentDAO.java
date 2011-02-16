@@ -616,6 +616,39 @@ public abstract class SQLDocumentDAO implements DocumentDAO {
 	protected abstract PreparedStatement getDeleteByPeriodIdQuery() throws SQLException;
 	
 	/**
+	 * Muuttaa tositenumeroita välillä <code>startNumber</code>..<code>endNumber</code>.
+	 * 
+	 * @param startNumber välin alku
+	 * @param endNumber välin loppu
+	 * @param shift muutos
+	 * @throws DataAccessException jos tositenumeroiden muuttaminen epäonnistuu
+	 */
+	public void shiftNumbers(int startNumber, int endNumber, int shift)
+			throws DataAccessException {
+		
+		try {
+			PreparedStatement stmt = getNumberShiftQuery();
+			stmt.setInt(1, shift);
+			stmt.setInt(2, startNumber);
+			stmt.setInt(3, endNumber);
+			stmt.executeUpdate();
+			stmt.close();
+		}
+		catch (SQLException e) {
+			throw new DataAccessException(e.getMessage(), e);
+		}
+	}
+	
+	/**
+	 * Palauttaa UPDATE-kyselyn, jonka avulla muutetaan tositenumeroita
+	 * tietyllä välillä.
+	 * 
+	 * @return UPDATE-kysely
+	 * @throws SQLException jos kyselyn luominen epäonnistuu
+	 */
+	protected abstract PreparedStatement getNumberShiftQuery() throws SQLException;
+
+	/**
 	 * Lukee <code>ResultSetistä</code> rivin kentät ja
 	 * luo <code>Document</code>-olion.
 	 * 

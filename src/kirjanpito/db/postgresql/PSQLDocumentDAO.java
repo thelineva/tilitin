@@ -78,4 +78,8 @@ public class PSQLDocumentDAO extends SQLDocumentDAO {
 	protected PreparedStatement getDeleteByPeriodIdQuery() throws SQLException {
 		return sess.prepareStatement("DELETE FROM document WHERE period_id = ?");
 	}
+	
+	protected PreparedStatement getNumberShiftQuery() throws SQLException {
+		return sess.prepareStatement("UPDATE document SET number = number + ? WHERE number BETWEEN ? AND ?");
+	}
 }
