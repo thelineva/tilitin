@@ -420,8 +420,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		menu.add(SwingUtils.createMenuItem("Muuta tositenumeroita", null, 'n',
 				null, numberShiftListener));
-		
-		menu.add(SwingUtils.createMenuItem("ALV-kantojen muutokset", null, 'T',
+
+		menu.add(SwingUtils.createMenuItem("ALV-kantojen muutokset", null, 'm',
 				null, vatChangeListener));
 
 		/* Luodaan Ohje-valikko. */
@@ -980,7 +980,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		 * tai haku on kytketty pois päältä. */
 		if (invalidDocuments) {
 			try {
-				model.fetchDocuments();
+				model.fetchDocuments(index);
 			}
 			catch (DataAccessException e) {
 				String message = "Tositetietojen hakeminen epäonnistui";
@@ -988,9 +988,14 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 				SwingUtils.showDataAccessErrorMessage(this, e, message);
 				return;
 			}
-		}
 
-		goToDocument(index);
+			updatePosition();
+			updateDocument();
+			updateTotalRow();
+		}
+		else {
+			goToDocument(index);
+		}
 	}
 
 	/**
@@ -1009,7 +1014,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			 * tositelajin kaikki tositteet.
 			 */
 			try {
-				model.fetchDocuments();
+				model.fetchDocuments(-1);
 			}
 			catch (DataAccessException e) {
 				String message = "Tositteiden hakeminen epäonnistui";
@@ -1292,7 +1297,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		model.setDocumentTypeIndex(index);
 
 		try {
-			model.fetchDocuments();
+			model.fetchDocuments(-1);
 		}
 		catch (DataAccessException e) {
 			String message = "Tositetietojen hakeminen epäonnistui";
@@ -1619,18 +1624,18 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		dialog.create();
 		dialog.setVisible(true);
 	}
-	
+
 	public void showDocumentNumberShiftDialog() {
 		DocumentType documentType = model.getDocumentType();
 		int endNumber = Integer.MAX_VALUE;
-		
+
 		if (documentType != null) {
 			endNumber = documentType.getNumberEnd();
 		}
-		
+
 		DocumentNumberShiftDialog dialog = new DocumentNumberShiftDialog(this, registry);
 		dialog.create();
-		
+
 		try {
 			dialog.fetchDocuments(model.getDocument().getNumber(), endNumber);
 		}
@@ -1640,11 +1645,11 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			SwingUtils.showDataAccessErrorMessage(this, e, message);
 			return;
 		}
-		
+
 		dialog.setVisible(true);
-		
+
 		if (dialog.getResult() == JOptionPane.OK_OPTION) {
-			refreshModel();
+			refreshModel(false);
 		}
 	}
 
@@ -1734,9 +1739,9 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		updateDocumentTypes();
 	}
 
-	protected void refreshModel() {
+	protected void refreshModel(boolean positionChanged) {
 		try {
-			model.refresh();
+			model.fetchDocuments(positionChanged ? -1 : model.getDocumentPosition());
 		}
 		catch (DataAccessException e) {
 			String message = "Tositetietojen hakeminen epäonnistui";
@@ -1748,6 +1753,11 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		updatePosition();
 		updateDocument();
 		updateTotalRow();
+
+		if (searchEnabled) {
+			searchEnabled = false;
+			updateSearchPanel();
+		}
 	}
 
 	/**
@@ -2071,6 +2081,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 					document.getNumber(), document.getId()));
 		}
 
+		boolean numberChanged = false;
+
 		try {
 			int result = updateModel();
 
@@ -2079,12 +2091,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			}
 
 			model.saveDocument();
-
-			if (result == 1) { // Tositenumeroa muutettu
-				/* Kaikki tositetiedot on haettava tietokannasta uudelleen, koska
-				 * tositteiden järjestys on muuttunut. */
-				model.fetchDocuments();
-			}
+			numberChanged = (result == 1);
 		}
 		catch (DataAccessException e) {
 			String message = "Tositetietojen tallentaminen epäonnistui";
@@ -2093,7 +2100,13 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return false;
 		}
 
-		updatePosition();
+		if (numberChanged) {
+			refreshModel(false);
+		}
+		else {
+			updatePosition();
+		}
+
 		return true;
 	}
 
@@ -2291,12 +2304,12 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		public void documentTypesChanged() {
 			updateDocumentTypes();
-			refreshModel();
+			refreshModel(true);
 		}
 
 		public void periodChanged() {
 			updatePeriod();
-			refreshModel();
+			refreshModel(true);
 		}
 	};
 
@@ -2561,7 +2574,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			showDocumentNumberShiftDialog();
 		}
 	};
-	
+
 	/* ALV-kantojen muutokset */
 	private ActionListener vatChangeListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {

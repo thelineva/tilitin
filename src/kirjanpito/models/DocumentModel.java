@@ -180,11 +180,13 @@ public class DocumentModel {
 		
 		return true;
 	}
-	
+
 	/**
-	 * Hakee tositetiedot uudelleen tietokannasta.
+	 * Hakee valitun tositelajin tositteet.
+	 * 
+	 * @throws DataAccessException jos tietojen hakeminen epäonnistuu
 	 */
-	public void refresh() throws DataAccessException {
+	public void fetchDocuments(int position) throws DataAccessException {
 		DataSource dataSource = registry.getDataSource();
 		Period period = registry.getPeriod();
 		Session sess = null;
@@ -192,43 +194,29 @@ public class DocumentModel {
 		
 		try {
 			sess = dataSource.openSession();
-			documentCountTotal = dataSource.getDocumentDAO(
-					sess).getCountByPeriodId(period.getId(), 1);
 			
-			DocumentType type = findDocumentType();
-			recordSet = new FilteredDocumentRecordSet(dataSource, period, type,
-					autoCompleteSupport);
-			recordSet.open(sess);
+			if (position < 0) {
+				documentCountTotal = dataSource.getDocumentDAO(
+						sess).getCountByPeriodId(period.getId(), 1);
+				
+				int documentTypeCount = registry.getDocumentTypes().size();
+				
+				if (documentTypeCount == 0) {
+					documentTypeIndex = -1;
+				}
+				else if (documentTypeIndex >= documentTypeCount) {
+					documentTypeIndex = documentTypeCount - 1;
+				}
+			}
 			
-			if (recordSet.getCount() > 0) {
-				fetchDocument();
-			}
-			else {
-				createDocument(sess);
-			}
-		}
-		finally {
-			if (sess != null) sess.close();
-		}
-	}
-
-	/**
-	 * Hakee valitun tositelajin tositteet.
-	 * 
-	 * @throws DataAccessException jos tietojen hakeminen epäonnistuu
-	 */
-	public void fetchDocuments() throws DataAccessException {
-		DataSource dataSource = registry.getDataSource();
-		Period period = registry.getPeriod();
-		Session sess = null;
-		
-		try {
-			sess = dataSource.openSession();
 			recordSet = new FilteredDocumentRecordSet(dataSource, period,
 					getDocumentType(), autoCompleteSupport);
 			recordSet.open(sess);
 			
-			if (recordSet.getCount() > 0) {
+			if (position >= 0 && position < recordSet.getCount()) {
+				goToDocument(position);
+			}
+			else if (recordSet.getCount() > 0) {
 				fetchDocument();
 			}
 			else {
