@@ -3,7 +3,6 @@ package kirjanpito.db.postgresql;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import kirjanpito.db.DocumentType;
 import kirjanpito.db.sql.SQLDocumentTypeDAO;
 
 public class PSQLDocumentTypeDAO extends SQLDocumentTypeDAO {
@@ -13,11 +12,8 @@ public class PSQLDocumentTypeDAO extends SQLDocumentTypeDAO {
 		this.sess = sess;
 	}
 	
-	protected void executeInsertQuery(DocumentType obj) throws SQLException {
-		super.executeInsertQuery(obj);
-		/* Haetaan palvelimelta uusi sekvenssin arvo
-		 * ja päivitetään se olioon. */
-		obj.setId(sess.getSequenceValue("document_type_id_seq"));
+	protected int getGeneratedKey() throws SQLException {
+		return sess.getSequenceValue("document_type_id_seq");
 	}
 	
 	protected PreparedStatement getDeleteQuery() throws SQLException {

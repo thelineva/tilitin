@@ -75,6 +75,7 @@ public abstract class SQLDocumentTypeDAO implements DocumentTypeDAO {
 		setValuesToStatement(stmt, obj);
 		stmt.executeUpdate();
 		stmt.close();
+		obj.setId(getGeneratedKey());
 	}
 	
 	/**
@@ -85,6 +86,14 @@ public abstract class SQLDocumentTypeDAO implements DocumentTypeDAO {
 	 */
 	protected abstract PreparedStatement getInsertQuery() throws SQLException;
 	
+	/**
+	 * Palauttaa tietokantaan lisätyn tositelajin tunnisteen.
+	 *
+	 * @return tositelajin tunniste
+	 * @throws SQLException jos tunnisteen hakeminen epäonnistuu
+	 */
+	protected abstract int getGeneratedKey() throws SQLException;
+
 	/**
 	 * Päivittää tilin tiedot tietokantaan.
 	 * 

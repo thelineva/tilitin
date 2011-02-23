@@ -3,7 +3,6 @@ package kirjanpito.db.postgresql;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import kirjanpito.db.EntryTemplate;
 import kirjanpito.db.sql.SQLEntryTemplateDAO;
 
 public class PSQLEntryTemplateDAO extends SQLEntryTemplateDAO {
@@ -13,11 +12,8 @@ public class PSQLEntryTemplateDAO extends SQLEntryTemplateDAO {
 		this.sess = sess;
 	}
 	
-	protected void executeInsertQuery(EntryTemplate obj) throws SQLException {
-		super.executeInsertQuery(obj);
-		/* Haetaan palvelimelta uusi sekvenssin arvo
-		 * ja päivitetään se olioon. */
-		obj.setId(sess.getSequenceValue("entry_template_id_seq"));
+	protected int getGeneratedKey() throws SQLException {
+		return sess.getSequenceValue("entry_template_id_seq");
 	}
 	
 	protected PreparedStatement getDeleteQuery() throws SQLException {

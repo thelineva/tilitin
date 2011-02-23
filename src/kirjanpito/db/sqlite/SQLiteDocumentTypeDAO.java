@@ -3,7 +3,6 @@ package kirjanpito.db.sqlite;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import kirjanpito.db.DocumentType;
 import kirjanpito.db.sql.SQLDocumentTypeDAO;
 
 public class SQLiteDocumentTypeDAO extends SQLDocumentTypeDAO {
@@ -13,11 +12,8 @@ public class SQLiteDocumentTypeDAO extends SQLDocumentTypeDAO {
 		this.sess = sess;
 	}
 	
-	protected void executeInsertQuery(DocumentType obj) throws SQLException {
-		super.executeInsertQuery(obj);
-		/* Haetaan palvelimelta uuden rivin tunniste
-		 * ja päivitetään se olioon. */ 
-		obj.setId(sess.getInsertId());
+	protected int getGeneratedKey() throws SQLException {
+		return sess.getInsertId();
 	}
 	
 	protected PreparedStatement getDeleteQuery() throws SQLException {

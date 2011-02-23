@@ -314,6 +314,7 @@ public abstract class SQLEntryDAO implements EntryDAO {
 		setValuesToStatement(stmt, obj);
 		stmt.executeUpdate();
 		stmt.close();
+		obj.setId(getGeneratedKey());
 	}
 
 	/**
@@ -323,6 +324,14 @@ public abstract class SQLEntryDAO implements EntryDAO {
 	 * @throws SQLException jos kyselyn luominen epäonnistuu
 	 */
 	protected abstract PreparedStatement getInsertQuery() throws SQLException;
+
+	/**
+	 * Palauttaa tietokantaan lisätyn viennin tunnisteen.
+	 *
+	 * @return viennin tunniste
+	 * @throws SQLException jos tunnisteen hakeminen epäonnistuu
+	 */
+	protected abstract int getGeneratedKey() throws SQLException;
 
 	/**
 	 * Päivittää viennin tiedot tietokantaan.

@@ -89,6 +89,7 @@ public abstract class SQLCOAHeadingDAO implements COAHeadingDAO {
 		setValuesToStatement(stmt, obj);
 		stmt.executeUpdate();
 		stmt.close();
+		obj.setId(getGeneratedKey());
 	}
 	
 	/**
@@ -99,6 +100,14 @@ public abstract class SQLCOAHeadingDAO implements COAHeadingDAO {
 	 */
 	protected abstract PreparedStatement getInsertQuery() throws SQLException;
 	
+	/**
+	 * Palauttaa tietokantaan lisätyn otsikon tunnisteen.
+	 *
+	 * @return otsikon tunniste
+	 * @throws SQLException jos tunnisteen hakeminen epäonnistuu
+	 */
+	protected abstract int getGeneratedKey() throws SQLException;
+
 	/**
 	 * Päivittää otsikon tiedot tietokantaan.
 	 * 

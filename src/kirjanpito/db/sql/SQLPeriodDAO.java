@@ -126,6 +126,7 @@ public abstract class SQLPeriodDAO implements PeriodDAO {
 		setValuesToStatement(stmt, obj);
 		stmt.executeUpdate();
 		stmt.close();
+		obj.setId(getGeneratedKey());
 	}
 	
 	/**
@@ -136,6 +137,14 @@ public abstract class SQLPeriodDAO implements PeriodDAO {
 	 */
 	protected abstract PreparedStatement getInsertQuery() throws SQLException;
 	
+	/**
+	 * Palauttaa tietokantaan lisätyn tilikauden tunnisteen.
+	 *
+	 * @return tilikauden tunniste
+	 * @throws SQLException jos tunnisteen hakeminen epäonnistuu
+	 */
+	protected abstract int getGeneratedKey() throws SQLException;
+
 	/**
 	 * Päivittää tilikauden tiedot tietokantaan.
 	 * 

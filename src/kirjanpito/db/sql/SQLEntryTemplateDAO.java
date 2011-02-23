@@ -90,6 +90,7 @@ public abstract class SQLEntryTemplateDAO implements EntryTemplateDAO {
 		setValuesToStatement(stmt, obj);
 		stmt.executeUpdate();
 		stmt.close();
+		obj.setId(getGeneratedKey());
 	}
 	
 	/**
@@ -100,6 +101,14 @@ public abstract class SQLEntryTemplateDAO implements EntryTemplateDAO {
 	 */
 	protected abstract PreparedStatement getInsertQuery() throws SQLException;
 	
+	/**
+	 * Palauttaa tietokantaan lisätyn vientimallin tunnisteen.
+	 *
+	 * @return vientimallin tunniste
+	 * @throws SQLException jos tunnisteen hakeminen epäonnistuu
+	 */
+	protected abstract int getGeneratedKey() throws SQLException;
+
 	/**
 	 * Päivittää vientimallin tiedot tietokantaan.
 	 * 

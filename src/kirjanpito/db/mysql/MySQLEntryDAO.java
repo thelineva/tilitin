@@ -3,7 +3,6 @@ package kirjanpito.db.mysql;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import kirjanpito.db.Entry;
 import kirjanpito.db.sql.SQLEntryDAO;
 
 /**
@@ -20,11 +19,8 @@ public class MySQLEntryDAO extends SQLEntryDAO {
 		this.sess = sess;
 	}
 
-	protected void executeInsertQuery(Entry obj) throws SQLException {
-		super.executeInsertQuery(obj);
-		/* Haetaan palvelimelta uuden rivin tunniste
-		 * ja päivitetään se olioon. */
-		obj.setId(sess.getInsertId());
+	protected int getGeneratedKey() throws SQLException {
+		return sess.getInsertId();
 	}
 
 	protected PreparedStatement getSelectByDocumentIdQuery() throws SQLException {

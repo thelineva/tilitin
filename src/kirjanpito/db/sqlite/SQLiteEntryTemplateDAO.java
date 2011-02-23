@@ -15,11 +15,8 @@ public class SQLiteEntryTemplateDAO extends SQLEntryTemplateDAO {
 		this.sess = sess;
 	}
 	
-	protected void executeInsertQuery(EntryTemplate obj) throws SQLException {
-		super.executeInsertQuery(obj);
-		/* Haetaan palvelimelta uuden rivin tunniste
-		 * ja päivitetään se olioon. */ 
-		obj.setId(sess.getInsertId());
+	protected int getGeneratedKey() throws SQLException {
+		return sess.getInsertId();
 	}
 	
 	protected PreparedStatement getDeleteQuery() throws SQLException {

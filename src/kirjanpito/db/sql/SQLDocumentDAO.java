@@ -529,6 +529,7 @@ public abstract class SQLDocumentDAO implements DocumentDAO {
 		setValuesToStatement(stmt, obj);
 		stmt.executeUpdate();
 		stmt.close();
+		obj.setId(getGeneratedKey());
 	}
 	
 	/**
@@ -539,6 +540,14 @@ public abstract class SQLDocumentDAO implements DocumentDAO {
 	 */
 	protected abstract PreparedStatement getInsertQuery() throws SQLException;
 	
+	/**
+	 * Palauttaa tietokantaan lisätyn tositteen tunnisteen.
+	 *
+	 * @return tositteen tunniste
+	 * @throws SQLException jos tunnisteen hakeminen epäonnistuu
+	 */
+	protected abstract int getGeneratedKey() throws SQLException;
+
 	/**
 	 * Päivittää tositteen tiedot tietokantaan.
 	 * 
