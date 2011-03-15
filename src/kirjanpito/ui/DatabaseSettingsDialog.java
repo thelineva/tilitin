@@ -147,7 +147,7 @@ public class DatabaseSettingsDialog extends JDialog {
 		createContentPanel();
 		createButtonPanel();
 		pack();
-		setLocationRelativeTo(null);
+		setLocationRelativeTo(getOwner());
 	}
 	
 	private void createContentPanel() {
