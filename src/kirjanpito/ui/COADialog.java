@@ -778,6 +778,7 @@ public class COADialog extends JDialog {
 		
 		Account account = coa.getAccount(index);
 		Account vatAccount1, vatAccount2;
+		boolean changed = true;
 		String number;
 		
 		number = JOptionPane.showInputDialog(this,
@@ -786,12 +787,22 @@ public class COADialog extends JDialog {
 				"ALV-vastatili", JOptionPane.QUESTION_MESSAGE);
 		
 		if (number != null) {
-			vatAccount1 = model.getAccountByNumber(number);
-			
-			if (vatAccount1 == null) {
-				SwingUtils.showInformationMessage(this,
-						"Tiliä ei löytynyt numerolla '" + number + "'.");
-				return;
+			if (number.isEmpty()) {
+				account.setVatAccount1Id(-1);
+				changed = true;
+			}
+			else {
+				vatAccount1 = model.getAccountByNumber(number);
+				
+				if (vatAccount1 == null) {
+					SwingUtils.showInformationMessage(this,
+							"Tiliä ei löytynyt numerolla '" + number + "'.");
+					return;
+				}
+				else {
+					account.setVatAccount1Id(vatAccount1.getId());
+					changed = true;
+				}
 			}
 		}
 		else {
@@ -805,30 +816,29 @@ public class COADialog extends JDialog {
 					"ALV-vastatili (2)", JOptionPane.QUESTION_MESSAGE);
 			
 			if (number != null) {
-				vatAccount2 = model.getAccountByNumber(number);
-				
-				if (vatAccount2 == null) {
-					SwingUtils.showInformationMessage(this,
-							"Tiliä ei löytynyt numerolla '" + number + "'.");
-					return;
+				if (number.isEmpty()) {
+					account.setVatAccount2Id(-1);
+					changed = true;
+				}
+				else {
+					vatAccount2 = model.getAccountByNumber(number);
+					
+					if (vatAccount2 == null) {
+						SwingUtils.showInformationMessage(this,
+								"Tiliä ei löytynyt numerolla '" + number + "'.");
+						return;
+					}
+					else {
+						account.setVatAccount2Id(vatAccount2.getId());
+					}
 				}
 			}
-			else {
-				vatAccount2 = null;
-			}
-		}
-		else {
-			vatAccount2 = null;
 		}
 		
-		account.setVatAccount1Id((vatAccount1 == null) ?
-				-1 : vatAccount1.getId());
-		
-		account.setVatAccount2Id((vatAccount2 == null) ?
-				-1 : vatAccount2.getId());
-		
-		model.updateRow(coa.indexOfAccount(account), false);
-		saveMenuItem.setEnabled(true);
+		if (changed) {
+			model.updateRow(coa.indexOfAccount(account), false);
+			saveMenuItem.setEnabled(true);
+		}
 	}
 	
 	private String accountText(int accountId) {
