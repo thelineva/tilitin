@@ -276,18 +276,35 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 				KeyStroke.getKeyStroke(KeyEvent.VK_M, shortcutKeyMask),
 				editEntryTemplatesListener);
 
-		vatDocumentMenuItem = SwingUtils.createMenuItem("ALV-tilien päättäminen",
-				null, 'p', KeyStroke.getKeyStroke(KeyEvent.VK_R,
-						shortcutKeyMask), vatDocumentListener);
-
 		menu.add(addEntryMenuItem);
 		menu.add(removeEntryMenuItem);
 		menu.add(entryTemplateMenu);
-		menu.add(vatDocumentMenuItem);
+
 		menu.addSeparator();
 
 		exportMenuItem = SwingUtils.createMenuItem("Vie…",
 				null, 'V', null, exportListener);
+
+		menu.add(exportMenuItem);
+
+		menu.add(SwingUtils.createMenuItem("Lopeta", "quit-16x16.png", 'L',
+				KeyStroke.getKeyStroke('Q', shortcutKeyMask),
+				quitListener));
+
+		/* Luodaan Muokkaa-valikko. */
+		menu = new JMenu("Muokkaa");
+		menu.setMnemonic('M');
+		menuBar.add(menu);
+
+		menu.add(SwingUtils.createMenuItem("Kopioi", null, 'K',
+				KeyStroke.getKeyStroke(KeyEvent.VK_C,
+						shortcutKeyMask), copyEntriesListener));
+
+		menu.add(SwingUtils.createMenuItem("Liitä", null, 'L',
+				KeyStroke.getKeyStroke(KeyEvent.VK_V,
+						shortcutKeyMask), pasteEntriesListener));
+
+		menu.addSeparator();
 
 		coaMenuItem = SwingUtils.createMenuItem("Tilikartta…", null, 'T',
 				KeyStroke.getKeyStroke(KeyEvent.VK_T,
@@ -299,19 +316,12 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		settingsMenuItem = SwingUtils.createMenuItem("Perustiedot…", null, 'e',
 				null, settingsListener);
 
-		menu.add(exportMenuItem);
 		menu.add(coaMenuItem);
 		menu.add(startingBalancesMenuItem);
 		menu.add(settingsMenuItem);
 
 		menu.add(SwingUtils.createMenuItem("Tietokanta-asetukset…", null, 'a', null,
 				databaseSettingsListener));
-
-		menu.addSeparator();
-
-		menu.add(SwingUtils.createMenuItem("Lopeta", "quit-16x16.png", 'L',
-				KeyStroke.getKeyStroke('Q', shortcutKeyMask),
-				quitListener));
 
 		/* Luodaan Siirry-valikko. */
 		menu = gotoMenu = new JMenu("Siirry");
@@ -409,6 +419,12 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		menu = toolsMenu = new JMenu("Työkalut");
 		menu.setMnemonic('y');
 		menuBar.add(menu);
+
+		vatDocumentMenuItem = SwingUtils.createMenuItem("ALV-tilien päättäminen",
+				null, 'p', KeyStroke.getKeyStroke(KeyEvent.VK_R,
+						shortcutKeyMask), vatDocumentListener);
+
+		menu.add(vatDocumentMenuItem);
 
 		menu.add(SwingUtils.createMenuItem("Tilien saldojen vertailu", null, 'T',
 				null, balanceComparisonListener));
@@ -2495,6 +2511,20 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private ActionListener editDocTypesListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			editDocumentTypes();
+		}
+	};
+
+	/* Kopioi */
+	private ActionListener copyEntriesListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+
+		}
+	};
+
+	/* Liitä */
+	private ActionListener pasteEntriesListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+
 		}
 	};
 
