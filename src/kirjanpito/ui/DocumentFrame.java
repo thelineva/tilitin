@@ -12,6 +12,10 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -30,6 +34,7 @@ import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
@@ -221,6 +226,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		formatter = new DecimalFormat();
 		formatter.setMinimumFractionDigits(2);
 		formatter.setMaximumFractionDigits(2);
+		formatter.setParseBigDecimal(true);
 
 		AppSettings settings = AppSettings.getInstance();
 		int width = settings.getInt("window.width", 0);
@@ -298,11 +304,11 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		menu.add(SwingUtils.createMenuItem("Kopioi", null, 'K',
 				KeyStroke.getKeyStroke(KeyEvent.VK_C,
-						shortcutKeyMask), copyEntriesListener));
+						shortcutKeyMask), copyEntriesAction));
 
 		menu.add(SwingUtils.createMenuItem("Liitä", null, 'L',
 				KeyStroke.getKeyStroke(KeyEvent.VK_V,
-						shortcutKeyMask), pasteEntriesListener));
+						shortcutKeyMask), pasteEntriesAction));
 
 		menu.addSeparator();
 
@@ -613,7 +619,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		entryTable = new JTable(tableModel);
 		entryTable.setFillsViewportHeight(true);
 		entryTable.setPreferredScrollableViewportSize(new Dimension(680, 250));
-		entryTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		entryTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		entryTable.setSurrendersFocusOnKeystroke(true);
 		entryTable.getTableHeader().setDefaultRenderer(new EntryTableHeaderRenderer(
 				entryTable.getTableHeader().getDefaultRenderer()));
@@ -662,6 +668,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
 
+		int shortcutKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+
 		/* Muutetaan enter-näppäimen toiminta. */
 		entryTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
 				KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "nextCell");
@@ -697,6 +705,16 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 				KeyStroke.getKeyStroke(KeyEvent.VK_F12, 0), "removeSuffix");
 
 		entryTable.getActionMap().put("removeSuffix", removeSuffixAction);
+
+		entryTable.getInputMap(JComponent.WHEN_FOCUSED).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_C, shortcutKeyMask), "copy");
+
+		entryTable.getActionMap().put("copy", copyEntriesAction);
+
+		entryTable.getInputMap(JComponent.WHEN_FOCUSED).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_V, shortcutKeyMask), "paste");
+
+		entryTable.getActionMap().put("paste", pasteEntriesAction);
 
 		descriptionCellEditor.getTextField().getInputMap(JComponent.WHEN_FOCUSED).put(
 				KeyStroke.getKeyStroke(KeyEvent.VK_F12, 0), "removeSuffix");
@@ -1287,11 +1305,22 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	 * Poistaa käyttäjän valitseman viennin.
 	 */
 	public void removeEntry() {
-		int index = entryTable.getSelectedRow();
-		if (index < 0) return;
+		int[] rows = entryTable.getSelectedRows();
+
+		if (rows.length == 0) {
+			return;
+		}
+
 		stopEditing();
-		model.removeEntry(index);
-		tableModel.fireTableRowsDeleted(index, index);
+		Arrays.sort(rows);
+		int index = -1;
+
+		for (int i = rows.length - 1; i >= 0; i--) {
+			index = rows[i];
+			model.removeEntry(index);
+			tableModel.fireTableRowsDeleted(index, index);
+		}
+
 		updateTotalRow();
 
 		/* Valitaan edellinen vienti. */
@@ -1301,6 +1330,126 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		else if (tableModel.getRowCount() > 0) {
 			entryTable.setRowSelectionInterval(0, 0);
 		}
+	}
+
+	/**
+	 * Kopioi valitut viennit leikepöydälle.
+	 */
+	public void copyEntries() {
+		stopEditing();
+		StringBuilder sb = new StringBuilder();
+		int[] rows = entryTable.getSelectedRows();
+
+		for (int i = 0; i < rows.length; i++) {
+			Entry entry = model.getEntry(rows[i]);
+			Account account = registry.getAccountById(entry.getAccountId());
+
+			if (account == null) {
+				sb.append('\t');
+			}
+			else {
+				sb.append(account.getNumber());
+				sb.append('\t');
+				sb.append(account.getName());
+			}
+
+			sb.append('\t');
+
+			if (entry.isDebit()) {
+				sb.append(formatter.format(model.getVatIncludedAmount(rows[i])));
+				sb.append('\t');
+			}
+			else {
+				sb.append('\t');
+				sb.append(formatter.format(model.getVatIncludedAmount(rows[i])));
+			}
+
+			sb.append('\t');
+			sb.append(formatter.format(model.getVatAmount(i)));
+			sb.append('\t');
+			sb.append(entry.getDescription());
+			sb.append(System.getProperty("line.separator"));
+		}
+
+		Toolkit.getDefaultToolkit().getSystemClipboard(
+				).setContents(new StringSelection(sb.toString()), null);
+	}
+
+	/**
+	 * Liittää leikepöydällä olevat viennit.
+	 */
+	public void pasteEntries() {
+		Transferable t = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
+		String text = null;
+
+		try {
+			if (t != null && t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+				text = t.getTransferData(DataFlavor.stringFlavor).toString();
+			}
+		}
+		catch (UnsupportedFlavorException e) {
+		}
+		catch (IOException e) {
+		}
+
+		if (text == null) {
+			return;
+		}
+
+		String[] lines = text.split("\n");
+		stopEditing();
+
+		for (String line : lines) {
+			String[] cols = line.split("\t", 6);
+
+			if (cols.length != 6) {
+				continue;
+			}
+
+			int index = model.addEntry();
+			Entry entry = model.getEntry(index);
+			Account account = registry.getAccountByNumber(cols[0]);
+			boolean vatEntries = true;
+
+			if (account != null) {
+				model.updateAccountId(index, account.getId());
+			}
+
+			if (!cols[4].isEmpty()) {
+				/* Lasketaan ALV, jos ALV-sarakkeen rahamäärä on erisuuri kuin 0,00. */
+				try {
+					vatEntries = ((BigDecimal)formatter.parse(cols[4])).compareTo(BigDecimal.ZERO) != 0;
+				}
+				catch (ParseException e) {
+				}
+			}
+
+			if (!cols[2].isEmpty()) {
+				entry.setDebit(true);
+
+				try {
+					model.updateAmount(index, (BigDecimal)formatter.parse(cols[2]), vatEntries);
+				}
+				catch (ParseException e) {
+				}
+			}
+
+			if (!cols[3].isEmpty()) {
+				entry.setDebit(false);
+
+				try {
+					model.updateAmount(index, (BigDecimal)formatter.parse(cols[3]), vatEntries);
+				}
+				catch (ParseException e) {
+				}
+			}
+
+			entry.setDescription(cols[5]);
+			tableModel.fireTableRowsInserted(index, index);
+			entryTable.changeSelection(index, 0, false, false);
+		}
+
+		updateTotalRow();
 	}
 
 	/**
@@ -2515,16 +2664,20 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	};
 
 	/* Kopioi */
-	private ActionListener copyEntriesListener = new ActionListener() {
-		public void actionPerformed(ActionEvent e) {
+	private AbstractAction copyEntriesAction = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
 
+		public void actionPerformed(ActionEvent e) {
+			copyEntries();
 		}
 	};
 
 	/* Liitä */
-	private ActionListener pasteEntriesListener = new ActionListener() {
-		public void actionPerformed(ActionEvent e) {
+	private AbstractAction pasteEntriesAction = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
 
+		public void actionPerformed(ActionEvent e) {
+			pasteEntries();
 		}
 	};
 
