@@ -28,7 +28,6 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -49,7 +48,7 @@ import kirjanpito.util.AppSettings;
  * 
  * @author Tommi Helineva
  */
-public class PrintPreviewDialog extends JDialog {
+public class PrintPreviewFrame extends JFrame {
 	private PrintPreviewModel model;
 	private PrintPreviewPanel previewPanel;
 	private JLabel pageLabel;
@@ -68,11 +67,15 @@ public class PrintPreviewDialog extends JDialog {
 	private static Logger logger = Logger.getLogger(Kirjanpito.LOGGER_NAME); 
 	private static final long serialVersionUID = 1L;
 	
-	public PrintPreviewDialog(Window owner, PrintPreviewModel model) {
-		super(owner, "Tulosteen esikatselu", ModalityType.MODELESS);
+	public PrintPreviewFrame(Window owner, PrintPreviewModel model) {
+		super("Tulosteen esikatselu");
 		this.model = model;
 	}
 	
+	public PrintPreviewModel getModel() {
+		return model;
+	}
+
 	public void close() {
 		AppSettings settings = AppSettings.getInstance();
 		settings.set("print-preview-window.width", getWidth());
@@ -87,7 +90,7 @@ public class PrintPreviewDialog extends JDialog {
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
-				close();
+				setVisible(false);
 			}
 		});
 		
@@ -123,7 +126,6 @@ public class PrintPreviewDialog extends JDialog {
 		
 		setLocationRelativeTo(null);
 		updatePrint();
-		updatePage();
 	}
 	
 	/**
@@ -295,9 +297,8 @@ public class PrintPreviewDialog extends JDialog {
 			model.setPrintService(service);
 			model.saveAttributeSet();
 			model.setPageIndex(0);
-			updatePrint();
 			previewPanel.revalidate();
-			updatePage();
+			updatePrint();
 		}
 	}
 	
@@ -424,7 +425,7 @@ public class PrintPreviewDialog extends JDialog {
 	/**
 	 * Päivittää ikkunan otsikkorivin ja esikatselupaneelin.
 	 */
-	private void updatePrint() {
+	public void updatePrint() {
 		Print print = model.getPrint();
 		String title;
 		
@@ -445,6 +446,7 @@ public class PrintPreviewDialog extends JDialog {
 		}
 		
 		setTitle(title);
+		updatePage();
 	}
 	
 	/**

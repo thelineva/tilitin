@@ -899,7 +899,7 @@ public class COADialog extends JDialog {
 		PrintPreviewModel previewModel = new PrintPreviewModel();
 		previewModel.setPrintModel(printModel);
 		previewModel.setPrint(print);
-		PrintPreviewDialog frame = new PrintPreviewDialog(this, previewModel);
+		PrintPreviewFrame frame = new PrintPreviewFrame(this, previewModel);
 		frame.create();
 		frame.setVisible(true);
 	}

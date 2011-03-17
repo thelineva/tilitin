@@ -169,6 +169,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private DescriptionCellEditor descriptionCellEditor;
 	private DecimalFormat formatter;
 	private AccountSelectionDialog accountSelectionDialog;
+	private PrintPreviewFrame printPreviewFrame;
 	private boolean searchEnabled;
 
 	private static Logger logger = Logger.getLogger(Kirjanpito.LOGGER_NAME);
@@ -855,6 +856,11 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			model.closeDataSource();
 		}
 
+		if (printPreviewFrame != null) {
+			printPreviewFrame.close();
+			printPreviewFrame = null;
+		}
+
 		AppSettings settings = AppSettings.getInstance();
 
 		/* Tallennetaan ikkunan koko. */
@@ -1102,6 +1108,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return;
 		}
 
+		closePrintPreview();
 		COAModel coaModel = new COAModel(registry);
 		COADialog dialog = new COADialog(this, registry, coaModel);
 		dialog.create();
@@ -1228,6 +1235,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return;
 		}
 
+		closePrintPreview();
 		final SettingsModel settingsModel = new SettingsModel(registry);
 
 		try {
@@ -2418,7 +2426,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	}
 
 	/**
-	 * Näyttää tulosteen esikatseluikkunan.
+	 * Näyttää tulosteiden esikatseluikkunan.
 	 *
 	 * @param printModel tulosteen malli
 	 * @param print tuloste
@@ -2435,12 +2443,30 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 
 		print.setSettings(registry.getSettings());
-		PrintPreviewModel previewModel = new PrintPreviewModel();
+		PrintPreviewModel previewModel;
+
+		if (printPreviewFrame == null) {
+			previewModel = new PrintPreviewModel();
+			printPreviewFrame = new PrintPreviewFrame(this, previewModel);
+			printPreviewFrame.create();
+		}
+		else {
+			previewModel = printPreviewFrame.getModel();
+		}
+
 		previewModel.setPrintModel(printModel);
 		previewModel.setPrint(print);
-		PrintPreviewDialog frame = new PrintPreviewDialog(this, previewModel);
-		frame.create();
-		frame.setVisible(true);
+		printPreviewFrame.updatePrint();
+		printPreviewFrame.setVisible(true);
+	}
+
+	/**
+	 * Sulkee tulosteiden esikatseluikkunan, jos se on auki.
+	 */
+	private void closePrintPreview() {
+		if (printPreviewFrame != null) {
+			printPreviewFrame.setVisible(false);
+		}
 	}
 
 	/**

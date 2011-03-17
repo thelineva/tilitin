@@ -21,6 +21,10 @@ public class DocumentPrintModel implements PrintModel {
 	private Document document;
 	private List<Entry> entries;
 
+	public DocumentPrintModel() {
+		document = new Document();
+	}
+
 	public Registry getRegistry() {
 		return registry;
 	}
@@ -28,21 +32,21 @@ public class DocumentPrintModel implements PrintModel {
 	public void setRegistry(Registry registry) {
 		this.registry = registry;
 	}
-	
+
 	public Document getDocument() {
 		return document;
 	}
 
 	public void setDocument(Document document) {
-		this.document = document;
+		document.copy(this.document);
 	}
 
 	public void run() throws DataAccessException {
 		DataSource dataSource = registry.getDataSource();
 		Session sess = null;
-		
+
 		settings = registry.getSettings();
-		
+
 		try {
 			sess = dataSource.openSession();
 			entries = dataSource.getEntryDAO(sess
@@ -52,13 +56,13 @@ public class DocumentPrintModel implements PrintModel {
 			if (sess != null) sess.close();
 		}
 	}
-	
+
 	public void writeCSV(CSVWriter writer) throws IOException {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
 		DecimalFormat numberFormat = new DecimalFormat();
 		numberFormat.setMinimumFractionDigits(2);
 		numberFormat.setMaximumFractionDigits(2);
-		
+
 		writer.writeField("Tosite");
 		writer.writeLine();
 		writer.writeField("Nimi");
@@ -80,12 +84,12 @@ public class DocumentPrintModel implements PrintModel {
 		writer.writeField("Kredit");
 		writer.writeField("Selite");
 		writer.writeLine();
-		
+
 		for (Entry entry : entries) {
 			Account account = registry.getAccountById(entry.getAccountId());
 			writer.writeField(account.getNumber());
 			writer.writeField(account.getName());
-			
+
 			if (entry.isDebit()) {
 				writer.writeField(numberFormat.format(entry.getAmount()));
 				writer.writeField("");
@@ -94,7 +98,7 @@ public class DocumentPrintModel implements PrintModel {
 				writer.writeField("");
 				writer.writeField(numberFormat.format(entry.getAmount()));
 			}
-			
+
 			writer.writeField(entry.getDescription());
 			writer.writeLine();
 		}
@@ -102,44 +106,44 @@ public class DocumentPrintModel implements PrintModel {
 
 	/**
 	 * Palauttaa käyttäjän nimen.
-	 * 
+	 *
 	 * @return käyttäjän nimi
 	 */
 	public String getName() {
 		return settings.getName();
 	}
-	
+
 	/**
 	 * Palauttaa Y-tunnuksen.
-	 * 
+	 *
 	 * @return y-tunnus
 	 */
 	public String getBusinessId() {
 		return settings.getBusinessId();
 	}
-	
+
 	/**
 	 * Palauttaa vientien lukumäärän.
-	 * 
+	 *
 	 * @return vientien lukumäärä
 	 */
 	public int getEntryCount() {
 		return entries.size();
 	}
-	
+
 	/**
 	 * Palauttaa rivillä <code>index</code> olevan viennin.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return vienti
 	 */
 	public Entry getEntry(int index) {
 		return entries.get(index);
 	}
-	
+
 	/**
 	 * Palauttaa rivillä <code>index</code> olevan viennin tilin.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return tili
 	 */
