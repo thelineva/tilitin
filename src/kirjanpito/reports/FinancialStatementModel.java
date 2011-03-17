@@ -46,6 +46,7 @@ public class FinancialStatementModel implements PrintModel {
 	private DecimalFormat numberFormat;
 	private boolean details;
 	private boolean emptyRow;
+	private boolean nonZeroAccounts;
 	
 	public static final int STYLE_PLAIN = 0;
 	public static final int STYLE_BOLD = 1;
@@ -388,6 +389,7 @@ public class FinancialStatementModel implements PrintModel {
 		
 		BigDecimal amount = BigDecimal.ZERO;
 		BigDecimal amountPrev = BigDecimal.ZERO;
+		nonZeroAccounts = false;
 		
 		if (typeChar == 'F') {
 			String[] fields = line.substring(offset + 3).split(";");
@@ -437,17 +439,14 @@ public class FinancialStatementModel implements PrintModel {
 		
 		text = line.substring(pos1);
 		
-		/* H- ja S-rivit näytetään aina, G- ja T-rivit vain, jos arvo on
-		 * erisuuri kuin 0,00. */
+		/* H- ja S-rivit näytetään aina, G- ja T-rivit vain, jos
+		 * jokin summattavista tileistä on ollut käytössä. */
 		if (previousPeriodVisible) {
-			if (amount.compareTo(BigDecimal.ZERO) == 0 &&
-					amountPrev.compareTo(BigDecimal.ZERO) == 0 &&
-					(typeChar == 'G' || typeChar == 'T')) {
+			if (!nonZeroAccounts && (typeChar == 'G' || typeChar == 'T')) {
 				return;
 			}
 		}
-		else if (amount.compareTo(BigDecimal.ZERO) == 0 &&
-				(typeChar == 'G' || typeChar == 'T')) {
+		else if (!nonZeroAccounts && (typeChar == 'G' || typeChar == 'T')) {
 			return;
 		}
 		
@@ -494,6 +493,7 @@ public class FinancialStatementModel implements PrintModel {
 						balance = balance.negate();
 					
 					sum = sum.add(balance);
+					nonZeroAccounts = true;
 				}
 			}
 		}
