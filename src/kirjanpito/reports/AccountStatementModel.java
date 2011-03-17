@@ -34,6 +34,7 @@ public class AccountStatementModel implements PrintModel {
 	private AccountStatementRow[] rows;
 	private BigDecimal debitTotal;
 	private BigDecimal kreditTotal;
+	private BigDecimal balance;
 	private int lastDocumentNumber;
 	private Date startDate;
 	private Date endDate;
@@ -150,6 +151,7 @@ public class AccountStatementModel implements PrintModel {
 	public void run() throws DataAccessException {
 		Session sess = null;
 		final ArrayList<AccountStatementRow> rowList = new ArrayList<AccountStatementRow>();
+		balance = BigDecimal.ZERO;
 		balances = new AccountBalances();
 		balances.addAccount(account);
 		debitTotal = BigDecimal.ZERO;
@@ -192,9 +194,11 @@ public class AccountStatementModel implements PrintModel {
 								lastDocumentNumber = Math.max(lastDocumentNumber, document.getNumber());
 							}
 							
+							balance = balances.getBalance(account.getId());
+							
 							rowList.add(new AccountStatementRow(
 									document.getNumber(), document.getDate(),
-									entry, balances.getBalance(account.getId())));
+									entry, balance));
 						}
 					});
 		}
@@ -202,8 +206,7 @@ public class AccountStatementModel implements PrintModel {
 			if (sess != null) sess.close();
 		}
 		
-		rowList.add(new AccountStatementRow(-1, null, null,
-				balances.getBalance(account.getId())));
+		rowList.add(new AccountStatementRow(-1, null, null, balance));
 		rows = new AccountStatementRow[rowList.size()];
 		rowList.toArray(rows);
 	}
