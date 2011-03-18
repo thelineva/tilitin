@@ -156,6 +156,14 @@ public class GeneralLedgerPrint extends Print {
 				drawText(model.getDocumentType(i).getName());
 				setNormalStyle();
 			}
+			else if (model.getType(i) == 4) {
+				setX(columns[0]);
+				drawText(account.getNumber());
+				setX(columns[1]);
+				drawText(account.getName());
+				setX(columns[6]);
+				drawTextRight(numberFormat.format(model.getBalance(i)));
+			}
 			
 			setY(getY() + 13);
 		}

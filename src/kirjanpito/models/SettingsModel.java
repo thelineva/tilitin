@@ -280,11 +280,11 @@ public class SettingsModel {
 			if (account.getType() == Account.TYPE_ASSET ||
 					account.getType() == Account.TYPE_LIABILITY ||
 					account.getType() == Account.TYPE_EQUITY ||
-					account.getType() == Account.TYPE_PROFIT)
+					account.getType() == Account.TYPE_PROFIT_PREV)
 			{
 				balance = balances.getBalance(account.getId());
 				
-				if (account.getType() == Account.TYPE_PROFIT) {
+				if (account.getType() == Account.TYPE_PROFIT_PREV) {
 					if (balance == null)
 						balance = BigDecimal.ZERO;
 					

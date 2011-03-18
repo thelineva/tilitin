@@ -86,6 +86,7 @@ public class AccountBalances {
 				(type == Account.TYPE_LIABILITY && debit) ||
 				(type == Account.TYPE_EQUITY && debit) ||
 				(type == Account.TYPE_REVENUE && debit) ||
+				(type == Account.TYPE_PROFIT_PREV && debit) ||
 				(type == Account.TYPE_PROFIT && debit))
 		{
 			amount = amount.negate();

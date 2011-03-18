@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import kirjanpito.db.Account;
@@ -162,6 +163,15 @@ public class GeneralLedgerModel implements PrintModel {
 							return;
 						}
 
+						if (account.getType() == Account.TYPE_PROFIT_PREV) {
+							if (prevAccountId != -1)
+								rows.add(new GeneralLedgerRow(0, null, null, null, null, null));
+
+							rows.add(new GeneralLedgerRow(4, document, null, account, null,
+									balances.getBalance(entry.getAccountId())));
+							return;
+						}
+
 						if (prevAccountId != account.getId()) {
 							if (prevAccountId != -1)
 								rows.add(new GeneralLedgerRow(0, null, null, null, null, null));
@@ -179,6 +189,52 @@ public class GeneralLedgerModel implements PrintModel {
 		}
 		finally {
 			if (sess != null) sess.close();
+		}
+
+		addProfitRow(balances.getProfit());
+	}
+
+	/**
+	 * Lisää tilikauden voitto/tappio -rivin.
+	 *
+	 * @param profit tilikauden voitto/tappio
+	 */
+	protected void addProfitRow(BigDecimal profit) {
+		ArrayList<Account> profitAccounts = new ArrayList<Account>();
+
+		for (Account account : registry.getAccounts()) {
+			if (account.getType() == Account.TYPE_PROFIT) {
+				profitAccounts.add(account);
+			}
+		}
+
+		for (int i = 0; i < rows.size(); i++) {
+			GeneralLedgerRow row = rows.get(i);
+
+			if (row.type != 2) {
+				continue;
+			}
+
+			Iterator<Account> iter = profitAccounts.iterator();
+
+			while (iter.hasNext()) {
+				Account profitAccount = iter.next();
+
+				if (profitAccount.getNumber().compareTo(row.account.getNumber()) < 0) {
+					rows.add(i, new GeneralLedgerRow(0, null, null, null, null, null));
+					rows.add(i, new GeneralLedgerRow(4, null, null, profitAccount, null, profit));
+					iter.remove();
+				}
+			}
+
+			if (profitAccounts.isEmpty()) {
+				break;
+			}
+		}
+
+		for (Account profitAccount : profitAccounts) {
+			rows.add(new GeneralLedgerRow(0, null, null, null, null, null));
+			rows.add(new GeneralLedgerRow(4, null, null, profitAccount, null, profit));
 		}
 	}
 
@@ -229,7 +285,7 @@ public class GeneralLedgerModel implements PrintModel {
 		writer.writeLine();
 
 		for (GeneralLedgerRow row : rows) {
-			if (row.type != 1) {
+			if (row.type != 1 && row.type != 4) {
 				continue;
 			}
 
@@ -240,7 +296,7 @@ public class GeneralLedgerModel implements PrintModel {
 			writer.writeField(row.account.getNumber());
 			writer.writeField(row.account.getName());
 
-			if (row.document.getNumber() == 0) {
+			if (row.document == null || row.document.getNumber() == 0) {
 				writer.writeField("");
 				writer.writeField("");
 				writer.writeField("");
@@ -261,7 +317,11 @@ public class GeneralLedgerModel implements PrintModel {
 			}
 
 			writer.writeField(numberFormat.format(row.balance));
-			writer.writeField(row.entry.getDescription());
+
+			if (row.type == 1) {
+				writer.writeField(row.entry.getDescription());
+			}
+
 			writer.writeLine();
 		}
 	}

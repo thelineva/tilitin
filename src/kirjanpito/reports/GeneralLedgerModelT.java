@@ -67,6 +67,12 @@ public class GeneralLedgerModelT extends GeneralLedgerModel {
 							return;
 						}
 
+						if (account.getType() == Account.TYPE_PROFIT_PREV) {
+							rows.add(new GeneralLedgerRow(4, document, null, account, null,
+									balances.getBalance(entry.getAccountId())));
+							return;
+						}
+
 						DocumentType type = getDocumentTypeByNumber(document.getNumber());
 
 						if (type != null && !documentTypeMap.containsKey(account.getId())) {
@@ -119,12 +125,17 @@ public class GeneralLedgerModelT extends GeneralLedgerModel {
 
 			if (prevAccount != row.account.getId()) {
 				rows.add(i++, new GeneralLedgerRow(0, null, null, null, null, null));
-				rows.add(i++, new GeneralLedgerRow(2, null, null, row.account, null, null));
+
+				if (row.type != 4) {
+					rows.add(i++, new GeneralLedgerRow(2, null, null, row.account, null, null));
+				}
 			}
 
 			prevDocumentType = row.documentType.getId();
 			prevAccount = row.account.getId();
 		}
+
+		addProfitRow(balances.getProfit());
 	}
 
 	public void writeCSV(CSVWriter writer) throws IOException {

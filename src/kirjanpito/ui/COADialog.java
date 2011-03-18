@@ -205,7 +205,8 @@ public class COADialog extends JDialog {
 		accountPopupMenu = new JPopupMenu();
 		
 		String[] types = new String[] {"Vastaavaa", "Vastattavaa",
-				"Oma pääoma", "Tulot", "Menot", "Edellisten tilikausien voitto"};
+				"Oma pääoma", "Tulot", "Menot", "Edellisten tilikausien voitto",
+				"Tilikauden voitto"};
 		
 		typeMenuItems = new JCheckBoxMenuItem[types.length];
 		int index = 0;

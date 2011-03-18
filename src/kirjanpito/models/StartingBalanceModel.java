@@ -80,7 +80,7 @@ public class StartingBalanceModel {
 			if (account.getType() == Account.TYPE_ASSET ||
 					account.getType() == Account.TYPE_LIABILITY ||
 					account.getType() == Account.TYPE_EQUITY ||
-					account.getType() == Account.TYPE_PROFIT) {
+					account.getType() == Account.TYPE_PROFIT_PREV) {
 				numRealAccounts++;
 			}
 		}
@@ -166,7 +166,7 @@ public class StartingBalanceModel {
 				balance.compareTo(BigDecimal.ZERO) > 0) ||
 				((account.getType() == Account.TYPE_LIABILITY ||
 						account.getType() == Account.TYPE_EQUITY ||
-						account.getType() == Account.TYPE_PROFIT) &&
+						account.getType() == Account.TYPE_PROFIT_PREV) &&
 				balance.compareTo(BigDecimal.ZERO) < 0));
 		
 		if (balance.compareTo(BigDecimal.ZERO) < 0)
@@ -307,14 +307,14 @@ public class StartingBalanceModel {
 			if (account.getType() == Account.TYPE_ASSET ||
 					account.getType() == Account.TYPE_LIABILITY ||
 					account.getType() == Account.TYPE_EQUITY ||
-					account.getType() == Account.TYPE_PROFIT)
+					account.getType() == Account.TYPE_PROFIT_PREV)
 			{
 				balance = balances.getBalance(account.getId());
 				
 				if (balance == null)
 					balance = BigDecimal.ZERO;
 				
-				if (account.getType() == Account.TYPE_PROFIT && profit != null)
+				if (account.getType() == Account.TYPE_PROFIT_PREV && profit != null)
 					balance = balance.add(profit);
 				
 				this.accounts[index] = account;

@@ -427,6 +427,7 @@ public class AccountSummaryModel implements PrintModel {
 				return type == Account.TYPE_ASSET ||
 					type == Account.TYPE_LIABILITY ||
 					type == Account.TYPE_EQUITY ||
+					type == Account.TYPE_PROFIT_PREV ||
 					type == Account.TYPE_PROFIT;
 			}
 		}

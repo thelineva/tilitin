@@ -44,7 +44,12 @@ public class Account implements Comparable<Account> {
 	/**
 	 * Edellisten tilikausien voitto
 	 */
-	public static final int TYPE_PROFIT = 5;
+	public static final int TYPE_PROFIT_PREV = 5;
+
+	/**
+	 * Tilikauden voitto
+	 */
+	public static final int TYPE_PROFIT = 6;
 	
 	public Account() {
 	}
