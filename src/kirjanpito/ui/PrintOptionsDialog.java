@@ -279,6 +279,7 @@ public class PrintOptionsDialog extends JDialog {
 	private JPanel createMonthSelectionPanel() {
 		GridBagConstraints c = new GridBagConstraints();
 		JPanel panel = new JPanel(new GridBagLayout());
+		panel.setBorder(BorderFactory.createEmptyBorder(30, 4, 30, 4));
 		
 		Calendar cal = Calendar.getInstance();
 		int year = cal.get(Calendar.YEAR);
@@ -300,7 +301,9 @@ public class PrintOptionsDialog extends JDialog {
 		
 		monthComboBox = new JComboBox(monthItems);
 		monthComboBox.setSelectedIndex(cal.get(Calendar.MONTH));
-		c.insets = new Insets(35, 5, 35, 5);
+		c.insets = new Insets(5, 5, 5, 5);
+		c.ipady = 8;
+		c.ipadx = 12;
 		panel.add(monthComboBox, c);
 		
 		cal.setTime(period.getStartDate());
