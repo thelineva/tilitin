@@ -42,9 +42,9 @@ public class VATReportPrint extends Print {
 		columns = new int[5];
 		columns[0] = getMargins().left;
 		columns[1] = columns[0] + 40;
-		columns[2] = columns[0] + 300;
-		columns[3] = columns[0] + 370;
-		columns[4] = columns[0] + 490;
+		columns[2] = columns[0] + 310;
+		columns[3] = columns[0] + 380;
+		columns[4] = columns[0] + 500;
 	}
 	
 	public String getVariableValue(String name) {
@@ -123,6 +123,22 @@ public class VATReportPrint extends Print {
 				
 				setX(columns[4]);
 				drawTextRight(numberFormat.format(model.getVatIncludedTotal(i)));
+			}
+			else if (model.getType(i) == 4 || model.getType(i) == 5) {
+				setX(columns[1]);
+
+				if (model.getType(i) == 5) {
+					setBoldStyle();
+				}
+				else {
+					setNormalStyle();
+				}
+
+				drawText(model.getText(i));
+				setNormalStyle();
+
+				setX(columns[3]);
+				drawTextRight(numberFormat.format(model.getVatAmountTotal(i)));
 			}
 			
 			setY(getY() + 17);
