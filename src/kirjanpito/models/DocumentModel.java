@@ -710,7 +710,7 @@ public class DocumentModel {
 				removeVatEntry(entry, 2);
 				removeVatEntry(entry, 3);
 			}
-			else if (account.getVatCode() == 9) { // Yhteisöosto
+			else if (account.getVatCode() == 9 || account.getVatCode() == 11) { // Yhteisöosto tai rakentamispalvelun osto
 				vatAmount = VATUtil.addVatAmount(account.getVatRate(), amount);
 				vatExcludedAmount = amount;
 				removeVatEntry(entry, 1);

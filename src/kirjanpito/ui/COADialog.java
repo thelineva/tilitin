@@ -251,7 +251,8 @@ public class COADialog extends JDialog {
 				"Suoritettava ALV", "Vähennettävä ALV",
 				"Verollinen myynti", "Verollinen osto",
 				"Veroton myynti", "Veroton osto",
-				"Yhteisömyynti", "Yhteisöosto"
+				"Yhteisömyynti", "Yhteisöosto",
+				"Rakentamispalvelun myynti", "Rakentamispalvelun osto"
 		};
 		
 		codeMenuItems = new JCheckBoxMenuItem[codes.length];
@@ -271,7 +272,11 @@ public class COADialog extends JDialog {
 		for (String rate : VATUtil.VAT_RATE_TEXTS) {
 			rateMenuItems[index] = new JCheckBoxMenuItem(rate);
 			rateMenuItems[index].addActionListener(accountVatRateListener);
-			vatMenu.add(rateMenuItems[index]);
+
+			if (index >= 1) {
+				vatMenu.add(rateMenuItems[index]);
+			}
+
 			index++;
 		}
 		
@@ -478,7 +483,7 @@ public class COADialog extends JDialog {
 			}
 			
 			boolean rateEnabled = (accountVatCode == 4 ||
-					accountVatCode == 5 || accountVatCode == 9);
+					accountVatCode == 5 || accountVatCode == 9 || accountVatCode == 11);
 			
 			if (!rateEnabled) {
 				accountVatRate = -1;
@@ -731,6 +736,7 @@ public class COADialog extends JDialog {
 			if (code < 4 || code > 5) {
 				account.setVatRate(0);
 				account.setVatAccount1Id(-1);
+				account.setVatAccount2Id(-1);
 			}
 			
 			model.updateRow(index, false);
@@ -810,7 +816,7 @@ public class COADialog extends JDialog {
 			vatAccount1 = null;
 		}
 		
-		if (account.getVatCode() == 9) {
+		if (account.getVatCode() == 9 || account.getVatCode() == 11) {
 			number = JOptionPane.showInputDialog(this,
 					"Anna ALV-vastatilin numero." +
 					accountText(account.getVatAccount2Id()),
