@@ -17,7 +17,7 @@ public class VATUtil {
 	};
 	
 	public static final BigDecimal[] VAT_RATES = {
-		null,
+		new BigDecimal("0.00"),
 		new BigDecimal("0.22"),
 		new BigDecimal("0.17"),
 		new BigDecimal("0.08"),
