@@ -63,18 +63,24 @@ public class GeneralLedgerPrint extends Print {
 		super.printHeader();
 		
 		if (columns == null) {
+			setNormalStyle();
 			int numberColumnWidth = Math.max(25, stringWidth(
 					Integer.toString(model.getLastDocumentNumber())) + 15);
 			
+			setBoldStyle();
+			int debitCreditWidth = Math.max(40, Math.max(
+					stringWidth(numberFormat.format(model.getTotalDebit())) + 12,
+					stringWidth(numberFormat.format(model.getTotalCredit())) + 12));
+
 			columns = new int[8];
 			columns[0] = getMargins().left;
 			columns[1] = columns[0] + 50;
 			columns[2] = columns[0] + 50;
 			columns[3] = columns[1] + numberColumnWidth;
-			columns[4] = columns[3] + 120;
-			columns[5] = columns[3] + 170;
-			columns[6] = columns[3] + 240;
-			columns[7] = columns[3] + 250;
+			columns[4] = columns[3] + 60 + debitCreditWidth;
+			columns[5] = columns[4] + debitCreditWidth;
+			columns[6] = columns[5] + 70;
+			columns[7] = columns[5] + 80;
 		}
 		
 		/* Tulostetaan sarakeotsikot. */
@@ -163,6 +169,13 @@ public class GeneralLedgerPrint extends Print {
 				drawText(account.getName());
 				setX(columns[6]);
 				drawTextRight(numberFormat.format(model.getBalance(i)));
+			}
+			else if (model.getType(i) == 5) {
+				setBoldStyle();
+				setX(columns[4]);
+				drawTextRight(numberFormat.format(model.getTotalDebit()));
+				setX(columns[5]);
+				drawTextRight(numberFormat.format(model.getTotalCredit()));
 			}
 			
 			setY(getY() + 13);

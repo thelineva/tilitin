@@ -1,6 +1,7 @@
 package kirjanpito.reports;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,6 +42,8 @@ public class GeneralLedgerModelT extends GeneralLedgerModel {
 		documentTypes = registry.getDocumentTypes();
 		settings = registry.getSettings();
 		rows = new ArrayList<GeneralLedgerRow>();
+		totalDebit = BigDecimal.ZERO;
+		totalCredit = BigDecimal.ZERO;
 
 		try {
 			sess = dataSource.openSession();
@@ -65,6 +68,13 @@ public class GeneralLedgerModelT extends GeneralLedgerModel {
 
 						if (document.getDate().before(startDate) || document.getDate().after(endDate)) {
 							return;
+						}
+
+						if (entry.isDebit()) {
+							totalDebit = totalDebit.add(entry.getAmount());
+						}
+						else {
+							totalCredit = totalCredit.add(entry.getAmount());
 						}
 
 						if (account.getType() == Account.TYPE_PROFIT_PREV) {
@@ -136,6 +146,8 @@ public class GeneralLedgerModelT extends GeneralLedgerModel {
 		}
 
 		addProfitRow(balances.getProfit());
+		rows.add(new GeneralLedgerRow(0, null, null, null, null, null));
+		rows.add(new GeneralLedgerRow(5, null, null, null, null, null));
 	}
 
 	public void writeCSV(CSVWriter writer) throws IOException {

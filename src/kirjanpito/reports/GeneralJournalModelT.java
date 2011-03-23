@@ -1,6 +1,7 @@
 package kirjanpito.reports;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -39,6 +40,8 @@ public class GeneralJournalModelT extends GeneralJournalModel {
 		documentTypes = registry.getDocumentTypes();
 		settings = registry.getSettings();
 		rows = new ArrayList<GeneralJournalRow>();
+		totalDebit = BigDecimal.ZERO;
+		totalCredit = BigDecimal.ZERO;
 
 		try {
 			sess = dataSource.openSession();
@@ -67,6 +70,13 @@ public class GeneralJournalModelT extends GeneralJournalModel {
 
 						if (type != null && !documentTypeMap.containsKey(account.getId())) {
 							documentTypeMap.put(account.getId(), type);
+						}
+
+						if (entry.isDebit()) {
+							totalDebit = totalDebit.add(entry.getAmount());
+						}
+						else {
+							totalCredit = totalCredit.add(entry.getAmount());
 						}
 
 						lastDocumentNumber = Math.max(lastDocumentNumber, document.getNumber());
@@ -120,6 +130,9 @@ public class GeneralJournalModelT extends GeneralJournalModel {
 			prevDocumentType = row.documentType.getId();
 			prevDocument = row.document.getId();
 		}
+
+		rows.add(new GeneralJournalRow(0, null, null, null, null));
+		rows.add(new GeneralJournalRow(4, null, null, null, null));
 	}
 
 	public void writeCSV(CSVWriter writer) throws IOException {

@@ -1,6 +1,7 @@
 package kirjanpito.reports;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -35,6 +36,8 @@ public class GeneralJournalModel implements PrintModel {
 	protected int orderBy;
 	protected List<GeneralJournalRow> rows;
 	protected int lastDocumentNumber;
+	protected BigDecimal totalDebit;
+	protected BigDecimal totalCredit;
 	private int prevDocumentId;
 
 	public static final int ORDER_BY_NUMBER = 1; // EntryDAO.ORDER_BY_DOCUMENT_NUMBER
@@ -132,6 +135,8 @@ public class GeneralJournalModel implements PrintModel {
 		prevDocumentId = -1;
 		rows = new ArrayList<GeneralJournalRow>();
 		lastDocumentNumber = 0;
+		totalDebit = BigDecimal.ZERO;
+		totalCredit = BigDecimal.ZERO;
 
 		try {
 			sess = dataSource.openSession();
@@ -161,6 +166,13 @@ public class GeneralJournalModel implements PrintModel {
 							rows.add(new GeneralJournalRow(2, document, null, null, null));
 						}
 
+						if (entry.isDebit()) {
+							totalDebit = totalDebit.add(entry.getAmount());
+						}
+						else {
+							totalCredit = totalCredit.add(entry.getAmount());
+						}
+
 						rows.add(new GeneralJournalRow(1, document, null, account, entry));
 						prevDocumentId = document.getId();
 					}
@@ -169,6 +181,9 @@ public class GeneralJournalModel implements PrintModel {
 		finally {
 			if (sess != null) sess.close();
 		}
+
+		rows.add(new GeneralJournalRow(0, null, null, null, null));
+		rows.add(new GeneralJournalRow(4, null, null, null, null));
 	}
 
 	public void writeCSV(CSVWriter writer) throws IOException {
@@ -311,6 +326,24 @@ public class GeneralJournalModel implements PrintModel {
 	 */
 	public int getLastDocumentNumber() {
 		return lastDocumentNumber;
+	}
+
+	/**
+	 * Palauttaa debet-vientien summan.
+	 *
+	 * @return debet-vientien summa
+	 */
+	public BigDecimal getTotalDebit() {
+		return totalDebit;
+	}
+
+	/**
+	 * Palauttaa kredit-vientien summan.
+	 *
+	 * @return kredit-vientien summa
+	 */
+	public BigDecimal getTotalCredit() {
+		return totalCredit;
 	}
 
 	protected class GeneralJournalRow {

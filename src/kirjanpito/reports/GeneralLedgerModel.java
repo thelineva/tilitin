@@ -38,6 +38,8 @@ public class GeneralLedgerModel implements PrintModel {
 	protected Settings settings;
 	protected List<GeneralLedgerRow> rows;
 	protected int lastDocumentNumber;
+	protected BigDecimal totalDebit;
+	protected BigDecimal totalCredit;
 	private int prevAccountId;
 
 	public static final int ORDER_BY_NUMBER = 3; // EntryDAO.ORDER_BY_ACCOUNT_NUMBER_AND_DOCUMENT_NUMBER
@@ -137,6 +139,8 @@ public class GeneralLedgerModel implements PrintModel {
 		prevAccountId = -1;
 		rows = new ArrayList<GeneralLedgerRow>();
 		lastDocumentNumber = 0;
+		totalDebit = BigDecimal.ZERO;
+		totalCredit = BigDecimal.ZERO;
 
 		try {
 			sess = dataSource.openSession();
@@ -161,6 +165,13 @@ public class GeneralLedgerModel implements PrintModel {
 
 						if (document.getDate().before(startDate) || document.getDate().after(endDate)) {
 							return;
+						}
+
+						if (entry.isDebit()) {
+							totalDebit = totalDebit.add(entry.getAmount());
+						}
+						else {
+							totalCredit = totalCredit.add(entry.getAmount());
 						}
 
 						if (account.getType() == Account.TYPE_PROFIT_PREV) {
@@ -192,6 +203,8 @@ public class GeneralLedgerModel implements PrintModel {
 		}
 
 		addProfitRow(balances.getProfit());
+		rows.add(new GeneralLedgerRow(0, null, null, null, null, null));
+		rows.add(new GeneralLedgerRow(5, null, null, null, null, null));
 	}
 
 	/**
@@ -422,6 +435,24 @@ public class GeneralLedgerModel implements PrintModel {
 	 */
 	public int getLastDocumentNumber() {
 		return lastDocumentNumber;
+	}
+
+	/**
+	 * Palauttaa debet-vientien summan.
+	 *
+	 * @return debet-vientien summa
+	 */
+	public BigDecimal getTotalDebit() {
+		return totalDebit;
+	}
+
+	/**
+	 * Palauttaa kredit-vientien summan.
+	 *
+	 * @return kredit-vientien summa
+	 */
+	public BigDecimal getTotalCredit() {
+		return totalCredit;
 	}
 
 	protected class GeneralLedgerRow {

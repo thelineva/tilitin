@@ -62,17 +62,23 @@ public class GeneralJournalPrint extends Print {
 		super.printHeader();
 		
 		if (columns == null) {
+			setNormalStyle();
 			int numberColumnWidth = Math.max(25, stringWidth(
 					Integer.toString(model.getLastDocumentNumber())) + 15);
 			
+			setBoldStyle();
+			int debitCreditWidth = Math.max(40, Math.max(
+					stringWidth(numberFormat.format(model.getTotalDebit())) + 12,
+					stringWidth(numberFormat.format(model.getTotalCredit())) + 12));
+
 			columns = new int[7];
 			columns[0] = getMargins().left;
 			columns[1] = columns[0] + numberColumnWidth;
 			columns[2] = columns[1] + 10;
 			columns[3] = columns[1] + 50;
-			columns[4] = columns[1] + 225;
-			columns[5] = columns[1] + 280;
-			columns[6] = columns[1] + 290;
+			columns[4] = columns[1] + 160 + debitCreditWidth;
+			columns[5] = columns[4] + debitCreditWidth;
+			columns[6] = columns[5] + 10;
 		}
 		
 		/* Tulostetaan sarakeotsikot. */
@@ -135,7 +141,9 @@ public class GeneralJournalPrint extends Print {
 
 				/* Lasketaan tilin nimen enimmäispituus. */
 				String amountString = numberFormat.format(entry.getAmount());
-				int w = entry.isDebit() ? 155 - stringWidth(amountString) : 165;
+				int w = entry.isDebit() ? columns[4] : columns[5];
+				w -= columns[3];
+				w -= stringWidth(amountString) + 12;
 				text = cutString(text, w);
 				drawText(text);
 				
@@ -149,6 +157,13 @@ public class GeneralJournalPrint extends Print {
 				drawTextRight(amountString);
 				setX(columns[6]);
 				drawText(cutString(entry.getDescription(), descriptionWidth));
+			}
+			else if (rowType == 4) {
+				setBoldStyle();
+				setX(columns[4]);
+				drawTextRight(numberFormat.format(model.getTotalDebit()));
+				setX(columns[5]);
+				drawTextRight(numberFormat.format(model.getTotalCredit()));
 			}
 			
 			setY(getY() + 13);
