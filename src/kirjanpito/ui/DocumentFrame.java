@@ -155,7 +155,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private JTextField numberTextField;
 	private DateTextField dateTextField;
 	private JLabel debitTotalLabel;
-	private JLabel kreditTotalLabel;
+	private JLabel creditTotalLabel;
 	private JLabel differenceLabel;
 	private JLabel documentLabel;
 	private JLabel periodLabel;
@@ -762,15 +762,15 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		debitTotalLabel = new JLabel("0,00");
 		Dimension minSize = debitTotalLabel.getMinimumSize();
 		debitTotalLabel.setPreferredSize(new Dimension(80, minSize.height));
-		kreditTotalLabel = new JLabel("0,00");
-		kreditTotalLabel.setPreferredSize(new Dimension(80, minSize.height));
+		creditTotalLabel = new JLabel("0,00");
+		creditTotalLabel.setPreferredSize(new Dimension(80, minSize.height));
 		differenceLabel = new JLabel("0,00");
 		differenceLabel.setPreferredSize(new Dimension(80, minSize.height));
 
 		panel.add(new JLabel("Debet yht."), c);
 		panel.add(debitTotalLabel, c);
 		panel.add(new JLabel("Kredit yht."), c);
-		panel.add(kreditTotalLabel, c);
+		panel.add(creditTotalLabel, c);
 		panel.add(new JLabel("Erotus"), c);
 		c.weightx = 1.0;
 		panel.add(differenceLabel, c);
@@ -2044,7 +2044,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	 */
 	protected void updateTotalRow() {
 		BigDecimal debitTotal = BigDecimal.ZERO;
-		BigDecimal kreditTotal = BigDecimal.ZERO;
+		BigDecimal creditTotal = BigDecimal.ZERO;
 		int count = model.getEntryCount();
 		Entry entry;
 
@@ -2055,13 +2055,13 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 				debitTotal = debitTotal.add(model.getVatIncludedAmount(i));
 			}
 			else {
-				kreditTotal = kreditTotal.add(model.getVatIncludedAmount(i));
+				creditTotal = creditTotal.add(model.getVatIncludedAmount(i));
 			}
 		}
 
-		BigDecimal difference = kreditTotal.subtract(debitTotal).abs();
+		BigDecimal difference = creditTotal.subtract(debitTotal).abs();
 		debitTotalLabel.setText(formatter.format(debitTotal));
-		kreditTotalLabel.setText(formatter.format(kreditTotal));
+		creditTotalLabel.setText(formatter.format(creditTotal));
 		differenceLabel.setForeground(difference.compareTo(BigDecimal.ZERO) == 0 ?
 				debitTotalLabel.getForeground() : Color.RED);
 		differenceLabel.setText(formatter.format(difference));

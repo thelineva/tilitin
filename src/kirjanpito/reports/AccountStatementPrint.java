@@ -149,9 +149,9 @@ public class AccountStatementPrint extends Print {
 					drawTextRight(numberFormat.format(model.getDebitTotal()));
 				}
 				
-				if (model.getKreditTotal().compareTo(BigDecimal.ZERO) != 0) {
+				if (model.getCreditTotal().compareTo(BigDecimal.ZERO) != 0) {
 					setX(columns[3]);
-					drawTextRight(numberFormat.format(model.getKreditTotal()));
+					drawTextRight(numberFormat.format(model.getCreditTotal()));
 				}
 				
 				setX(columns[4]);

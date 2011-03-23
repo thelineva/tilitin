@@ -632,7 +632,7 @@ public class DocumentModel {
 		 * vielä syötetty, asetetaan rahamääräksi
 		 * debet- ja kreditvientien erotus. */
 		if (account != null && amount.compareTo(BigDecimal.ZERO) == 0) {
-			BigDecimal diff = calculateDebitKreditDifference();
+			BigDecimal diff = calculateDebitCreditDifference();
 			
 			if (account.getType() == Account.TYPE_REVENUE) {
 				entry.setDebit(false);
@@ -666,7 +666,7 @@ public class DocumentModel {
 		updateAmount(index, amount, true);
 	}
 	
-	private BigDecimal calculateDebitKreditDifference() {
+	private BigDecimal calculateDebitCreditDifference() {
 		int count = amounts.size();
 		BigDecimal diff = BigDecimal.ZERO;
 		Entry entry;
