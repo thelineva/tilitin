@@ -744,6 +744,58 @@ public class DocumentModel {
 	}
 	
 	/**
+	 * Päivittää ALV:n määrän.
+	 *
+	 * @param index rivinumero
+	 * @param amount ALV:n määrä
+	 */
+	public void updateVatAmount(int index, BigDecimal vatAmount) {
+		Entry entry = entries.get(index);
+
+		if (vatAmount == null) {
+			vatAmount = BigDecimal.ZERO;
+		}
+		else if (vatAmount.compareTo(BigDecimal.ZERO) < 0) {
+			vatAmount = vatAmount.negate();
+		}
+
+		if (entry.getAccountId() >= 0) {
+			Account account = registry.getAccountById(entry.getAccountId());
+
+			if (account == null || account.getVatAccount1Id() < 0) {
+				/* ALV:tä ei lasketa, jos vastatiliä ei ole määritetty. */
+				vatAmount = BigDecimal.ZERO;
+				removeVatEntry(entry, 1);
+				removeVatEntry(entry, 2);
+				removeVatEntry(entry, 3);
+			}
+			else if (account.getVatCode() == 9 || account.getVatCode() == 11) { // Yhteisöosto tai rakentamispalvelun osto
+				removeVatEntry(entry, 1);
+				updateVatEntry(entry, account.getVatAccount1Id(),
+						vatAmount, entry.isDebit(), 2);
+
+				updateVatEntry(entry, account.getVatAccount2Id(),
+						vatAmount, !entry.isDebit(), 3);
+			}
+			else {
+				updateVatEntry(entry, account.getVatAccount1Id(),
+						vatAmount, entry.isDebit(), 1);
+
+				removeVatEntry(entry, 2);
+				removeVatEntry(entry, 3);
+			}
+		}
+		else {
+			removeVatEntry(entry, 1);
+			removeVatEntry(entry, 2);
+			removeVatEntry(entry, 3);
+		}
+
+		entry.setAmount(amounts.get(index).subtract(vatAmount));
+		vatAmounts.set(index, vatAmount);
+	}
+
+	/**
 	 * Poistaa viennin riviltä <code>index</code>.
 	 * 
 	 * @param index

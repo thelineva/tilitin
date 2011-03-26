@@ -641,7 +641,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		TableCellEditor[] editors = new TableCellEditor[] {
 			accountCellEditor, currencyCellEditor, currencyCellEditor,
-			null, descriptionCellEditor };
+			currencyCellEditor, descriptionCellEditor };
 
 		for (int i = 0; i < widths.length; i++) {
 			column = entryTable.getColumnModel().getColumn(i);
@@ -2841,6 +2841,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 					column = 4;
 				}
 
+				changed = true;
+			}
+			else if (column == 3) {
+				column = 4;
 				changed = true;
 			}
 			else {

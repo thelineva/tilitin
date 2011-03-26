@@ -110,7 +110,6 @@ public class EntryTableModel extends AbstractTableModel {
 	 * @return <code>true</code>, jos taulukon solua voi muokata
 	 */
 	public boolean isCellEditable(int row, int col) {
-		if (col == 3) return false;
 		return model.isEditable();
 	}
 
@@ -143,6 +142,9 @@ public class EntryTableModel extends AbstractTableModel {
 			entry.setDebit(false);
 			model.updateAmount(row, (BigDecimal)value, vatEntries);
 			currencyCellEditor.setLastModifiers(0);
+		}
+		else if (col == 3) {
+			model.updateVatAmount(row, (BigDecimal)value);
 		}
 		else if (col == 4) {
 			Entry entry = model.getEntry(row);
