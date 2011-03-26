@@ -1585,6 +1585,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		dialog.setPeriod(registry.getPeriod());
 		dialog.create();
 		dialog.setPreviousPeriodVisible(settings.getBoolean("previous-period", false));
+		dialog.setPageBreakCheckBoxVisible(false);
 		dialog.showTab(0);
 		dialog.setVisible(true);
 

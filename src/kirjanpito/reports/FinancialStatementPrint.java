@@ -2,6 +2,7 @@ package kirjanpito.reports;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 import kirjanpito.db.Period;
 
@@ -13,6 +14,7 @@ import kirjanpito.db.Period;
 public class FinancialStatementPrint extends Print {
 	private FinancialStatementModel model;
 	private DecimalFormat numberFormat;
+	private ArrayList<Integer> rowMapping;
 	private int[] columns;
 	private int numRowsPerPage;
 	private int pageCount;
@@ -46,16 +48,30 @@ public class FinancialStatementPrint extends Print {
 
 	public void initialize() {
 		super.initialize();
-		numRowsPerPage = (getContentHeight() - 10) / 17;
-		
-		if (numRowsPerPage > 0) {
-			pageCount = (int)Math.ceil(model.getRowCount() / (double)numRowsPerPage);
-			pageCount = Math.max(1, pageCount); /* Vähintään yksi sivu. */
+		numRowsPerPage = Math.max(1, (getContentHeight() - 10) / 17);
+		rowMapping = new ArrayList<Integer>();
+		int rowsRemaining = numRowsPerPage;
+		pageCount = 1;
+
+		for (int i = 0; i < model.getRowCount(); i++) {
+			if (rowsRemaining == 0) {
+				pageCount++;
+				rowsRemaining = numRowsPerPage;
+			}
+
+			if (model.getLevel(i) < 0) {
+				while (rowsRemaining > 0) {
+					rowMapping.add(-1);
+					rowsRemaining--;
+				}
+
+				continue;
+			}
+
+			rowMapping.add(i);
+			rowsRemaining--;
 		}
-		else {
-			pageCount = 1;
-		}
-		
+
 		columns = null;
 	}
 	
@@ -117,13 +133,20 @@ public class FinancialStatementPrint extends Print {
 
 	protected void printContent() {
 		int offset = getPageIndex() * numRowsPerPage;
-		int numRows = Math.min(model.getRowCount(), offset + numRowsPerPage);
+		int numRows = Math.min(rowMapping.size(), offset + numRowsPerPage);
 		BigDecimal amount, amountPrev;
 		
 		setNormalStyle();
 		y += 17;
 		
-		for (int i = offset; i < numRows; i++) {
+		for (int r = offset; r < numRows; r++) {
+			int i = rowMapping.get(r);
+
+			if (i < 0) {
+				setY(getY() + 17);
+				continue;
+			}
+
 			if (model.getStyle(i) == FinancialStatementModel.STYLE_BOLD)
 				setBoldStyle();
 			else if (model.getStyle(i) == FinancialStatementModel.STYLE_ITALIC)

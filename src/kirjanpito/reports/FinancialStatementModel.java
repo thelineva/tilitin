@@ -38,6 +38,7 @@ public class FinancialStatementModel implements PrintModel {
 	private String title;
 	private String reportId;
 	private boolean previousPeriodVisible;
+	private boolean pageBreakEnabled;
 	private ReportStructure structure;
 	private List<Account> accounts;
 	private List<FinancialStatementRow> rows;
@@ -219,6 +220,24 @@ public class FinancialStatementModel implements PrintModel {
 		this.previousPeriodVisible = previousPeriodVisible;
 	}
 
+	/**
+	 * Ilmoittaa, ovatko sivunvaihdot käytössä
+	 *
+	 * @return <code>true</code>, jos sivunvaihdot ovat käytössä
+	 */
+	public boolean isPageBreakEnabled() {
+		return pageBreakEnabled;
+	}
+
+	/**
+	 * Asettaa sivunvaihdot käyttöön tai pois käytöstä.
+	 *
+	 * @param pageBreakEnabled <code>true</code> tai <code>false</code>
+	 */
+	public void setPageBreakEnabled(boolean pageBreakEnabled) {
+		this.pageBreakEnabled = pageBreakEnabled;
+	}
+
 	public void run() throws DataAccessException {
 		Session sess = null;
 		
@@ -354,7 +373,14 @@ public class FinancialStatementModel implements PrintModel {
 	}
 	
 	private void processLine(String line) {
-		if (line.equals("-")) {
+		if (line.equals("--") && pageBreakEnabled) {
+			rows.add(new FinancialStatementRow(null,
+					"", STYLE_PLAIN, -1, null, null));
+			emptyRow = true;
+			return;
+		}
+
+		if (line.startsWith("-")) {
 			if (!emptyRow) {
 				rows.add(new FinancialStatementRow(null,
 					"", STYLE_PLAIN, 0, null, null));

@@ -233,7 +233,7 @@ public class ReportEditorModel {
 				if (len == 0)
 					continue;
 				
-				if (line.equals("-")) {
+				if (line.equals("-") || line.equals("--")) {
 					continue;
 				}
 				
