@@ -94,7 +94,7 @@ import kirjanpito.models.EntryTableModel;
 import kirjanpito.models.EntryTemplateModel;
 import kirjanpito.models.PrintPreviewModel;
 import kirjanpito.models.ReportEditorModel;
-import kirjanpito.models.SettingsModel;
+import kirjanpito.models.PropertiesModel;
 import kirjanpito.models.StartingBalanceModel;
 import kirjanpito.models.StatisticsModel;
 import kirjanpito.reports.AccountStatementModel;
@@ -1236,7 +1236,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 
 		closePrintPreview();
-		final SettingsModel settingsModel = new SettingsModel(registry);
+		final PropertiesModel settingsModel = new PropertiesModel(registry);
 
 		try {
 			settingsModel.initialize();
@@ -1248,7 +1248,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return;
 		}
 
-		SettingsDialog dialog = new SettingsDialog(
+		PropertiesDialog dialog = new PropertiesDialog(
 				this, settingsModel);
 
 		dialog.create();

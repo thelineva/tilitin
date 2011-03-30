@@ -24,14 +24,14 @@ import kirjanpito.util.Registry;
  * 
  * @author Tommi Helineva
  */
-public class SettingsModel {
+public class PropertiesModel {
 	private Registry registry;
 	private Settings settings;
 	private List<Period> periods;
 	private HashSet<Period> changedPeriods;
 	private int currentPeriodIndex;
 	
-	public SettingsModel(Registry registry) {
+	public PropertiesModel(Registry registry) {
 		this.registry = registry;
 		this.settings = registry.getSettings();
 		this.changedPeriods = new HashSet<Period>();

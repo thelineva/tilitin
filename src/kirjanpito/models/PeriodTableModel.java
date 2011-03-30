@@ -13,7 +13,7 @@ import kirjanpito.db.Period;
  * @author Tommi Helineva
  */
 public class PeriodTableModel extends AbstractTableModel {
-	private SettingsModel model;
+	private PropertiesModel model;
 	
 	private static final long serialVersionUID = 1L;
 
@@ -22,7 +22,7 @@ public class PeriodTableModel extends AbstractTableModel {
 		"", "Alkaa", "Päättyy"
 	};
 	
-	public PeriodTableModel(SettingsModel model) {
+	public PeriodTableModel(PropertiesModel model) {
 		setModel(model);
 	}
 
@@ -31,7 +31,7 @@ public class PeriodTableModel extends AbstractTableModel {
 	 * 
 	 * @return malli
 	 */
-	public SettingsModel getModel() {
+	public PropertiesModel getModel() {
 		return model;
 	}
 
@@ -40,7 +40,7 @@ public class PeriodTableModel extends AbstractTableModel {
 	 * 
 	 * @param model malli
 	 */
-	public void setModel(SettingsModel model) {
+	public void setModel(PropertiesModel model) {
 		this.model = model;
 	}
 

@@ -29,15 +29,15 @@ import kirjanpito.db.DataAccessException;
 import kirjanpito.db.Period;
 import kirjanpito.db.Settings;
 import kirjanpito.models.PeriodTableModel;
-import kirjanpito.models.SettingsModel;
+import kirjanpito.models.PropertiesModel;
 
 /**
  * Perustietojen muokkausikkuna.
  * 
  * @author Tommi Helineva
  */
-public class SettingsDialog extends JDialog {
-	private SettingsModel model;
+public class PropertiesDialog extends JDialog {
+	private PropertiesModel model;
 	private JTextField nameTextField;
 	private JTextField businessIdTextField;
 	private JButton okButton;
@@ -49,7 +49,7 @@ public class SettingsDialog extends JDialog {
 	
 	private static Logger logger = Logger.getLogger(Kirjanpito.LOGGER_NAME);
 	
-	public SettingsDialog(Frame owner, SettingsModel model) {
+	public PropertiesDialog(Frame owner, PropertiesModel model) {
 		super(owner, "Perustiedot", true);
 		this.model = model;
 	}
