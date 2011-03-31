@@ -2385,6 +2385,18 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return -1;
 		}
 
+		Period period = registry.getPeriod();
+
+		if (document.getDate().before(period.getStartDate()) ||
+				document.getDate().after(period.getEndDate())) {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
+			SwingUtils.showErrorMessage(this, String.format("Päivämäärä ei kuulu nykyiselle tilikaudelle\n%s - %s.",
+					dateFormat.format(period.getStartDate()),
+					dateFormat.format(period.getEndDate())));
+			dateTextField.requestFocusInWindow();
+			return -1;
+		}
+
 		removeEmptyEntry();
 		int count = model.getEntryCount();
 
