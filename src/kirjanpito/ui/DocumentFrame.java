@@ -2241,6 +2241,9 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			vatColumn = columnModel.getColumn(3);
 			columnModel.removeColumn(vatColumn);
 		}
+
+		boolean vatEditable = settings.getProperty("vatLocked", "true").equals("false");
+		tableModel.setVatEditable(vatEditable);
 	}
 
 	protected int mapColumnIndexToView(int col) {

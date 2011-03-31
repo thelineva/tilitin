@@ -17,6 +17,7 @@ import kirjanpito.ui.CurrencyCellEditor;
 public class EntryTableModel extends AbstractTableModel {
 	private DocumentModel model;
 	private CurrencyCellEditor currencyCellEditor;
+	private boolean vatEditable;
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -43,6 +44,14 @@ public class EntryTableModel extends AbstractTableModel {
 
 	public void setCurrencyCellEditor(CurrencyCellEditor currencyCellEditor) {
 		this.currencyCellEditor = currencyCellEditor;
+	}
+
+	public boolean isVatEditable() {
+		return vatEditable;
+	}
+
+	public void setVatEditable(boolean vatEditable) {
+		this.vatEditable = vatEditable;
 	}
 
 	/**
@@ -110,7 +119,9 @@ public class EntryTableModel extends AbstractTableModel {
 	 * @return <code>true</code>, jos taulukon solua voi muokata
 	 */
 	public boolean isCellEditable(int row, int col) {
-		return model.isDocumentEditable();
+		if (!model.isDocumentEditable()) return false;
+		if (col == 3) return vatEditable;
+		return true;
 	}
 
 	/**
