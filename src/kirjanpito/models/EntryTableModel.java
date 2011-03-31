@@ -110,7 +110,7 @@ public class EntryTableModel extends AbstractTableModel {
 	 * @return <code>true</code>, jos taulukon solua voi muokata
 	 */
 	public boolean isCellEditable(int row, int col) {
-		return model.isEditable();
+		return model.isDocumentEditable();
 	}
 
 	/**

@@ -2,7 +2,10 @@ package kirjanpito.models;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -51,6 +54,8 @@ public class DocumentModel {
 	private boolean editable;
 	private boolean autoCompleteEnabled;
 	private AutoCompleteSupport autoCompleteSupport;
+	private SimpleDateFormat monthFormat;
+	private String[] lockedMonths;
 	
 	public static final int FETCH_FIRST = -4;
 	public static final int FETCH_LAST = -3;
@@ -63,6 +68,7 @@ public class DocumentModel {
 		amounts = new ArrayList<BigDecimal>();
 		vatAmounts = new ArrayList<BigDecimal>();
 		documentTypeIndex = -1;
+		monthFormat = new SimpleDateFormat("yyyy-MM");
 	}
 	
 	/**
@@ -155,6 +161,7 @@ public class DocumentModel {
 			
 			Period period = registry.getPeriod();
 			editable = !period.isLocked();
+			loadLockedMonths();
 			documentCountTotal = dataSource.getDocumentDAO(
 					sess).getCountByPeriodId(period.getId(), 1);
 			
@@ -351,12 +358,26 @@ public class DocumentModel {
 	}
 	
 	/**
-	 * Ilmoittaa, voiko tositteita muokata.
-	 * 
-	 * @return <code>true</code>, jos tositteita voi muokata
+	 * Ilmoittaa, voiko nykyisen tilikauden tietoja muokata.
+	 * @return <code>true</code>, jos nykyisen tilikauden tietoja voi muokata
 	 */
-	public boolean isEditable() {
+	public boolean isPeriodEditable() {
 		return editable;
+	}
+
+	/**
+	 * Ilmoittaa, voiko valittua tositetta muokata.
+	 *
+	 * @return <code>true</code>, jos tositetta voi muokata
+	 */
+	public boolean isDocumentEditable() {
+		boolean monthEditable = true;
+
+		if (document != null) {
+			monthEditable = isMonthEditable(document.getDate());
+		}
+
+		return monthEditable && editable;
 	}
 	
 	/**
@@ -1069,6 +1090,18 @@ public class DocumentModel {
 		return 0;
 	}
 	
+	public void loadLockedMonths() {
+		Settings settings = registry.getSettings();
+		String key = "locked/" + registry.getPeriod().getId();
+		lockedMonths = settings.getProperty(key, "").split(",");
+		Arrays.sort(lockedMonths);
+	}
+
+	public boolean isMonthEditable(Date date) {
+		return Arrays.binarySearch(lockedMonths,
+				monthFormat.format(date)) < 0;
+	}
+
 	private void updateVatEntry(Entry entry, int accountId,
 			BigDecimal vatAmount, boolean debit, int index) {
 		

@@ -142,7 +142,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private JMenuItem exportMenuItem;
 	private JMenuItem editEntryTemplatesMenuItem;
 	private JMenuItem startingBalancesMenuItem;
-	private JMenuItem settingsMenuItem;
+	private JMenuItem propertiesMenuItem;
 	private JCheckBoxMenuItem searchMenuItem;
 	private JCheckBoxMenuItem[] docTypeMenuItems;
 	private JMenuItem editDocTypesMenuItem;
@@ -320,12 +320,15 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		startingBalancesMenuItem = SwingUtils.createMenuItem("Alkusaldot…", null, 's',
 				null, startingBalancesListener);
 
-		settingsMenuItem = SwingUtils.createMenuItem("Perustiedot…", null, 'e',
-				null, settingsListener);
+		propertiesMenuItem = SwingUtils.createMenuItem("Perustiedot…", null, 'e',
+				null, propertiesListener);
 
 		menu.add(coaMenuItem);
 		menu.add(startingBalancesMenuItem);
-		menu.add(settingsMenuItem);
+		menu.add(propertiesMenuItem);
+
+		menu.add(SwingUtils.createMenuItem("Kirjausasetukset…", null, 'K', null,
+				settingsListener));
 
 		menu.add(SwingUtils.createMenuItem("Tietokanta-asetukset…", null, 'a', null,
 				databaseSettingsListener));
@@ -1230,7 +1233,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	/**
 	 * Näyttää perustiedot.
 	 */
-	public void showSettings() {
+	public void showProperties() {
 		if (!saveDocumentIfChanged()) {
 			return;
 		}
@@ -1251,6 +1254,19 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		PropertiesDialog dialog = new PropertiesDialog(
 				this, settingsModel);
 
+		dialog.create();
+		dialog.setVisible(true);
+	}
+
+	/**
+	 * Näyttää kirjausasetukset.
+	 */
+	public void showSettings() {
+		if (!saveDocumentIfChanged()) {
+			return;
+		}
+
+		SettingsDialog dialog = new SettingsDialog(this, registry);
 		dialog.create();
 		dialog.setVisible(true);
 	}
@@ -1301,6 +1317,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	 * Lisää viennin tositteeseen.
 	 */
 	public void addEntry() {
+		if (!model.isDocumentEditable()) {
+			return;
+		}
+
 		stopEditing();
 		int index = model.addEntry();
 		tableModel.fireTableRowsInserted(index, index);
@@ -1313,6 +1333,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	 * Poistaa käyttäjän valitseman viennin.
 	 */
 	public void removeEntry() {
+		if (!model.isDocumentEditable()) {
+			return;
+		}
+
 		int[] rows = entryTable.getSelectedRows();
 
 		if (rows.length == 0) {
@@ -1901,7 +1925,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		catch (DataAccessException e) {
 			String message = "Tietokantayhteyden avaaminen epäonnistui";
 			logger.log(Level.SEVERE, message, e);
-			setComponentsEnabled(false, false);
+			setComponentsEnabled(false, false, false);
 			SwingUtils.showDataAccessErrorMessage(this, e, message);
 		}
 
@@ -1967,10 +1991,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 				dateFormat.format(period.getStartDate()) + " - " +
 				dateFormat.format(period.getEndDate());
 			periodLabel.setText(text);
-
-			/* Poistetaan muokkaustoiminnot käytöstä, jos
-			 * tilikausi on lukittu. */
-			setComponentsEnabled(true, !period.isLocked());
 		}
 	}
 
@@ -2038,6 +2058,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 
 		tableModel.fireTableDataChanged();
+		setComponentsEnabled(true, model.isPeriodEditable(),
+				model.isDocumentEditable());
 	}
 
 	/**
@@ -2187,7 +2209,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	}
 
 	protected void initializeDataSource() {
-		setComponentsEnabled(false, false);
+		setComponentsEnabled(false, false, false);
 
 		DataSourceInitializationModel initModel =
 			new DataSourceInitializationModel();
@@ -2212,10 +2234,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 	}
 
-	protected void setComponentsEnabled(boolean read, boolean write) {
+	protected void setComponentsEnabled(boolean read, boolean create, boolean edit) {
 		coaMenuItem.setEnabled(read);
 		startingBalancesMenuItem.setEnabled(read);
-		settingsMenuItem.setEnabled(read);
+		propertiesMenuItem.setEnabled(read);
 		exportMenuItem.setEnabled(read);
 		gotoMenu.setEnabled(read);
 		docTypeMenu.setEnabled(read);
@@ -2224,16 +2246,18 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		prevButton.setEnabled(read);
 		nextButton.setEnabled(read);
 
-		newDocMenuItem.setEnabled(write);
-		deleteDocMenuItem.setEnabled(write);
-		addEntryMenuItem.setEnabled(write);
-		removeEntryMenuItem.setEnabled(write);
-		vatDocumentMenuItem.setEnabled(write);
-		entryTemplateMenu.setEnabled(write);
-		newDocButton.setEnabled(write);
-		addEntryButton.setEnabled(write);
-		removeEntryButton.setEnabled(write);
-		dateTextField.setEditable(write);
+		newDocMenuItem.setEnabled(create);
+		newDocButton.setEnabled(create);
+		vatDocumentMenuItem.setEnabled(create);
+
+		deleteDocMenuItem.setEnabled(edit);
+		addEntryMenuItem.setEnabled(edit);
+		addEntryButton.setEnabled(edit);
+		removeEntryMenuItem.setEnabled(edit);
+		removeEntryButton.setEnabled(edit);
+		entryTemplateMenu.setEnabled(edit);
+		numberTextField.setEditable(edit);
+		dateTextField.setEditable(edit);
 	}
 
 	/**
@@ -2344,6 +2368,14 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		if (document.getDate() == null) {
 			SwingUtils.showErrorMessage(this, "Syötä tositteen päivämäärä ennen tallentamista.");
+			dateTextField.requestFocusInWindow();
+			return -1;
+		}
+
+		if (!model.isMonthEditable(document.getDate())) {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM yyyy");
+			SwingUtils.showErrorMessage(this, String.format("Kuukausi %s on lukittu.",
+					dateFormat.format(document.getDate())));
 			dateTextField.requestFocusInWindow();
 			return -1;
 		}
@@ -2487,6 +2519,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 	private RegistryAdapter registryListener = new RegistryAdapter() {
 		public void settingsChanged() {
+			model.loadLockedMonths();
+			updateDocument();
 			updateTitle();
 		}
 
@@ -2652,6 +2686,13 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	};
 
 	/* Perustiedot */
+	private ActionListener propertiesListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			showProperties();
+		}
+	};
+
+	/* Kirjausasetukset */
 	private ActionListener settingsListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			showSettings();
