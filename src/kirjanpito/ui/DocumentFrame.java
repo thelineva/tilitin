@@ -75,6 +75,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 
 import kirjanpito.db.Account;
 import kirjanpito.db.DataAccessException;
@@ -93,8 +94,8 @@ import kirjanpito.models.DocumentTypeModel;
 import kirjanpito.models.EntryTableModel;
 import kirjanpito.models.EntryTemplateModel;
 import kirjanpito.models.PrintPreviewModel;
-import kirjanpito.models.ReportEditorModel;
 import kirjanpito.models.PropertiesModel;
+import kirjanpito.models.ReportEditorModel;
 import kirjanpito.models.StartingBalanceModel;
 import kirjanpito.models.StatisticsModel;
 import kirjanpito.models.TextFieldWithLockIcon;
@@ -163,6 +164,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private JLabel periodLabel;
 	private JLabel documentTypeLabel;
 	private JTable entryTable;
+	private TableColumn vatColumn;
+	private EntryTableHeaderRenderer tableHeaderRenderer;
 	private JPanel searchPanel;
 	private JTextField searchPhraseTextField;
 	private EntryTableModel tableModel;
@@ -628,8 +631,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		entryTable.setPreferredScrollableViewportSize(new Dimension(680, 250));
 		entryTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		entryTable.setSurrendersFocusOnKeystroke(true);
-		entryTable.getTableHeader().setDefaultRenderer(new EntryTableHeaderRenderer(
-				entryTable.getTableHeader().getDefaultRenderer()));
+
+		tableHeaderRenderer = new EntryTableHeaderRenderer(
+				entryTable.getTableHeader().getDefaultRenderer());
+		entryTable.getTableHeader().setDefaultRenderer(tableHeaderRenderer);
 
 		TableColumn column;
 		int[] widths = new int[] {190, 80, 80, 80, 190};
@@ -875,8 +880,12 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		/* Tallennetaan taulukon sarakkeiden leveydet. */
 		for (int i = 0; i < 5; i++) {
-			settings.set("table.columns." + i, entryTable.getColumnModel(
-					).getColumn(i).getWidth());
+			int columnIndex = mapColumnIndexToView(i);
+
+			if (columnIndex >= 0) {
+				settings.set("table.columns." + i, entryTable.getColumnModel(
+						).getColumn(columnIndex).getWidth());
+			}
 		}
 
 		settings.set("table.auto-complete-enabled", model.isAutoCompleteEnabled());
@@ -1938,6 +1947,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		updateTotalRow();
 		updateEntryTemplates();
 		updateDocumentTypes();
+		updateTableSettings();
 	}
 
 	protected void refreshModel(boolean positionChanged) {
@@ -2210,6 +2220,49 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		if (searchEnabled) {
 			searchPhraseTextField.requestFocusInWindow();
 		}
+	}
+
+	/**
+	 * Päivittää vientitaulukon asetukset.
+	 */
+	protected void updateTableSettings() {
+		TableColumnModel columnModel = entryTable.getColumnModel();
+		Settings settings = registry.getSettings();
+		boolean vatVisible = !settings.getProperty("vatVisible", "true").equals("false");
+
+		if (vatVisible && vatColumn != null) {
+			/* Näytetään ALV-sarake. */
+			columnModel.addColumn(vatColumn);
+			columnModel.moveColumn(columnModel.getColumnCount() - 1, 3);
+			vatColumn = null;
+		}
+		else if (!vatVisible && vatColumn == null) {
+			/* Piilotetaan ALV-sarake. */
+			vatColumn = columnModel.getColumn(3);
+			columnModel.removeColumn(vatColumn);
+		}
+	}
+
+	protected int mapColumnIndexToView(int col) {
+		int[] indexes = {0, 1, 2, 3, 4};
+
+		if (vatColumn != null) {
+			indexes[3] = -1;
+			indexes[4] = 3;
+		}
+
+		return indexes[col];
+	}
+
+	protected int mapColumnIndexToModel(int col) {
+		int[] indexes = {0, 1, 2, 3, 4};
+
+		if (vatColumn != null) {
+			indexes[3] = 4;
+			indexes[4] = -1;
+		}
+
+		return indexes[col];
 	}
 
 	protected void initializeDataSource() {
@@ -2537,6 +2590,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private RegistryAdapter registryListener = new RegistryAdapter() {
 		public void settingsChanged() {
 			model.loadLockedMonths();
+			updateTableSettings();
 			updateDocument();
 			updateTitle();
 		}
@@ -2556,11 +2610,11 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 	};
 
-	private static class EntryTableHeaderRenderer extends DefaultTableCellRenderer {
+	private class EntryTableHeaderRenderer extends DefaultTableCellRenderer {
 		private TableCellRenderer defaultRenderer;
+		private final int[] alignments = {
+				JLabel.LEFT, JLabel.RIGHT, JLabel.RIGHT, JLabel.RIGHT, JLabel.LEFT};
 		private static final long serialVersionUID = 1L;
-		private static final int[] alignments = {
-			JLabel.LEFT, JLabel.RIGHT, JLabel.RIGHT, JLabel.RIGHT, JLabel.LEFT};
 
 		public EntryTableHeaderRenderer(TableCellRenderer defaultRenderer) {
 			this.defaultRenderer = defaultRenderer;
@@ -2575,7 +2629,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 			if (comp instanceof JLabel) {
 				/* Muutetaan tekstin tasaus. */
-				((JLabel)comp).setHorizontalAlignment(alignments[column]);
+				((JLabel)comp).setHorizontalAlignment(alignments[mapColumnIndexToModel(column)]);
 			}
 
 			return comp;
@@ -2875,7 +2929,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		private static final long serialVersionUID = 1L;
 
 		public void actionPerformed(ActionEvent e) {
-			int column = entryTable.getSelectedColumn();
+			int column = mapColumnIndexToModel(entryTable.getSelectedColumn());
 			int row = entryTable.getSelectedRow();
 			boolean changed = false;
 
@@ -2940,6 +2994,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			}
 
 			if (changed) {
+				column = mapColumnIndexToView(column);
 				entryTable.changeSelection(row, column, false, false);
 				entryTable.editCellAt(row, column);
 			}
