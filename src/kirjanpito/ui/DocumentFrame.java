@@ -149,7 +149,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private JCheckBoxMenuItem searchMenuItem;
 	private JCheckBoxMenuItem[] docTypeMenuItems;
 	private JMenuItem editDocTypesMenuItem;
-	private JCheckBoxMenuItem autoCompleteMenuItem;
 	private JButton prevButton;
 	private JButton nextButton;
 	private JButton newDocButton;
@@ -445,11 +444,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		menu.add(SwingUtils.createMenuItem("Tilien saldojen vertailu", null, 'T',
 				null, balanceComparisonListener));
 
-		autoCompleteMenuItem = new JCheckBoxMenuItem("Vientiselitteen täydennys");
-		autoCompleteMenuItem.setMnemonic('s');
-		autoCompleteMenuItem.addActionListener(autoCompleteListener);
-		menu.add(autoCompleteMenuItem);
-
 		menu.add(SwingUtils.createMenuItem("Muuta tositenumeroita", null, 'n',
 				null, numberShiftListener));
 
@@ -674,8 +668,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			}
 		}
 
-		setAutoCompleteEnabled(settings.getBoolean("table.auto-complete-enabled", false));
-
 		container.add(new JScrollPane(entryTable,
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
@@ -888,7 +880,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			}
 		}
 
-		settings.set("table.auto-complete-enabled", model.isAutoCompleteEnabled());
 		settings.save();
 		System.exit(0);
 	}
@@ -1872,11 +1863,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		dialog.setVisible(true);
 	}
 
-	public void setAutoCompleteEnabled(boolean enabled) {
-		model.setAutoCompleteEnabled(enabled);
-		autoCompleteMenuItem.setSelected(enabled);
-	}
-
 	/**
 	 * Avaa ohjeet Web-selaimessa.
 	 */
@@ -2244,6 +2230,9 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		boolean vatEditable = settings.getProperty("vatLocked", "true").equals("false");
 		tableModel.setVatEditable(vatEditable);
+		
+		boolean autoCompleteEnabled = !settings.getProperty("autoCompleteEnabled", "true").equals("false");
+		model.setAutoCompleteEnabled(autoCompleteEnabled);
 	}
 
 	protected int mapColumnIndexToView(int col) {
@@ -2883,13 +2872,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private ActionListener balanceComparisonListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			showBalanceComparison();
-		}
-	};
-
-	/* Vientiselitteen täydennys */
-	private ActionListener autoCompleteListener = new ActionListener() {
-		public void actionPerformed(ActionEvent e) {
-			setAutoCompleteEnabled(!model.isAutoCompleteEnabled());
 		}
 	};
 
