@@ -178,6 +178,7 @@ public class PropertiesDialog extends JDialog {
 		add(panel, BorderLayout.SOUTH);
 		
 		okButton = new JButton("OK");
+		okButton.setMnemonic('O');
 		okButton.setPreferredSize(new Dimension(100, 30));
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -186,6 +187,7 @@ public class PropertiesDialog extends JDialog {
 		});
 		
 		cancelButton = new JButton("Peruuta");
+		cancelButton.setMnemonic('P');
 		cancelButton.setPreferredSize(new Dimension(100, 30));
 		cancelButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -197,10 +199,12 @@ public class PropertiesDialog extends JDialog {
 		c.weightx = 1.0;
 		c.anchor = GridBagConstraints.EAST;
 		c.insets = new Insets(0, 0, 0, 5);
-		panel.add(okButton, c);
+		panel.add(cancelButton, c);
 		
 		c = new GridBagConstraints();
-		panel.add(cancelButton, c);
+		panel.add(okButton, c);
+
+		rootPane.setDefaultButton(okButton);
 	}
 	
 	/**
@@ -217,6 +221,7 @@ public class PropertiesDialog extends JDialog {
 			String message = "Asetusten tallentaminen epäonnistui";
 			logger.log(Level.SEVERE, message, e);
 			SwingUtils.showDataAccessErrorMessage(this, e, message);
+			return;
 		}
 		
 		dispose();
