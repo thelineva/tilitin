@@ -97,6 +97,7 @@ import kirjanpito.models.ReportEditorModel;
 import kirjanpito.models.PropertiesModel;
 import kirjanpito.models.StartingBalanceModel;
 import kirjanpito.models.StatisticsModel;
+import kirjanpito.models.TextFieldWithLockIcon;
 import kirjanpito.reports.AccountStatementModel;
 import kirjanpito.reports.AccountStatementPrint;
 import kirjanpito.reports.AccountSummaryModel;
@@ -137,6 +138,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private JMenuItem deleteDocMenuItem;
 	private JMenuItem addEntryMenuItem;
 	private JMenuItem removeEntryMenuItem;
+	private JMenuItem pasteMenuItem;
 	private JMenuItem coaMenuItem;
 	private JMenuItem vatDocumentMenuItem;
 	private JMenuItem exportMenuItem;
@@ -152,7 +154,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private JButton newDocButton;
 	private JButton addEntryButton;
 	private JButton removeEntryButton;
-	private JTextField numberTextField;
+	private TextFieldWithLockIcon numberTextField;
 	private DateTextField dateTextField;
 	private JLabel debitTotalLabel;
 	private JLabel creditTotalLabel;
@@ -307,10 +309,11 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 				KeyStroke.getKeyStroke(KeyEvent.VK_C,
 						shortcutKeyMask), copyEntriesAction));
 
-		menu.add(SwingUtils.createMenuItem("Liitä", null, 'L',
+		pasteMenuItem = SwingUtils.createMenuItem("Liitä", null, 'L',
 				KeyStroke.getKeyStroke(KeyEvent.VK_V,
-						shortcutKeyMask), pasteEntriesAction));
+						shortcutKeyMask), pasteEntriesAction);
 
+		menu.add(pasteMenuItem);
 		menu.addSeparator();
 
 		coaMenuItem = SwingUtils.createMenuItem("Tilikartta…", null, 'T',
@@ -525,7 +528,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		c.insets = new Insets(8, 8, 8, 4);
 		left.add(numberLabel, c);
 
-		numberTextField = new JTextField();
+		numberTextField = new TextFieldWithLockIcon();
 		numberTextField.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -2057,9 +2060,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			dateTextField.requestFocus();
 		}
 
+		boolean documentEditable = model.isDocumentEditable();
 		tableModel.fireTableDataChanged();
-		setComponentsEnabled(true, model.isPeriodEditable(),
-				model.isDocumentEditable());
+		numberTextField.setLockIconVisible(!documentEditable);
+		setComponentsEnabled(true, model.isPeriodEditable(), documentEditable);
 	}
 
 	/**
@@ -2256,6 +2260,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		removeEntryMenuItem.setEnabled(edit);
 		removeEntryButton.setEnabled(edit);
 		entryTemplateMenu.setEnabled(edit);
+		pasteMenuItem.setEnabled(edit);
 		numberTextField.setEditable(edit);
 		dateTextField.setEditable(edit);
 	}
