@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -457,7 +458,19 @@ public class DocumentModel {
 			document = dataSource.getDocumentDAO(sess).create(
 					period.getId(), type.getNumberStart(), type.getNumberEnd());
 		}
-		
+
+		if (lockedMonths.length > 0) {
+			Calendar cal = Calendar.getInstance();
+			cal.setLenient(true);
+			cal.setTime(document.getDate());
+
+			while (!isMonthEditable(cal.getTime())) {
+				cal.add(Calendar.DAY_OF_MONTH, 1);
+			}
+
+			document.setDate(cal.getTime());
+		}
+
 		entries = new ArrayList<Entry>();
 		amounts.clear();
 		vatAmounts.clear();
