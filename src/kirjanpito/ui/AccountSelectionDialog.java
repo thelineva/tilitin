@@ -73,6 +73,7 @@ public class AccountSelectionDialog extends JDialog {
 		this.registry = registry;
 		this.coa = registry.getChartOfAccounts();
 		this.searchPhrase = "";
+		registry.addListener(registryListener);
 	}
 
 	/**
@@ -436,6 +437,13 @@ public class AccountSelectionDialog extends JDialog {
 			
 			return entry.getStringValue(0).startsWith(searchPhrase) ||
 				entry.getStringValue(1).regionMatches(true, 0, searchPhrase, 0, searchPhrase.length());
+		}
+	};
+
+	private RegistryAdapter registryListener = new RegistryAdapter() {
+		public void chartOfAccountsChanged() {
+			hideNonFavAccountsCheckBoxListener.actionPerformed(null);
+			allAccountsCheckBoxListener.actionPerformed(null);
 		}
 	};
 }
