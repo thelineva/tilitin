@@ -161,7 +161,6 @@ public class DocumentModel {
 			registry.fetchDocumentTypes(sess);
 			
 			Period period = registry.getPeriod();
-			editable = !period.isLocked();
 			loadLockedMonths();
 			documentCountTotal = dataSource.getDocumentDAO(
 					sess).getCountByPeriodId(period.getId(), 1);
@@ -1108,6 +1107,7 @@ public class DocumentModel {
 		String key = "locked/" + registry.getPeriod().getId();
 		lockedMonths = settings.getProperty(key, "").split(",");
 		Arrays.sort(lockedMonths);
+		editable = !registry.getPeriod().isLocked();
 	}
 
 	public boolean isMonthEditable(Date date) {

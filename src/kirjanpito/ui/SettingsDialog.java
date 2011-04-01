@@ -261,6 +261,7 @@ public class SettingsDialog extends JDialog {
 		String key = "locked/" + registry.getPeriod().getId();
 		StringBuilder sb = new StringBuilder();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM");
+		int count = 0;
 
 		for (int i = 0; i < months.length; i++) {
 			if (monthsLocked[i]) {
@@ -269,16 +270,24 @@ public class SettingsDialog extends JDialog {
 				}
 
 				sb.append(dateFormat.format(months[i]));
+				count++;
 			}
 		}
 
 		settings.setProperty(key, sb.toString());
+
+		/* Merkitään tilikausi lukituksi, jos kaikki tilikauteen
+		 * kuuluvat kuukaudet on lukittu. */
+		Period period = registry.getPeriod();
+		period.setLocked(count == months.length);
+
 		DataSource dataSource = registry.getDataSource();
 		Session sess = null;
 		
 		try {
 			sess = dataSource.openSession();
 			dataSource.getSettingsDAO(sess).save(settings);
+			dataSource.getPeriodDAO(sess).save(period);
 			sess.commit();
 		}
 		catch (DataAccessException e) {

@@ -43,6 +43,7 @@ import kirjanpito.models.StartingBalanceTableModel;
 public class StartingBalanceDialog extends JDialog {
 	private StartingBalanceModel model;
 	private JMenuItem saveMenuItem;
+	private JMenuItem copyMenuItem;
 	private JTable accountTable;
 	private JLabel assetsTotalLabel;
 	private JLabel liabilitiesTotalLabel;
@@ -102,10 +103,12 @@ public class StartingBalanceDialog extends JDialog {
 				KeyStroke.getKeyStroke('S', shortcutKeyMask),
 				saveListener);
 		
-		menu.add(saveMenuItem);
+		copyMenuItem = SwingUtils.createMenuItem("Kopioi edellisen tilikauden loppusaldot", null,
+				'K', null, copyListener);
+		copyMenuItem.setEnabled(model.isEditable());
 		
-		menu.add(SwingUtils.createMenuItem("Kopioi edellisen tilikauden loppusaldot", null, 'K',
-				null, copyListener));
+		menu.add(saveMenuItem);
+		menu.add(copyMenuItem);
 		
 		menu.add(SwingUtils.createMenuItem("Sulje", "close-16x16.png", 'L',
 				KeyStroke.getKeyStroke('W', shortcutKeyMask),
