@@ -128,6 +128,7 @@ public class DataSourceInitializationWorker extends SwingWorker<Void, Void> {
 		COAHeading heading;
 		int index;
 		double count;
+		boolean containsVatAccounts = false;
 		
 		line = reader.readLine();
 		count = Integer.parseInt(line);
@@ -181,6 +182,10 @@ public class DataSourceInitializationWorker extends SwingWorker<Void, Void> {
 					account.setVatAccount2Id(-1);
 				}
 				
+				if (account.getVatCode() == 2 || account.getVatCode() == 3) {
+					containsVatAccounts = true;
+				}
+				
 				accountDAO.save(account);
 			}
 			
@@ -189,6 +194,13 @@ public class DataSourceInitializationWorker extends SwingWorker<Void, Void> {
 		}
 		
 		reader.close();
+
+		/* Piilotetaan ALV-sarake, jos tilikarttamalli ei sisällä ALV-tilejä. */
+		if (!containsVatAccounts) {
+			Settings settings = dataSource.getSettingsDAO(sess).get();
+			settings.setProperty("vatVisible", "false");
+			dataSource.getSettingsDAO(sess).save(settings);
+		}
 	}
 	
 	private void copyReportStructure(String name) throws IOException, DataAccessException {

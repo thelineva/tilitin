@@ -3069,6 +3069,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 				updateTotalRow();
 				updateEntryTemplates();
 				updateDocumentTypes();
+				updateTableSettings();
 			}
 		}
 	}
