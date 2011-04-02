@@ -479,6 +479,37 @@ public class DatabaseUpgradeUtil {
 		conn.commit();
 	}
 	
+	public static void upgrade11to12(Connection conn, Statement stmt) throws SQLException {
+		/* Päivitetään ammatinharjoittajan tase. */
+		String[] reportIds = {"balance-sheet", "balance-sheet-detailed"};
+		
+		for (String reportId : reportIds) {
+			ResultSet rs = stmt.executeQuery(String.format("SELECT data FROM report_structure WHERE id = '%s'", reportId));
+			
+			if (rs.next()) {
+				String content = rs.getString(1);
+				Pattern pattern = Pattern.compile("GB2;2250;2330;Edellisten tilikausien voitto \\(tappio\\).+DP3;2250;2330;Edellisten tilikausien voitto \\(tappio\\).+TB2;2250;2330;Edellisten tilikausien voitto \\(tappio\\) yhteensä", Pattern.DOTALL);
+				Matcher matcher = pattern.matcher(content);
+
+				if (matcher.find()) {
+					content = content.replace(matcher.group(),
+							"TB2;2250;2330;Edellisten tilikausien voitto (tappio)");
+				}
+
+				content = content.replace("GB2;3000;9999;Tilikauden voitto", "TB2;3000;9999;Tilikauden voitto");
+				content = content.replace("HB0;2000;9999;VASTATTAVAA", "--\nHB0;2000;9999;VASTATTAVAA");
+				PreparedStatement upd = conn.prepareStatement(String.format(
+						"UPDATE report_structure SET data=? WHERE id = '%s'", reportId));
+				upd.setString(1, content);
+				upd.executeUpdate();
+				upd.close();
+			}
+		}
+		
+		stmt.executeUpdate("UPDATE settings SET version=12");
+		conn.commit();
+	}
+
 	private static String readTextFile(JarFile jarFile, String name) throws IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(
 				jarFile.getInputStream(jarFile.getEntry(name)),

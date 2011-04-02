@@ -180,6 +180,11 @@ public class PSQLDataSource implements DataSource {
 				upgrade10to11(conn, stmt);
 				version = 11;
 			}
+
+			if (version == 11) {
+				upgrade11to12(conn, stmt);
+				version = 12;
+			}
 			
 			stmt.close();
 		}
@@ -266,5 +271,11 @@ public class PSQLDataSource implements DataSource {
 		DatabaseUpgradeUtil.upgrade10to11(conn, stmt);
 		Logger logger = Logger.getLogger("kirjanpito.db.postgresql");
 		logger.info("Tietokannan päivittäminen versioon 11 onnistui");
+	}
+
+	private static void upgrade11to12(Connection conn, Statement stmt) throws SQLException {
+		DatabaseUpgradeUtil.upgrade11to12(conn, stmt);
+		Logger logger = Logger.getLogger("kirjanpito.db.postgresql");
+		logger.info("Tietokannan päivittäminen versioon 12 onnistui");
 	}
 }
