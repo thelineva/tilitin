@@ -728,20 +728,46 @@ public class COADialog extends JDialog {
 		
 		Account account = coa.getAccount(index);
 		
-		if (account.getVatCode() != code) {
-			account.setVatCode(code);
-			
-			/* ALV-prosenttia käytetään vain, jos koodi on
-			 * verollinen myynti tai verolliset ostot. */
-			if (code < 4 || code > 5) {
-				account.setVatRate(0);
-				account.setVatAccount1Id(-1);
-				account.setVatAccount2Id(-1);
-			}
-			
-			model.updateRow(index, false);
-			saveMenuItem.setEnabled(true);
+		if (account.getVatCode() == code) {
+			return;
 		}
+
+		account.setVatCode(code);
+
+		/* ALV-prosenttia käytetään vain, jos koodi on
+		 * verollinen myynti tai verolliset ostot. */
+		if (code < 4 || code > 5) {
+			account.setVatRate(0);
+		}
+		else {
+			account.setVatRate(7); // 23 %
+		}
+
+		account.setVatAccount1Id(-1);
+		account.setVatAccount2Id(-1);
+
+		if (code >= 4) {
+			/* Kopioidaan ALV-vastatilit toiselta tililtä, jolla
+			 * on sama ALV-koodi. */
+			for (Account a : registry.getAccounts()) {
+				if (a == account) {
+					continue;
+				}
+
+				if (a.getVatCode() == code) {
+					account.setVatAccount1Id(a.getVatAccount1Id());
+					account.setVatAccount2Id(a.getVatAccount2Id());
+					break;
+				}
+			}
+
+			if (account.getVatAccount1Id() < 0) {
+				SwingUtils.showInformationMessage(this, "Valitse ALV-vastatili.");
+			}
+		}
+
+		model.updateRow(index, false);
+		saveMenuItem.setEnabled(true);
 	}
 	
 	/**
