@@ -22,6 +22,7 @@ import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -803,86 +804,90 @@ public class COADialog extends JDialog {
 	public void updateVatAccount() {
 		ChartOfAccounts coa = model.getChartOfAccounts();
 		int index = accountTable.getSelectedRow();
-		
+
 		if (index < 0 || coa.getType(index) !=
 				ChartOfAccounts.TYPE_ACCOUNT) {
 			return;
 		}
-		
-		Account account = coa.getAccount(index);
-		Account vatAccount1, vatAccount2;
-		boolean changed = true;
-		String number;
-		
-		number = JOptionPane.showInputDialog(this,
-				"Anna ALV-vastatilin numero." +
-				accountText(account.getVatAccount1Id()),
-				"ALV-vastatili", JOptionPane.QUESTION_MESSAGE);
-		
-		if (number != null) {
-			if (number.isEmpty()) {
-				account.setVatAccount1Id(-1);
-				changed = true;
-			}
-			else {
-				vatAccount1 = model.getAccountByNumber(number);
-				
-				if (vatAccount1 == null) {
-					SwingUtils.showInformationMessage(this,
-							"Tiliä ei löytynyt numerolla '" + number + "'.");
-					return;
-				}
-				else {
-					account.setVatAccount1Id(vatAccount1.getId());
-					changed = true;
-				}
+
+		ArrayList<Account> vatAccounts = new ArrayList<Account>();
+		vatAccounts.add(null);
+
+		for (Account account : registry.getAccounts()) {
+			if (account.getVatCode() == 2 || account.getVatCode() == 3) {
+				vatAccounts.add(account);
 			}
 		}
-		else {
-			vatAccount1 = null;
+
+		Account account = coa.getAccount(index);
+		String[] vatAccountTexts = new String[vatAccounts.size()];
+		vatAccountTexts[0] = "---";
+		int vatAccount1Index = 0;
+		int vatAccount2Index = 0;
+
+		for (int i = 1; i < vatAccountTexts.length; i++) {
+			Account vatAccount = vatAccounts.get(i);
+			vatAccountTexts[i] = vatAccount.getNumber() + " " + vatAccount.getName();
+
+			if (vatAccount.getId() == account.getVatAccount1Id()) {
+				vatAccount1Index = i;
+			}
+
+			if (vatAccount.getId() == account.getVatAccount2Id()) {
+				vatAccount2Index = i;
+			}
+		}
+
+		int vatAccount1Id;
+		int vatAccount2Id = -1;
+		Object result;
+
+		result = JOptionPane.showInputDialog(this,
+				"Valitse ALV-vastatili.",
+				"ALV-vastatili", JOptionPane.QUESTION_MESSAGE, null,
+				vatAccountTexts, vatAccountTexts[vatAccount1Index]);
+
+		vatAccount1Id = findVatAccount(result, vatAccountTexts, vatAccounts);
+
+		if (vatAccount1Id == -2) {
+			return;
 		}
 		
 		if (account.getVatCode() == 9 || account.getVatCode() == 11) {
-			number = JOptionPane.showInputDialog(this,
-					"Anna ALV-vastatilin numero." +
-					accountText(account.getVatAccount2Id()),
-					"ALV-vastatili (2)", JOptionPane.QUESTION_MESSAGE);
+			result = JOptionPane.showInputDialog(this,
+					"Valitse ALV-vastatili (2).",
+					"ALV-vastatili (2)", JOptionPane.QUESTION_MESSAGE, null,
+					vatAccountTexts, vatAccountTexts[vatAccount2Index]);
 			
-			if (number != null) {
-				if (number.isEmpty()) {
-					account.setVatAccount2Id(-1);
-					changed = true;
-				}
-				else {
-					vatAccount2 = model.getAccountByNumber(number);
-					
-					if (vatAccount2 == null) {
-						SwingUtils.showInformationMessage(this,
-								"Tiliä ei löytynyt numerolla '" + number + "'.");
-						return;
-					}
-					else {
-						account.setVatAccount2Id(vatAccount2.getId());
-					}
-				}
+			vatAccount2Id = findVatAccount(result, vatAccountTexts, vatAccounts);
+
+			if (vatAccount2Id == -2) {
+				return;
 			}
 		}
-		
-		if (changed) {
-			model.updateRow(coa.indexOfAccount(account), false);
-			saveMenuItem.setEnabled(true);
-		}
+
+		account.setVatAccount1Id(vatAccount1Id);
+		account.setVatAccount2Id(vatAccount2Id);
+		model.updateRow(coa.indexOfAccount(account), false);
+		saveMenuItem.setEnabled(true);
 	}
 	
-	private String accountText(int accountId) {
-		if (accountId <= 0) {
-			return "";
+	private int findVatAccount(Object result, String[] texts, ArrayList<Account> vatAccounts) {
+		if (result == null) {
+			return -2;
 		}
-		else {
-			Account account = model.getAccountById(accountId);
-			return " [" + account.getNumber() + " " +
-				account.getName() + "]";
+
+		if (result == texts[0]) {
+			return -1;
 		}
+
+		for (int i = 1; i < texts.length; i++) {
+			if (result == texts[i]) {
+				return vatAccounts.get(i).getId();
+			}
+		}
+
+		return -1;
 	}
 	
 	/**
