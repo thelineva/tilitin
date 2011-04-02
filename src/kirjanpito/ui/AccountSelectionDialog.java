@@ -145,6 +145,10 @@ public class AccountSelectionDialog extends JDialog {
 			public void windowOpened(WindowEvent e) {
 				accountTable.setRowHeight(getFontMetrics(accountTable.getFont()).getHeight() + 4);
 			}
+
+			public void windowClosed(WindowEvent e) {
+				registry.removeListener(registryListener);
+			}
 		});
 		
 		createSearchPanel();
