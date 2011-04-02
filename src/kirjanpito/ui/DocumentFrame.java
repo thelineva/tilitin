@@ -1664,6 +1664,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			printModel.setTitle("Tase");
 			printModel.setReportId(detailed ? "balance-sheet-detailed" : "balance-sheet");
 			printModel.setPreviousPeriodVisible(previousPeriodVisible);
+			printModel.setPageBreakEnabled(dialog.isPageBreakEnabled());
 			showPrintPreview(printModel, new FinancialStatementPrint(
 					printModel, detailed ? "balanceSheetDetailed" : "balanceSheet", false));
 		}
