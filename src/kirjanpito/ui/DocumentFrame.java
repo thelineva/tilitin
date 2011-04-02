@@ -527,15 +527,22 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		numberTextField = new TextFieldWithLockIcon();
 		numberTextField.addKeyListener(new KeyAdapter() {
-			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					dateTextField.requestFocusInWindow();
-					e.consume();
+			public void keyReleased(KeyEvent e) {
+				if (numberTextField.isEditable()) {
+					model.setDocumentChanged();
 				}
 			}
+		});
 
-			public void keyReleased(KeyEvent e) {
-				model.setDocumentChanged();
+		numberTextField.getInputMap().put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "transferFocus");
+
+		numberTextField.getActionMap().put("transferFocus", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				numberTextField.transferFocus();
 			}
 		});
 
@@ -562,30 +569,33 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		dateTextField = new DateTextField();
 		dateTextField.addKeyListener(new KeyAdapter() {
-			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					addEntry();
-					e.consume();
-				}
-				else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-					dateTextField.transferFocus();
-
-					/* Valitaan ensimmäinen rivi. */
-					if (entryTable.getSelectedRow() < 0 ||
-							entryTable.getRowCount() > 0) {
-
-						entryTable.changeSelection(0,
-								Math.max(0, entryTable.getSelectedColumn()),
-								false, false);
-					}
-
-					e.consume();
+			public void keyReleased(KeyEvent e) {
+				if (dateTextField.isEditable() && Character.isDigit(e.getKeyChar())) {
+					model.setDocumentChanged();
 				}
 			}
+		});
 
-			public void keyReleased(KeyEvent e) {
-				if (Character.isDigit(e.getKeyChar())) {
-					model.setDocumentChanged();
+		dateTextField.getInputMap().put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "addEntry");
+
+		dateTextField.getActionMap().put("addEntry", addEntryListener);
+
+		dateTextField.getInputMap().put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "firstEntry");
+
+		dateTextField.getActionMap().put("firstEntry", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				dateTextField.transferFocus();
+
+				/* Valitaan ensimmäinen rivi. */
+				if (entryTable.getRowCount() > 0) {
+					entryTable.changeSelection(0,
+							Math.max(0, entryTable.getSelectedColumn()),
+							false, false);
 				}
 			}
 		});
@@ -2320,7 +2330,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	protected boolean saveDocumentIfChanged() {
 		stopEditing();
 
-		if (!model.isDocumentChanged()) {
+		if (!model.isDocumentChanged() || !model.isDocumentEditable()) {
 			return true;
 		}
 
