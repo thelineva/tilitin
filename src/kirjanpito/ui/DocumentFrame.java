@@ -144,8 +144,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private JMenuItem vatDocumentMenuItem;
 	private JMenuItem exportMenuItem;
 	private JMenuItem editEntryTemplatesMenuItem;
+	private JMenuItem createEntryTemplateMenuItem;
 	private JMenuItem startingBalancesMenuItem;
 	private JMenuItem propertiesMenuItem;
+	private JMenuItem settingsMenuItem;
 	private JCheckBoxMenuItem searchMenuItem;
 	private JCheckBoxMenuItem[] docTypeMenuItems;
 	private JMenuItem editDocTypesMenuItem;
@@ -287,6 +289,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 				KeyStroke.getKeyStroke(KeyEvent.VK_M, shortcutKeyMask),
 				editEntryTemplatesListener);
 
+		createEntryTemplateMenuItem = SwingUtils.createMenuItem("Luo tositteesta", null, 'K',
+				KeyStroke.getKeyStroke(KeyEvent.VK_K, shortcutKeyMask),
+				createEntryTemplateListener);
+
 		menu.add(addEntryMenuItem);
 		menu.add(removeEntryMenuItem);
 		menu.add(entryTemplateMenu);
@@ -328,12 +334,13 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		propertiesMenuItem = SwingUtils.createMenuItem("Perustiedot…", null, 'e',
 				null, propertiesListener);
 
+		settingsMenuItem = SwingUtils.createMenuItem("Kirjausasetukset…", null, 'K',
+				null, settingsListener);
+
 		menu.add(coaMenuItem);
 		menu.add(startingBalancesMenuItem);
 		menu.add(propertiesMenuItem);
-
-		menu.add(SwingUtils.createMenuItem("Kirjausasetukset…", null, 'K', null,
-				settingsListener));
+		menu.add(settingsMenuItem);
 
 		menu.add(SwingUtils.createMenuItem("Tietokanta-asetukset…", null, 'a', null,
 				databaseSettingsListener));
@@ -1205,6 +1212,36 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	}
 
 	/**
+	 * Luo vientimallin valitusta tositteesta.
+	 */
+	public void createEntryTemplateFromDocument() {
+		int number;
+
+		try {
+			number = model.createEntryTemplateFromDocument();
+		}
+		catch (DataAccessException e) {
+			String message = "Vientimallin luominen epäonnistui";
+			logger.log(Level.SEVERE, message, e);
+			SwingUtils.showDataAccessErrorMessage(this, e, message);
+			return;
+		}
+
+		if (number < 0) {
+			return;
+		}
+
+		String message = String.format("Vientimalli on luotu numerolle %d", number);
+
+		if (number >= 1 && number < 10) {
+			message += String.format(" (Alt+%s)", number % 10);
+		}
+
+		updateEntryTemplates();
+		SwingUtils.showInformationMessage(this, message);
+	}
+
+	/**
 	 * Lisää viennit mallin perusteella.
 	 *
 	 * @param number vientimallin numero
@@ -2069,8 +2106,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		boolean documentEditable = model.isDocumentEditable();
 		tableModel.fireTableDataChanged();
-		numberTextField.setLockIconVisible(!documentEditable);
-		setComponentsEnabled(true, model.isPeriodEditable(), documentEditable);
+		numberTextField.setLockIconVisible(document != null && !documentEditable);
+		setComponentsEnabled(document != null, model.isPeriodEditable(), documentEditable);
 	}
 
 	/**
@@ -2141,6 +2178,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 
 		entryTemplateMenu.addSeparator();
+		entryTemplateMenu.add(createEntryTemplateMenuItem);
 		entryTemplateMenu.add(editEntryTemplatesMenuItem);
 	}
 
@@ -2223,8 +2261,13 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	 * Päivittää vientitaulukon asetukset.
 	 */
 	protected void updateTableSettings() {
-		TableColumnModel columnModel = entryTable.getColumnModel();
 		Settings settings = registry.getSettings();
+
+		if (settings == null) {
+			return;
+		}
+
+		TableColumnModel columnModel = entryTable.getColumnModel();
 		boolean vatVisible = !settings.getProperty("vatVisible", "true").equals("false");
 
 		if (vatVisible && vatColumn != null) {
@@ -2298,6 +2341,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		coaMenuItem.setEnabled(read);
 		startingBalancesMenuItem.setEnabled(read);
 		propertiesMenuItem.setEnabled(read);
+		settingsMenuItem.setEnabled(read);
 		exportMenuItem.setEnabled(read);
 		gotoMenu.setEnabled(read);
 		docTypeMenu.setEnabled(read);
@@ -2483,9 +2527,9 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		if (count > 0) {
 			String prevDescription = "";
 
-			if (count - 1 > 0) {
+			if (count - 2 >= 0) {
 				prevDescription = model.getEntry(
-						count - 1).getDescription();
+						count - 2).getDescription();
 			}
 
 			Entry lastEntry = model.getEntry(count - 1);
@@ -2717,6 +2761,13 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private ActionListener editEntryTemplatesListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			editEntryTemplates();
+		}
+	};
+
+	/* Luo vientimalli tositteesta */
+	private ActionListener createEntryTemplateListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			createEntryTemplateFromDocument();
 		}
 	};
 

@@ -83,14 +83,15 @@ public class DataSourceInitializationDialog extends JDialog {
 		c.gridwidth = 1;
 		c.insets = new Insets(5, 10, 10, 5);
 		c.weightx = 1.0;
-		add(okButton, c);
+		add(cancelButton, c);
 		
 		c.gridx = 2;
 		c.insets = new Insets(5, 5, 10, 10);
 		c.weightx = 0.0;
-		add(cancelButton, c);
+		add(okButton, c);
 		
 		pack();
+		rootPane.setDefaultButton(okButton);
 		setResizable(false);
 		setLocationRelativeTo(getOwner());
 	}

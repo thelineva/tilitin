@@ -21,6 +21,7 @@ import kirjanpito.db.DocumentType;
 import kirjanpito.db.Entry;
 import kirjanpito.db.EntryDAO;
 import kirjanpito.db.EntryTemplate;
+import kirjanpito.db.EntryTemplateDAO;
 import kirjanpito.db.Period;
 import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
@@ -970,6 +971,66 @@ public class DocumentModel {
 		setDocumentChanged();
 	}
 	
+	public int createEntryTemplateFromDocument() throws DataAccessException {
+		int count = getEntryCount();
+
+		if (count == 0) {
+			return -1;
+		}
+
+		EntryTemplate template;
+		int number = 1;
+		boolean match = true;
+
+		/* Etsitään seuraava vapaa numero. */
+		while (match) {
+			match = false;
+
+			for (EntryTemplate t : registry.getEntryTemplates()) {
+				if (t.getNumber() == number) {
+					number++;
+					match = true;
+					break;
+				}
+			}
+		}
+
+		DataSource dataSource = registry.getDataSource();
+		EntryTemplateDAO dao;
+		Session sess = null;
+		String name = entries.get(0).getDescription();
+
+		try {
+			sess = dataSource.openSession();
+			dao = dataSource.getEntryTemplateDAO(sess);
+
+			for (int i = 0; i < count; i++) {
+				Entry entry = entries.get(i);
+				template = new EntryTemplate();
+				template.setNumber(number);
+				template.setName(name);
+				template.setAccountId(entry.getAccountId());
+				template.setAmount(amounts.get(i));
+				template.setDebit(entry.isDebit());
+				template.setDescription(entry.getDescription());
+				template.setRowNumber(i);
+				dao.save(template);
+			}
+
+			sess.commit();
+			registry.fetchEntryTemplates(sess);
+		}
+		catch (DataAccessException e) {
+			if (sess != null) sess.rollback();
+			throw e;
+		}
+		finally {
+			if (sess != null) sess.close();
+		}
+
+		return number;
+	}
+
 	/**
 	 * Etsii tositteen numerolla <code>number</code> ja palauttaa
 	 * tositteen järjestysnumeron.

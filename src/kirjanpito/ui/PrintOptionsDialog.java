@@ -393,12 +393,12 @@ public class PrintOptionsDialog extends JDialog {
 		c.anchor = GridBagConstraints.EAST;
 		c.insets = new Insets(5, 10, 10, 5);
 		c.weightx = 1.0;
-		panel.add(okButton, c);
+		panel.add(cancelButton, c);
 		
 		c.gridx = 2;
 		c.insets = new Insets(5, 5, 10, 10);
 		c.weightx = 0.0;
-		panel.add(cancelButton, c);
+		panel.add(okButton, c);
 		add(panel, BorderLayout.SOUTH);
 		rootPane.setDefaultButton(okButton);
 	}
