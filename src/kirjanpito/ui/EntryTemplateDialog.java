@@ -319,7 +319,7 @@ public class EntryTemplateDialog extends JDialog implements AccountSelectionList
 	 */
 	public void addEntryTemplate() {
 		int index = model.addEntryTemplate();
-		tableModel.fireTableRowsDeleted(index, index);
+		tableModel.fireTableRowsInserted(index, index);
 		table.requestFocusInWindow();
 		table.changeSelection(index, 2, false, false);
 	}
