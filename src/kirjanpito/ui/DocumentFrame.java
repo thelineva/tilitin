@@ -153,6 +153,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private JMenuItem editDocTypesMenuItem;
 	private JButton prevButton;
 	private JButton nextButton;
+	private JButton searchButton;
+	private JButton findByNumberButton;
 	private JButton newDocButton;
 	private JButton addEntryButton;
 	private JButton removeEntryButton;
@@ -505,6 +507,16 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		toolBar.addSeparator();
 		toolBar.add(addEntryButton);
 		toolBar.add(removeEntryButton);
+		toolBar.addSeparator();
+
+		findByNumberButton = SwingUtils.createToolButton("jump-22x22.png",
+				"Hae numerolla", findDocumentByNumberListener, true);
+
+		searchButton = SwingUtils.createToolButton("find-22x22.png",
+				"Etsi", searchListener, true);
+
+		toolBar.add(findByNumberButton);
+		toolBar.add(searchButton);
 
 		add(toolBar, BorderLayout.PAGE_START);
 	}
@@ -2349,6 +2361,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		toolsMenu.setEnabled(read);
 		prevButton.setEnabled(read);
 		nextButton.setEnabled(read);
+		findByNumberButton.setEnabled(read);
+		searchButton.setEnabled(read);
 
 		newDocMenuItem.setEnabled(create);
 		newDocButton.setEnabled(create);
