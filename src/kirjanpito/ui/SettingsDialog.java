@@ -119,6 +119,7 @@ public class SettingsDialog extends JDialog {
 				new Dimension(300, 300));
 		monthTable.setRowHeight(24);
 		monthTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		monthTable.setShowGrid(false);
 
 		TableColumn column;
 		column = monthTable.getColumnModel().getColumn(0);
