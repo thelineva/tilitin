@@ -21,6 +21,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.table.TableColumn;
 
@@ -91,10 +92,12 @@ public class DocumentTypeDialog extends JDialog {
 		});
 		
 		createMenuBar();
+		createToolBar();
 		createTable();
 		
 		pack();
 		setLocationRelativeTo(null);
+		table.requestFocusInWindow();
 	}
 	
 	/**
@@ -129,6 +132,26 @@ public class DocumentTypeDialog extends JDialog {
 				closeListener));
 		
 		setJMenuBar(menuBar);
+	}
+
+	private void createToolBar() {
+		JToolBar toolBar = new JToolBar();
+		toolBar.setFloatable(false);
+
+		toolBar.add(SwingUtils.createToolButton("close-22x22.png",
+				"Sulje", closeListener, true));
+
+		toolBar.add(SwingUtils.createToolButton("save-22x22.png",
+				"Tallenna", saveListener, true));
+
+		toolBar.addSeparator();
+		toolBar.add(SwingUtils.createToolButton("list-add-22x22.png",
+				"Lisää", addRowListener, true));
+
+		toolBar.add(SwingUtils.createToolButton("list-remove-22x22.png",
+				"Poista", removeRowListener, true));
+
+		add(toolBar, BorderLayout.NORTH);
 	}
 	
 	/**
@@ -226,7 +249,9 @@ public class DocumentTypeDialog extends JDialog {
 	 */
 	public void addEntryTemplate() {
 		int index = model.addDocumentType();
-		tableModel.fireTableRowsDeleted(index, index);
+		tableModel.fireTableRowsInserted(index, index);
+		table.requestFocusInWindow();
+		table.changeSelection(index, 1, false, false);
 	}
 	
 	/**
@@ -235,9 +260,19 @@ public class DocumentTypeDialog extends JDialog {
 	public void removeEntryTemplate() {
 		int index = table.getSelectedRow();
 		
-		if (index >= 0) {
-			model.removeDocumentType(index);
-			tableModel.fireTableRowsDeleted(index, index);
+		if (index < 0) {
+			return;
+		}
+
+		model.removeDocumentType(index);
+		tableModel.fireTableRowsDeleted(index, index);
+		table.requestFocusInWindow();
+
+		if (index >= 1) {
+			table.setRowSelectionInterval(index - 1, index - 1);
+		}
+		else if (tableModel.getRowCount() > 0) {
+			table.setRowSelectionInterval(0, 0);
 		}
 	}
 	
