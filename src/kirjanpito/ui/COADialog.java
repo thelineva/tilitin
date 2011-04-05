@@ -64,9 +64,6 @@ import kirjanpito.db.COAHeading;
 import kirjanpito.db.DataAccessException;
 import kirjanpito.models.COAModel;
 import kirjanpito.models.EditableCOATableModel;
-import kirjanpito.models.PrintPreviewModel;
-import kirjanpito.reports.COAPrint;
-import kirjanpito.reports.COAPrintModel;
 import kirjanpito.ui.resources.Resources;
 import kirjanpito.util.CSVReader;
 import kirjanpito.util.CSVWriter;
@@ -178,19 +175,6 @@ public class COADialog extends JDialog {
 		hideNonFavouriteAccountsMenuItem.setState(model.isNonFavouriteAccountsHidden());
 		hideNonFavouriteAccountsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0));
 		menu.add(hideNonFavouriteAccountsMenuItem);
-		
-		JMenu printMenu = new JMenu("Tulosta");
-		printMenu.setMnemonic('T');
-		printMenu.setIcon(new ImageIcon(Resources.load("print-16x16.png")));
-		menu.add(printMenu);
-		
-		printMenu.add(SwingUtils.createMenuItem("Vain käytössä olevat tilit", null, 't',
-				KeyStroke.getKeyStroke(KeyEvent.VK_P, shortcutKeyMask), printListener));
-		
-		printMenu.add(SwingUtils.createMenuItem("Kaikki tilit", null, 'k',
-				null, printAllListener));
-		
-		menu.addSeparator();
 		
 		menu.add(SwingUtils.createMenuItem("Sulje", "close-16x16.png", 'L',
 				KeyStroke.getKeyStroke('W', shortcutKeyMask),
@@ -440,7 +424,7 @@ public class COADialog extends JDialog {
 		accountTable.setDragEnabled(true);
 		accountTable.setRowHeight(Math.max(16, getFontMetrics(accountTable.getFont()).getHeight()) + 4);
 		accountTable.getColumnModel().getColumn(0).setMaxWidth(getFontMetrics(accountTable.getFont())
-				.stringWidth(tableModel.getColumnName(0)) + 20);
+				.stringWidth(tableModel.getColumnName(0)) + 30);
 
 		cellRenderer = new COATableCellRenderer();
 		cellRenderer.setChartOfAccounts(model.getChartOfAccounts());
@@ -929,30 +913,6 @@ public class COADialog extends JDialog {
 		return true;
 	}
 	
-	public void print(boolean allAccountsVisible) {
-		COAPrintModel printModel = new COAPrintModel();
-		printModel.setRegistry(registry);
-		printModel.setAllAccountsVisible(allAccountsVisible);
-		
-		try {
-			printModel.run();
-		}
-		catch (DataAccessException e) {
-			String message = "Tulosteen luominen epäonnistui";
-			logger.log(Level.SEVERE, message, e);
-			SwingUtils.showDataAccessErrorMessage(this, e, message);
-			return;
-		}
-		
-		COAPrint print = new COAPrint(printModel);
-		PrintPreviewModel previewModel = new PrintPreviewModel();
-		previewModel.setPrintModel(printModel);
-		previewModel.setPrint(print);
-		PrintPreviewFrame frame = new PrintPreviewFrame(this, previewModel);
-		frame.create();
-		frame.setVisible(true);
-	}
-	
 	/**
 	 * Asettaa valitun rivin.
 	 * 
@@ -997,20 +957,6 @@ public class COADialog extends JDialog {
 	private ActionListener saveListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			save();
-		}
-	};
-	
-	/* Tulosta käytössä olevat tilit */
-	private ActionListener printListener = new ActionListener() {
-		public void actionPerformed(ActionEvent e) {
-			print(false);
-		}
-	};
-	
-	/* Tulosta kaikki tilit */
-	private ActionListener printAllListener = new ActionListener() {
-		public void actionPerformed(ActionEvent e) {
-			print(true);
 		}
 	};
 	

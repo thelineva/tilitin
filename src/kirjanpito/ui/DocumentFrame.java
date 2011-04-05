@@ -103,6 +103,8 @@ import kirjanpito.reports.AccountStatementModel;
 import kirjanpito.reports.AccountStatementPrint;
 import kirjanpito.reports.AccountSummaryModel;
 import kirjanpito.reports.AccountSummaryPrint;
+import kirjanpito.reports.COAPrint;
+import kirjanpito.reports.COAPrintModel;
 import kirjanpito.reports.DocumentPrint;
 import kirjanpito.reports.DocumentPrintModel;
 import kirjanpito.reports.FinancialStatementModel;
@@ -435,6 +437,18 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		menuItem = SwingUtils.createMenuItem("ALV-laskelma tileittäin", null, 'V', null, printListener);
 		menuItem.setActionCommand("vatReport");
 		menu.add(menuItem);
+
+		JMenu submenu = new JMenu("Tilikartta");
+		submenu.setMnemonic('r');
+		menu.add(submenu);
+
+		menuItem = SwingUtils.createMenuItem("Vain käytössä olevat tilit", null, 'V', null, printListener);
+		menuItem.setActionCommand("coa1");
+		submenu.add(menuItem);
+
+		menuItem = SwingUtils.createMenuItem("Kaikki tilit", null, 'k', null, printListener);
+		menuItem.setActionCommand("coa2");
+		submenu.add(menuItem);
 
 		menu.addSeparator();
 		menu.add(SwingUtils.createMenuItem("Muokkaa", null, 'M', null, editReportsListener));
@@ -1424,6 +1438,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		else if (tableModel.getRowCount() > 0) {
 			entryTable.setRowSelectionInterval(0, 0);
 		}
+
+		entryTable.requestFocusInWindow();
 	}
 
 	/**
@@ -1817,6 +1833,24 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			printModel.setEndDate(dialog.getEndDate());
 			showPrintPreview(printModel, new VATReportPrint(printModel));
 		}
+	}
+
+	public void showChartOfAccountsPrint(boolean allAccountsVisible) {
+		COAPrintModel printModel = new COAPrintModel();
+		printModel.setRegistry(registry);
+		printModel.setAllAccountsVisible(allAccountsVisible);
+
+		try {
+			printModel.run();
+		}
+		catch (DataAccessException e) {
+			String message = "Tulosteen luominen epäonnistui";
+			logger.log(Level.SEVERE, message, e);
+			SwingUtils.showDataAccessErrorMessage(this, e, message);
+			return;
+		}
+
+		showPrintPreview(printModel, new COAPrint(printModel));
 	}
 
 	/**
@@ -2933,6 +2967,12 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			}
 			else if (cmd.equals("vatReport")) {
 				showVATReport();
+			}
+			else if (cmd.equals("coa1")) {
+				showChartOfAccountsPrint(false);
+			}
+			else if (cmd.equals("coa2")) {
+				showChartOfAccountsPrint(true);
 			}
 		}
 	};
