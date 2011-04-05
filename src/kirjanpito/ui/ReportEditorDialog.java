@@ -170,7 +170,8 @@ public class ReportEditorDialog extends JDialog {
 			"Tuloslaskelma", "Tuloslaskelma erittelyin",
 			"Tase", "Tase erittelyin",
 			"Päiväkirja", "Pääkirja",
-			"ALV-laskelma tileittäin"
+			"ALV-laskelma tileittäin",
+			"Tilikartta"
 		};
 		
 		printComboBox = new JComboBox(comboBoxItems);

@@ -1,10 +1,7 @@
 package kirjanpito.reports;
 
-import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import kirjanpito.db.Account;
 import kirjanpito.db.COAHeading;
@@ -14,20 +11,17 @@ import kirjanpito.util.VATUtil;
 public class COAPrint extends Print {
 	private COAPrintModel model;
 	private ChartOfAccounts coa;
-	private DateFormat dateFormat;
 	private NumberFormat numberFormat;
-	private Date now;
 	private int numRowsPerPage;
 	private int pageCount;
 	
 	public COAPrint(COAPrintModel model) {
 		this.model = model;
-		dateFormat = new SimpleDateFormat("d.M.yyyy");
 		numberFormat = new DecimalFormat();
 		numberFormat.setMinimumFractionDigits(2);
 		numberFormat.setMaximumFractionDigits(2);
-		now = new Date();
 		numRowsPerPage = -1;
+		setPrintId("chartOfAccounts");
 	}
 	
 	public String getTitle() {
@@ -39,6 +33,7 @@ public class COAPrint extends Print {
 	}
 
 	public void initialize() {
+		super.initialize();
 		int height = getContentHeight();
 		numRowsPerPage = height / 14;
 		coa = model.getChartOfAccounts();
@@ -47,32 +42,13 @@ public class COAPrint extends Print {
 	}
 	
 	protected void printHeader() {
-		/* Tulostetaan vasempaan reunaan nimi ja y-tunnus. */
-		setNormalStyle();
-		setY(getY() + 20);
-		drawText(model.getSettings().getName());
-		setY(getY() + 20);
-		drawText(model.getSettings().getBusinessId());
-		setY(getY() - 20);
-		
-		/* Tulostetaan oikeaan reunaan sivunumero ja päivämäärä. */
-		setX(getPageWidth() - getMargins().right);
-		drawTextRight("Sivu " + (getPageIndex() + 1));
-		setY(getY() + 20);
-		drawTextRight(dateFormat.format(now));
-		
-		/* Tulostetaan keskelle tulosteen otsikko. */
-		setX(getPageWidth() / 2);
-		setHeadingStyle();
-		setY(getY() - 20);
-		drawTextCenter(getTitle());
-		
-		setY(getY() + 30);
+		super.printHeader();
+		y = margins.top + super.getHeaderHeight();
 		drawHorizontalLine(2.0f);
 	}
 	
 	protected int getHeaderHeight() {
-		return 75;
+		return super.getHeaderHeight() + 22;
 	}
 
 	protected void printContent() {

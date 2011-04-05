@@ -43,7 +43,7 @@ public class ReportEditorModel {
 		"accountSummary", "documentPrint", "accountStatement",
 		"incomeStatement", "incomeStatementDetailed",
 		"balanceSheet", "balanceSheetDetailed",
-		"generalJournal", "generalLedger", "vatReport"
+		"generalJournal", "generalLedger", "vatReport", "chartOfAccounts"
 	};
 	
 	public ReportEditorModel(Registry registry) {

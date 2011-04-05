@@ -55,7 +55,7 @@ public class COAPrintModel implements PrintModel {
 				}
 			}
 			
-			accountLevel = maxLevel;
+			accountLevel = maxLevel + 1;
 		}
 		else {
 			coa = createChartOfAccounts();
@@ -149,7 +149,7 @@ public class COAPrintModel implements PrintModel {
 		Collections.sort(headings);
 		coa = new ChartOfAccounts();
 		coa.set(accounts, headings);
-		accountLevel = maxLevel;
+		accountLevel = maxLevel + 1;
 		return coa;
 	}
 	
