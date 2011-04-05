@@ -31,6 +31,7 @@ import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.DropMode;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -89,6 +90,7 @@ public class COADialog extends JDialog {
 	private JCheckBoxMenuItem[] codeMenuItems;
 	private JCheckBoxMenuItem[] rateMenuItems;
 	private JMenuItem vatAccountMenuItem;
+	private JButton saveButton;
 	private JTable accountTable;
 	private JTextField searchTextField;
 	private JMenuItem removeMenuItem;
@@ -116,15 +118,11 @@ public class COADialog extends JDialog {
 		setLayout(new BorderLayout());
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
-			public void windowOpened(WindowEvent e) {
-				accountTable.setRowHeight(Math.max(16, getFontMetrics(accountTable.getFont()).getHeight()) + 4);
-			}
-			
 			public void windowClosing(WindowEvent e) {
 				close();
 			}
 		});
-		
+
 		createMenuBar();
 		createPopupMenus();
 		createSearchPanel();
@@ -132,7 +130,7 @@ public class COADialog extends JDialog {
 		createTable();
 		pack();
 		setLocationRelativeTo(getOwner());
-		
+
 		searchTextField.requestFocusInWindow();
 		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
 				KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0), "toggleFavourite");
@@ -371,7 +369,17 @@ public class COADialog extends JDialog {
 	private void createToolBar() {
 		JToolBar toolBar = new JToolBar();
 		toolBar.setFloatable(false);
-		
+
+		toolBar.add(SwingUtils.createToolButton("close-22x22.png",
+				"Sulje", closeListener, true));
+
+		saveButton = SwingUtils.createToolButton("save-22x22.png",
+				"Tallenna", saveListener, true);
+
+		saveButton.setEnabled(false);
+		toolBar.add(saveButton);
+		toolBar.addSeparator();
+
 		toolBar.add(SwingUtils.createToolButton("list-add-22x22.png",
 				"Lisää tili", addAccountListener, true));
 		
@@ -404,14 +412,14 @@ public class COADialog extends JDialog {
 		tableModel.setChartOfAccounts(model.getChartOfAccounts());
 		tableModel.addTableModelListener(new TableModelListener() {
 			public void tableChanged(TableModelEvent e) {
-				saveMenuItem.setEnabled(true);
+				setSaveEnabled(true);
 			}
 		});
 		
 		accountTable = new JTable(tableModel);
 		accountTable.setFillsViewportHeight(true);
 		accountTable.setPreferredScrollableViewportSize(
-				new Dimension(500, 350));
+				new Dimension(600, 380));
 		accountTable.addMouseListener(mouseListener);
 		accountTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		accountTable.getSelectionModel().addListSelectionListener(
@@ -430,7 +438,10 @@ public class COADialog extends JDialog {
 		accountTable.setDropMode(DropMode.INSERT_ROWS);
 		accountTable.setTransferHandler(transferHandler);
 		accountTable.setDragEnabled(true);
-		
+		accountTable.setRowHeight(Math.max(16, getFontMetrics(accountTable.getFont()).getHeight()) + 4);
+		accountTable.getColumnModel().getColumn(0).setMaxWidth(getFontMetrics(accountTable.getFont())
+				.stringWidth(tableModel.getColumnName(0)) + 20);
+
 		cellRenderer = new COATableCellRenderer();
 		cellRenderer.setChartOfAccounts(model.getChartOfAccounts());
 		cellRenderer.setHighlightFavouriteAccounts(!model.isNonFavouriteAccountsHidden());
@@ -685,7 +696,7 @@ public class COADialog extends JDialog {
 			heading.setLevel(level);
 			model.updateRow(index, true);
 			tableModel.fireTableDataChanged();
-			saveMenuItem.setEnabled(true);
+			setSaveEnabled(true);
 		}
 	}
 	
@@ -709,7 +720,7 @@ public class COADialog extends JDialog {
 			account.setType(type);
 			model.updateRow(index, false);
 			tableModel.fireTableCellUpdated(index, 1);
-			saveMenuItem.setEnabled(true);
+			setSaveEnabled(true);
 		}
 	}
 	
@@ -768,7 +779,7 @@ public class COADialog extends JDialog {
 		}
 
 		model.updateRow(index, false);
-		saveMenuItem.setEnabled(true);
+		setSaveEnabled(true);
 	}
 	
 	/**
@@ -790,7 +801,7 @@ public class COADialog extends JDialog {
 		if (account.getVatRate() != rate) {
 			account.setVatRate(rate);
 			model.updateRow(index, false);
-			saveMenuItem.setEnabled(true);
+			setSaveEnabled(true);
 			
 			if (account.getVatAccount1Id() < 0) {
 				SwingUtils.showInformationMessage(this, "Valitse ALV-vastatili.");
@@ -869,7 +880,7 @@ public class COADialog extends JDialog {
 		account.setVatAccount1Id(vatAccount1Id);
 		account.setVatAccount2Id(vatAccount2Id);
 		model.updateRow(coa.indexOfAccount(account), false);
-		saveMenuItem.setEnabled(true);
+		setSaveEnabled(true);
 	}
 	
 	private int findVatAccount(Object result, String[] texts, ArrayList<Account> vatAccounts) {
@@ -914,7 +925,7 @@ public class COADialog extends JDialog {
 			return false;
 		}
 		
-		saveMenuItem.setEnabled(false);
+		setSaveEnabled(false);
 		return true;
 	}
 	
@@ -955,7 +966,12 @@ public class COADialog extends JDialog {
 		Rectangle rect = accountTable.getCellRect(position, 0, true);
 		accountTable.scrollRectToVisible(rect);
 	}
-	
+
+	private void setSaveEnabled(boolean enabled) {
+		saveMenuItem.setEnabled(enabled);
+		saveButton.setEnabled(enabled);
+	}
+
 	/* Lisää tili */
 	private ActionListener addAccountListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
