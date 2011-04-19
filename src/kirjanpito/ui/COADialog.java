@@ -219,7 +219,7 @@ public class COADialog extends JDialog {
 					model.setDefaultAccount(coa.getAccount(index));
 				}
 				
-				saveMenuItem.setEnabled(true);
+				setSaveEnabled(true);
 			}
 		});
 		
@@ -1112,7 +1112,7 @@ public class COADialog extends JDialog {
 				tableModel.fireTableRowsUpdated(index, index);
 			}
 			
-			saveMenuItem.setEnabled(true);
+			setSaveEnabled(true);
 		}
 	};
 	
