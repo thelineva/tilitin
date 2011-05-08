@@ -323,7 +323,7 @@ public class AccountSelectionDialog extends JDialog {
 	}
 	
 	private void search() {
-		searchPhrase = searchTextField.getText();
+		searchPhrase = searchTextField.getText().toLowerCase();
 		
 		if (!allAccountsCheckBox.isSelected()) {
 			int index = coa.search(searchTextField.getText());
@@ -335,9 +335,38 @@ public class AccountSelectionDialog extends JDialog {
 		else {
 			sorter.allRowsChanged();
 			
-			if (accountTable.getRowCount() > 0) {
-				setSelectedRow(0);
+			if (accountTable.getRowCount() == 0) {
+				return;
 			}
+
+			int index1 = -1;
+			int index2 = -1;
+
+			/* Taulukossa näytetään kaikki tilit, joiden nimi *sisältää*
+			 * hakusanan. Valitaan tili, jonka nimi *alkaa* hakusanalla. */
+			for (int i = 0; i < accountTable.getRowCount(); i++) {
+				int modelIndex = accountTable.convertRowIndexToModel(i);
+				Account account = tableModel.getChartOfAccounts().getAccount(modelIndex);
+
+				if (account.getName().regionMatches(true, 0, searchPhrase, 0, searchPhrase.length())) {
+					if (account.getName().length() == searchPhrase.length()) {
+						index1 = i;
+					}
+					else if (index2 < 0) {
+						index2 = i;
+					}
+				}
+			}
+
+			if (index1 < 0) {
+				index1 = index2;
+			}
+
+			if (index1 < 0) {
+				index1 = 0;
+			}
+
+			setSelectedRow(index1);
 		}		
 	}
 	
@@ -440,7 +469,7 @@ public class AccountSelectionDialog extends JDialog {
 			}
 			
 			return entry.getStringValue(0).startsWith(searchPhrase) ||
-				entry.getStringValue(1).regionMatches(true, 0, searchPhrase, 0, searchPhrase.length());
+				entry.getStringValue(1).toLowerCase().contains(searchPhrase);
 		}
 	};
 
