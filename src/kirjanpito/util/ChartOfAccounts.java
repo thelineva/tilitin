@@ -224,6 +224,34 @@ public class ChartOfAccounts {
 		tmp.toArray(items);
 	}
 	
+	public void filterNonUsedAccounts(AccountBalances balances) {
+		LinkedList<COAItem> headingList = new LinkedList<COAItem>();
+		ArrayList<COAItem> tmp = new ArrayList<COAItem>();
+
+		for (COAItem item : items) {
+			if (item.account != null) {
+				if (balances.getBalance(item.account.getId()) == null)
+					continue;
+
+				while (!headingList.isEmpty()) {
+					tmp.add(headingList.removeFirst());
+				}
+
+				tmp.add(item);
+			}
+			else {
+				while (!headingList.isEmpty() && headingList.peekLast().heading.getLevel() >= item.heading.getLevel()) {
+					headingList.removeLast();
+				}
+
+				headingList.add(item);
+			}
+		}
+
+		items = new COAItem[tmp.size()];
+		tmp.toArray(items);
+	}
+
 	private static class COAItem {
 		private Account account;
 		private COAHeading heading;

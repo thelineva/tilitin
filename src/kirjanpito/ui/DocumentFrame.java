@@ -446,8 +446,12 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		menuItem.setActionCommand("coa1");
 		submenu.add(menuItem);
 
-		menuItem = SwingUtils.createMenuItem("Kaikki tilit", null, 'k', null, printListener);
+		menuItem = SwingUtils.createMenuItem("Vain suosikkitilit", null, 's', null, printListener);
 		menuItem.setActionCommand("coa2");
+		submenu.add(menuItem);
+
+		menuItem = SwingUtils.createMenuItem("Kaikki tilit", null, 'k', null, printListener);
+		menuItem.setActionCommand("coa0");
 		submenu.add(menuItem);
 
 		menu.addSeparator();
@@ -1835,10 +1839,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 	}
 
-	public void showChartOfAccountsPrint(boolean allAccountsVisible) {
+	public void showChartOfAccountsPrint(int mode) {
 		COAPrintModel printModel = new COAPrintModel();
 		printModel.setRegistry(registry);
-		printModel.setAllAccountsVisible(allAccountsVisible);
+		printModel.setMode(mode);
 
 		try {
 			printModel.run();
@@ -2968,11 +2972,14 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			else if (cmd.equals("vatReport")) {
 				showVATReport();
 			}
+			else if (cmd.equals("coa0")) {
+				showChartOfAccountsPrint(0);
+			}
 			else if (cmd.equals("coa1")) {
-				showChartOfAccountsPrint(false);
+				showChartOfAccountsPrint(1);
 			}
 			else if (cmd.equals("coa2")) {
-				showChartOfAccountsPrint(true);
+				showChartOfAccountsPrint(2);
 			}
 		}
 	};

@@ -1,9 +1,6 @@
 package kirjanpito.reports;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 
 import kirjanpito.db.Account;
@@ -26,7 +23,11 @@ public class COAPrintModel implements PrintModel {
 	private Registry registry;
 	private ChartOfAccounts coa;
 	private int accountLevel;
-	private boolean allAccountsVisible;
+	private int mode;
+
+	public static final int ALL_ACCOUNTS = 0;
+	public static final int USED_ACCOUNTS = 1;
+	public static final int FAVOURITE_ACCOUNTS = 2;
 	
 	public Registry getRegistry() {
 		return registry;
@@ -36,30 +37,39 @@ public class COAPrintModel implements PrintModel {
 		this.registry = registry;
 	}
 
-	public boolean isAllAccountsVisible() {
-		return allAccountsVisible;
+	public int getMode() {
+		return mode;
 	}
 
-	public void setAllAccountsVisible(boolean allAccountsVisible) {
-		this.allAccountsVisible = allAccountsVisible;
+	public void setMode(int mode) {
+		this.mode = mode;
 	}
 
 	public void run() throws DataAccessException {
-		if (allAccountsVisible) {
+		if (mode == ALL_ACCOUNTS) {
 			coa = registry.getChartOfAccounts();
-			int maxLevel = 0;
-			
-			for (int i = 0; i < coa.getSize(); i++) {
-				if (coa.getType(i) == ChartOfAccounts.TYPE_HEADING) {
-					maxLevel = Math.max(maxLevel, coa.getHeading(i).getLevel());
-				}
+		}
+		else if (mode == USED_ACCOUNTS) {
+			AccountBalances balances = fetchAccountBalances();
+			coa = new ChartOfAccounts();
+			coa.set(registry.getAccounts(), registry.getCOAHeadings());
+			coa.filterNonUsedAccounts(balances);
+		}
+		else if (mode == FAVOURITE_ACCOUNTS) {
+			coa = new ChartOfAccounts();
+			coa.set(registry.getAccounts(), registry.getCOAHeadings());
+			coa.filterNonFavouriteAccounts();
+		}
+
+		int maxLevel = 0;
+
+		for (int i = 0; i < coa.getSize(); i++) {
+			if (coa.getType(i) == ChartOfAccounts.TYPE_HEADING) {
+				maxLevel = Math.max(maxLevel, coa.getHeading(i).getLevel());
 			}
-			
-			accountLevel = maxLevel + 1;
 		}
-		else {
-			coa = createChartOfAccounts();
-		}
+
+		accountLevel = maxLevel + 1;
 	}
 	
 	public void writeCSV(CSVWriter writer) throws IOException {
@@ -104,53 +114,6 @@ public class COAPrintModel implements PrintModel {
 			
 			writer.writeLine();
 		}
-	}
-
-	private ChartOfAccounts createChartOfAccounts() throws DataAccessException {
-		AccountBalances balances = fetchAccountBalances();
-		ChartOfAccounts coa = registry.getChartOfAccounts();
-		ArrayList<Account> accounts = new ArrayList<Account>();
-		ArrayList<COAHeading> headings = new ArrayList<COAHeading>();
-		HashSet<Integer> headingIds = new HashSet<Integer>();
-		Account account;
-		COAHeading heading;
-		int maxLevel = 0;
-		int level;
-		
-		for (int i = 0; i < coa.getSize(); i++) {
-			if (coa.getType(i) != ChartOfAccounts.TYPE_ACCOUNT)
-				continue;
-			
-			account = coa.getAccount(i);
-			
-			if (balances.getBalance(account.getId()) == null)
-				continue;
-			
-			accounts.add(account);
-			level = Integer.MAX_VALUE;
-			
-			for (int j = i - 1; j >= 0; j--) {
-				if (coa.getType(j) == ChartOfAccounts.TYPE_HEADING) {
-					heading = coa.getHeading(j);
-
-					if (heading.getLevel() < level) {
-						if (headingIds.add(heading.getId())) {
-							headings.add(heading);
-						}
-						
-						level = heading.getLevel();
-						maxLevel = Math.max(level, maxLevel);
-						if (level == 0) break;
-					}
-				}
-			}
-		}
-		
-		Collections.sort(headings);
-		coa = new ChartOfAccounts();
-		coa.set(accounts, headings);
-		accountLevel = maxLevel + 1;
-		return coa;
 	}
 	
 	private AccountBalances fetchAccountBalances() throws DataAccessException {
