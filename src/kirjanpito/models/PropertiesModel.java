@@ -125,6 +125,13 @@ public class PropertiesModel {
 				else {
 					Document doc = dataSource.getDocumentDAO(
 							sess).getByPeriodIdAndNumber(period.getId(), 0);
+
+					if (doc == null) {
+						doc = new Document();
+						doc.setPeriodId(period.getId());
+						doc.setNumber(0);
+					}
+
 					doc.setDate(period.getStartDate());
 					dataSource.getDocumentDAO(sess).save(doc);
 				}
