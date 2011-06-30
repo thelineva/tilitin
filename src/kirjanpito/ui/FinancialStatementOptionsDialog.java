@@ -115,6 +115,7 @@ public class FinancialStatementOptionsDialog extends JDialog {
 		AppSettings settings = AppSettings.getInstance();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String prefix = (type == TYPE_INCOME_STATEMENT) ? "income-statement." : "balance-sheet.";
+		boolean empty = true;
 		String key;
 
 		for (int i = 0; i < NUM_COLUMNS; i++) {
@@ -124,6 +125,7 @@ public class FinancialStatementOptionsDialog extends JDialog {
 				try {
 					startDateFields[i].setDate(dateFormat.parse(
 							settings.getString(key, "")));
+					empty = false;
 				}
 				catch (ParseException e) {
 				}
@@ -134,9 +136,14 @@ public class FinancialStatementOptionsDialog extends JDialog {
 			try {
 				endDateFields[i].setDate(dateFormat.parse(
 						settings.getString(key, "")));
+				empty = false;
 			}
 			catch (ParseException e) {
 			}
+		}
+
+		if (empty) {
+			reset();
 		}
 	}
 
