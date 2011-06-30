@@ -1685,31 +1685,33 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return;
 		}
 
-		AppSettings settings = AppSettings.getInstance();
-		FinancialStatementOptionsDialog dialog =
-			new FinancialStatementOptionsDialog(this, "Tuloslaskelma");
-		dialog.setPeriod(registry.getPeriod());
+		FinancialStatementOptionsDialog dialog = new FinancialStatementOptionsDialog(
+				registry, this, "Tuloslaskelma",
+				FinancialStatementOptionsDialog.TYPE_INCOME_STATEMENT);
+
+		try {
+			dialog.fetchData();
+		}
+		catch (DataAccessException e) {
+			String message = "Tietojen hakeminen epäonnistui";
+			logger.log(Level.SEVERE, message, e);
+			SwingUtils.showDataAccessErrorMessage(this, e, message);
+			return;
+		}
+
 		dialog.create();
-		dialog.setPreviousPeriodVisible(settings.getBoolean("previous-period", false));
-		dialog.setPageBreakCheckBoxVisible(false);
-		dialog.showTab(0);
 		dialog.setVisible(true);
 
-		if (dialog.getResult() == JOptionPane.OK_OPTION) {
-			boolean previousPeriodVisible = dialog.isPreviousPeriodVisible();
-			settings.set("previous-period", previousPeriodVisible);
-			FinancialStatementModel printModel = new FinancialStatementModel();
+		if (dialog.getStartDates() != null) {
+			FinancialStatementModel printModel = new FinancialStatementModel(
+					detailed ? FinancialStatementModel.TYPE_INCOME_STATEMENT_DETAILED :
+						FinancialStatementModel.TYPE_INCOME_STATEMENT);
 			printModel.setDataSource(registry.getDataSource());
-			printModel.setPeriod(registry.getPeriod());
 			printModel.setSettings(registry.getSettings());
 			printModel.setAccounts(registry.getAccounts());
-			printModel.setStartDate(dialog.getStartDate());
-			printModel.setEndDate(dialog.getEndDate());
-			printModel.setTitle("Tuloslaskelma");
-			printModel.setReportId(detailed ? "income-statement-detailed" : "income-statement");
-			printModel.setPreviousPeriodVisible(previousPeriodVisible);
-			showPrintPreview(printModel, new FinancialStatementPrint(
-					printModel, detailed ? "incomeStatementDetailed" : "incomeStatement", true));
+			printModel.setStartDates(dialog.getStartDates());
+			printModel.setEndDates(dialog.getEndDates());
+			showPrintPreview(printModel, new FinancialStatementPrint(printModel));
 		}
 	}
 
@@ -1721,31 +1723,34 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return;
 		}
 
-		AppSettings settings = AppSettings.getInstance();
-		FinancialStatementOptionsDialog dialog =
-			new FinancialStatementOptionsDialog(this, "Tase");
-		dialog.setPeriod(registry.getPeriod());
+		FinancialStatementOptionsDialog dialog = new FinancialStatementOptionsDialog(
+				registry, this, "Tase",
+				FinancialStatementOptionsDialog.TYPE_BALANCE_SHEET);
+
+		try {
+			dialog.fetchData();
+		}
+		catch (DataAccessException e) {
+			String message = "Tietojen hakeminen epäonnistui";
+			logger.log(Level.SEVERE, message, e);
+			SwingUtils.showDataAccessErrorMessage(this, e, message);
+			return;
+		}
+
 		dialog.create();
-		dialog.setPreviousPeriodVisible(settings.getBoolean("previous-period", false));
-		dialog.showTab(0);
 		dialog.setVisible(true);
 
-		if (dialog.getResult() == JOptionPane.OK_OPTION) {
-			boolean previousPeriodVisible = dialog.isPreviousPeriodVisible();
-			settings.set("previous-period", previousPeriodVisible);
-			FinancialStatementModel printModel = new FinancialStatementModel();
+		if (dialog.getStartDates() != null) {
+			FinancialStatementModel printModel = new FinancialStatementModel(
+					detailed ? FinancialStatementModel.TYPE_BALANCE_SHEET_DETAILED :
+						FinancialStatementModel.TYPE_BALANCE_SHEET);
 			printModel.setDataSource(registry.getDataSource());
-			printModel.setPeriod(registry.getPeriod());
 			printModel.setSettings(registry.getSettings());
 			printModel.setAccounts(registry.getAccounts());
-			printModel.setStartDate(dialog.getStartDate());
-			printModel.setEndDate(dialog.getEndDate());
-			printModel.setTitle("Tase");
-			printModel.setReportId(detailed ? "balance-sheet-detailed" : "balance-sheet");
-			printModel.setPreviousPeriodVisible(previousPeriodVisible);
+			printModel.setStartDates(dialog.getStartDates());
+			printModel.setEndDates(dialog.getEndDates());
 			printModel.setPageBreakEnabled(dialog.isPageBreakEnabled());
-			showPrintPreview(printModel, new FinancialStatementPrint(
-					printModel, detailed ? "balanceSheetDetailed" : "balanceSheet", false));
+			showPrintPreview(printModel, new FinancialStatementPrint(printModel));
 		}
 	}
 

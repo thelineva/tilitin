@@ -21,6 +21,7 @@ import javax.swing.JTextField;
 public class DateTextField extends JTextField {
 	private DateFormat dateFormat;
 	private Date baseDate;
+	private boolean baseDateSet;
 	private static Pattern[] patterns;
 	
 	private static final long serialVersionUID = 1L;
@@ -56,11 +57,15 @@ public class DateTextField extends JTextField {
 
 	public void setBaseDate(Date baseDate) {
 		this.baseDate = baseDate;
+		this.baseDateSet = (baseDate != null);
 	}
 
 	public void setDate(Date date) {
-		String str = (date == null) ? "" : dateFormat.format(date);
-		setText(str);
+		setText((date == null) ? "" : dateFormat.format(date));
+
+		if (!baseDateSet) {
+			baseDate = date;
+		}
 	}
 	
 	public Date getDate() throws ParseException {
@@ -70,14 +75,44 @@ public class DateTextField extends JTextField {
 			return null;
 		}
 		
+		return parseDate(str);
+	}
+
+	private void autoComplete() {
+		String str = getText();
+		Date date;
+
+		if (str.length() == 0) {
+			return;
+		}
+
+		try {
+			date = parseDate(str);
+		}
+		catch (ParseException e) {
+			return;
+		}
+
+		if (!baseDateSet) {
+			baseDate = date;
+		}
+
+		String newStr = dateFormat.format(date);
+
+		if (!str.equals(newStr)) {
+			setText(newStr);
+		}
+	}
+
+	private Date parseDate(String str) throws ParseException {
 		Calendar cal = Calendar.getInstance();
 		cal.setLenient(false);
 		cal.clear();
 		
-		Calendar now = Calendar.getInstance();
+		Calendar bcal = Calendar.getInstance();
 		
 		if (baseDate != null) {
-			now.setTime(baseDate);
+			bcal.setTime(baseDate);
 		}
 		
 		Matcher matcher = patterns[0].matcher(str);
@@ -94,7 +129,7 @@ public class DateTextField extends JTextField {
 			
 			if (matcher.matches()) {
 				cal.set(
-						now.get(Calendar.YEAR), // vuosi
+						bcal.get(Calendar.YEAR), // vuosi
 						Integer.parseInt(matcher.group(2)) - 1, // kuukausi
 						Integer.parseInt(matcher.group(1)) // päivä
 				);
@@ -118,7 +153,7 @@ public class DateTextField extends JTextField {
 			
 			if (matcher.matches()) {
 				cal.set(
-						now.get(Calendar.YEAR), // vuosi
+						bcal.get(Calendar.YEAR), // vuosi
 						Integer.parseInt(matcher.group(2)) - 1, // kuukausi
 						Integer.parseInt(matcher.group(1)) // päivä
 				);
@@ -130,8 +165,8 @@ public class DateTextField extends JTextField {
 			
 			if (matcher.matches()) {
 				cal.set(
-						now.get(Calendar.YEAR), // vuosi
-						now.get(Calendar.MONTH), // kuukausi
+						bcal.get(Calendar.YEAR), // vuosi
+						bcal.get(Calendar.MONTH), // kuukausi
 						Integer.parseInt(matcher.group(1)) // päivä
 				);
 			}
@@ -151,19 +186,6 @@ public class DateTextField extends JTextField {
 		}
 		
 		return date;
-	}
-	
-	private void autoComplete() {
-		Date date;
-		
-		try {
-			date = getDate();
-		}
-		catch (ParseException e) {
-			return;
-		}
-		
-		setDate(date);
 	}
 	
 	@Override

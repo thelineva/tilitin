@@ -220,10 +220,19 @@ public abstract class SQLEntryDAO implements EntryDAO {
 		ResultSet rs;
 
 		try {
-			PreparedStatement stmt = getSelectByPeriodIdAndDateQuery();
-			stmt.setInt(1, periodId);
-			stmt.setTimestamp(2, new java.sql.Timestamp(startDate.getTime()));
-			stmt.setTimestamp(3, new java.sql.Timestamp(endDate.getTime()));
+			PreparedStatement stmt;
+			int index = 1;
+
+			if (periodId > 0) {
+				stmt = getSelectByPeriodIdAndDateQuery();
+				stmt.setInt(index++, periodId);
+			}
+			else {
+				stmt = getSelectByDateQuery();
+			}
+
+			stmt.setTimestamp(index++, new java.sql.Timestamp(startDate.getTime()));
+			stmt.setTimestamp(index++, new java.sql.Timestamp(endDate.getTime()));
 			rs = stmt.executeQuery();
 
 			while (rs.next()) {
@@ -239,10 +248,18 @@ public abstract class SQLEntryDAO implements EntryDAO {
 	}
 
 	/**
+	 * Palauttaa SELECT-kyselyn, jonka avulla haetaan viennit
+	 * tietyltä aikaväliltä
+	 *
+	 * @return SELECT-kysely
+	 * @throws SQLException jos kyselyn luominen epäonnistuu
+	 */
+	protected abstract PreparedStatement getSelectByDateQuery() throws SQLException;
+
+	/**
 	 * Palauttaa SELECT-kyselyn, jonka avulla haetaan tietyn tilikauden
-	 * viennit tietyltä aikaväliltä. Kyselyssä on kolme parametria,
-	 * ensimmäinen tilikauden tunniste, toinen alkamispäivämäärä ja
-	 * kolmas päättymispäivämäärä.
+	 * viennit tietyltä aikaväliltä. Kyselyssä on kolme parametria:
+	 * 1. tilikauden tunniste, 2. alkamispäivämäärä ja 3. päättymispäivämäärä.
 	 *
 	 * @return SELECT-kysely
 	 * @throws SQLException jos kyselyn luominen epäonnistuu

@@ -31,29 +31,30 @@ import kirjanpito.util.CSVWriter;
 public class FinancialStatementModel implements PrintModel {
 	private DataSource dataSource;
 	private Settings settings;
-	private Period period;
-	private Period periodPrev;
-	private Date startDate;
-	private Date endDate;
+	private int type;
 	private String title;
-	private String reportId;
-	private boolean previousPeriodVisible;
+	private Date[] startDates;
+	private Date[] endDates;
 	private boolean pageBreakEnabled;
 	private ReportStructure structure;
 	private List<Account> accounts;
 	private List<FinancialStatementRow> rows;
-	private AccountBalances balances;
-	private AccountBalances balancesPrev;
+	private AccountBalances[] balances;
 	private DecimalFormat numberFormat;
 	private boolean details;
 	private boolean emptyRow;
-	private boolean nonZeroAccounts;
 	
 	public static final int STYLE_PLAIN = 0;
 	public static final int STYLE_BOLD = 1;
 	public static final int STYLE_ITALIC = 2;
+
+	public static final int TYPE_INCOME_STATEMENT = 1;
+	public static final int TYPE_INCOME_STATEMENT_DETAILED = 2;
+	public static final int TYPE_BALANCE_SHEET = 3;
+	public static final int TYPE_BALANCE_SHEET_DETAILED = 4;
 	
-	public FinancialStatementModel() {
+	public FinancialStatementModel(int type) {
+		this.type = type;
 		numberFormat = new DecimalFormat();
 		numberFormat.setParseBigDecimal(true);
 	}
@@ -77,57 +78,48 @@ public class FinancialStatementModel implements PrintModel {
 	}
 
 	/**
-	 * Palauttaa tilikauden.
+	 * Palauttaa tulosteen tyypin.
 	 * 
-	 * @return tilikausi
+	 * @return tulosteen tyyppi
 	 */
-	public Period getPeriod() {
-		return period;
+	public int getType() {
+		return type;
 	}
 
 	/**
-	 * Asettaa tilikauden.
+	 * Palauttaa alkamispäivämäärät.
 	 * 
-	 * @param period tilikausi
+	 * @return alkamispäivämäärät
 	 */
-	public void setPeriod(Period period) {
-		this.period = period;
-	}
-	
-	/**
-	 * Palauttaa alkamispäivämäärän.
-	 * 
-	 * @return alkamispäivämäärä
-	 */
-	public Date getStartDate() {
-		return startDate;
+	public Date[] getStartDates() {
+		return startDates;
 	}
 
 	/**
-	 * Asettaa alkamispäivämäärän.
+	 * Asettaa alkamispäivämäärät.
 	 * 
-	 * @param startDate alkamispäivämäärä
+	 * @param startDate alkamispäivämäärät
 	 */
-	public void setStartDate(Date startDate) {
-		this.startDate = startDate;
+	public void setStartDates(Date[] startDates) {
+		this.startDates = startDates;
 	}
 
 	/**
-	 * Palauttaa päättymispäivämäärän.
+	 * Palauttaa päättymispäivämäärät.
 	 * 
-	 * @return päättymispäivämäärä
+	 * @return päättymispäivämäärät
 	 */
-	public Date getEndDate() {
-		return endDate;
+	public Date[] getEndDates() {
+		return endDates;
 	}
 
 	/**
-	 * Asettaa päättymispäivämäärän.
+	 * Asettaa päättymispäivämäärät.
 	 * 
-	 * @param endDate päättymispäivämäärä
+	 * @param endDate päättymispäivämäärät
 	 */
-	public void setEndDate(Date endDate) {
-		this.endDate = endDate;
+	public void setEndDates(Date[] endDates) {
+		this.endDates = endDates;
 	}
 
 	/**
@@ -149,6 +141,15 @@ public class FinancialStatementModel implements PrintModel {
 	}
 	
 	/**
+	 * Palauttaa tulosteen nimen.
+	 * 
+	 * @return tulosteen nimi
+	 */
+	public String getTitle() {
+		return title;
+	}
+
+	/**
 	 * Palauttaa tilit.
 	 * 
 	 * @return tilit
@@ -164,60 +165,6 @@ public class FinancialStatementModel implements PrintModel {
 	 */
 	public void setAccounts(List<Account> accounts) {
 		this.accounts = accounts;
-	}
-
-	/**
-	 * Palauttaa tulosteen nimen.
-	 * 
-	 * @return tulosteen nimi
-	 */
-	public String getTitle() {
-		return title;
-	}
-
-	/**
-	 * Asettaa tulosteen nimen.
-	 * 
-	 * @param title tulosteen nimi
-	 */
-	public void setTitle(String title) {
-		this.title = title;
-	}
-
-	/**
-	 * Palauttaa tulosteen tunnisteen.
-	 * 
-	 * @return tulosteen tunniste
-	 */
-	public String getReportId() {
-		return reportId;
-	}
-
-	/**
-	 * Asettaa tulosteen tunnisteen.
-	 * 
-	 * @param reportId tulosteen tunniste
-	 */
-	public void setReportId(String reportId) {
-		this.reportId = reportId;
-	}
-
-	/**
-	 * Ilmoittaa, onko edellisen tilikauden rahamäärät näkyvillä
-	 * 
-	 * @return <code>true</code> tai <code>false</code>
-	 */
-	public boolean isPreviousPeriodVisible() {
-		return previousPeriodVisible;
-	}
-
-	/**
-	 * Näyttää tai piilottaa edellisen tilikauden rahamäärät.
-	 * 
-	 * @param previousPeriodVisible ilmoittaa, onko edellisen tilikauden rahamäärät näkyvillä
-	 */
-	public void setPreviousPeriodVisible(boolean previousPeriodVisible) {
-		this.previousPeriodVisible = previousPeriodVisible;
 	}
 
 	/**
@@ -240,60 +187,79 @@ public class FinancialStatementModel implements PrintModel {
 
 	public void run() throws DataAccessException {
 		Session sess = null;
+		String reportId;
 		
-		if (startDate == null)
-			startDate = period.getStartDate();
-	
-		if (endDate == null)
-			endDate = period.getEndDate();
+		switch (type) {
+		case TYPE_INCOME_STATEMENT:
+			reportId = "income-statement";
+			title = "Tuloslaskelma";
+			break;
+
+		case TYPE_INCOME_STATEMENT_DETAILED:
+			reportId = "income-statement-detailed";
+			title = "Tuloslaskelma";
+			break;
+
+		case TYPE_BALANCE_SHEET:
+			reportId = "balance-sheet";
+			title = "Tase";
+			break;
+
+		case TYPE_BALANCE_SHEET_DETAILED:
+			reportId = "balance-sheet-detailed";
+			title = "Tase";
+			break;
+
+		default:
+			throw new IllegalArgumentException("Invalid report type: " + type);
+		}
 		
 		try {
 			sess = dataSource.openSession();
 			structure = dataSource.getReportStructureDAO(
 					sess).getById(reportId);
 			
-			balances = new AccountBalances(accounts);
-			
-			/* Lasketaan nykyisen tilikauden tilien saldot. */
-			dataSource.getEntryDAO(sess).getByPeriodIdAndDate(period.getId(),
-				startDate, endDate, new DTOCallback<Entry>() {
-					public void process(Entry entry) {
-						balances.addEntry(entry);
-					}
-				});
-			
-			if (previousPeriodVisible) {
-				/* Haetaan edellinen tilikausi. */
-				periodPrev = null;
+			if (type == TYPE_BALANCE_SHEET || type == TYPE_BALANCE_SHEET_DETAILED) {
 				List<Period> periods = dataSource.getPeriodDAO(sess).getAll();
 				
-				for (int i = 1; i < periods.size(); i++) {
-					if (periods.get(i).getId() == period.getId()) {
-						periodPrev = periods.get(i - 1);
-						break;
+				for (int i = 0; i < startDates.length; i++) {
+					for (Period period : periods) {
+						if (!period.getStartDate().after(endDates[i]) &&
+								!period.getEndDate().before(endDates[i])) {
+							startDates[i] = period.getStartDate();
+							break;
+						}
+					}
+					
+					if (startDates[i] == null) {
+						startDates[i] = endDates[i];
 					}
 				}
-				
-				if (periodPrev == null) {
-					previousPeriodVisible = false;
-				}
-				else {
-					balancesPrev = new AccountBalances(accounts);
-					
-					/* Lasketaan edellisen tilikauden tilien saldot. */
-					dataSource.getEntryDAO(sess).getByPeriodIdAndDate(periodPrev.getId(),
-						periodPrev.getStartDate(), periodPrev.getEndDate(), new DTOCallback<Entry>() {
-							public void process(Entry entry) {
-								balancesPrev.addEntry(entry);
-							}
-						});
-				}
+			}
+
+			balances = new AccountBalances[startDates.length];
+
+			for (int i = 0; i < balances.length; i++) {
+				balances[i] = new AccountBalances(accounts);
+			}
+
+			/* Lasketaan tilien saldot. */
+			for (int i = 0; i < startDates.length; i++) {
+				final int index = i;
+
+				dataSource.getEntryDAO(sess).getByPeriodIdAndDate(-1,
+						startDates[i], endDates[i],
+					new DTOCallback<Entry>() {
+						public void process(Entry entry) {
+							balances[index].addEntry(entry);
+						}
+					});
 			}
 		}
 		finally {
 			if (sess != null) sess.close();
 		}
-		
+
 		/* Tulosteen sisältö on tallennettu CSV-tiedostoon, jossa
 		 * erottimena käytetään ;-merkkiä. Ensimmäinen kenttä sisältää
 		 * kolme merkkiä:
@@ -334,6 +300,8 @@ public class FinancialStatementModel implements PrintModel {
 		catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		balances = null;
 	}
 	
 	public void writeCSV(CSVWriter writer) throws IOException {
@@ -351,10 +319,18 @@ public class FinancialStatementModel implements PrintModel {
 		writer.writeField(settings.getBusinessId());
 		writer.writeLine();
 		writer.writeField("Alkaa");
-		writer.writeField(dateFormat.format(startDate));
+
+		for (Date date : startDates) {
+			writer.writeField(dateFormat.format(date));
+		}
+
 		writer.writeLine();
 		writer.writeField("Päättyy");
-		writer.writeField(dateFormat.format(endDate));
+
+		for (Date date : endDates) {
+			writer.writeField(dateFormat.format(date));
+		}
+
 		writer.writeLine();
 		writer.writeLine();
 		
@@ -362,10 +338,9 @@ public class FinancialStatementModel implements PrintModel {
 			writer.writeField(row.text.isEmpty() ? "" : Integer.toString(row.level));
 			writer.writeField((row.number == null) ? "" : row.number);
 			writer.writeField(row.text);
-			writer.writeField((row.amount == null) ? "" : numberFormat.format(row.amount));
 			
-			if (previousPeriodVisible) {
-				writer.writeField((row.amountPrev == null) ? "" : numberFormat.format(row.amountPrev));
+			for (BigDecimal amount : row.amounts) {
+				writer.writeField((amount == null) ? "" : numberFormat.format(amount));
 			}
 			
 			writer.writeLine();
@@ -375,7 +350,7 @@ public class FinancialStatementModel implements PrintModel {
 	private void processLine(String line) {
 		if (line.equals("--") && pageBreakEnabled) {
 			rows.add(new FinancialStatementRow(null,
-					"", STYLE_PLAIN, -1, null, null));
+					"", STYLE_PLAIN, -1, null));
 			emptyRow = true;
 			return;
 		}
@@ -383,7 +358,7 @@ public class FinancialStatementModel implements PrintModel {
 		if (line.startsWith("-")) {
 			if (!emptyRow) {
 				rows.add(new FinancialStatementRow(null,
-					"", STYLE_PLAIN, 0, null, null));
+					"", STYLE_PLAIN, 0, null));
 				emptyRow = true;
 			}
 			
@@ -412,29 +387,24 @@ public class FinancialStatementModel implements PrintModel {
 		else {
 			style = STYLE_PLAIN;
 		}
-		
-		BigDecimal amount = BigDecimal.ZERO;
-		BigDecimal amountPrev = BigDecimal.ZERO;
-		nonZeroAccounts = false;
-		
+
 		if (typeChar == 'F') {
 			String[] fields = line.substring(offset + 3).split(";");
+			FinancialStatementRow row = new FinancialStatementRow(null,
+					fields[0], style, level, new BigDecimal[startDates.length]);
 			
 			try {
-				amount = (fields.length >= 2) ? (BigDecimal)numberFormat.parse(fields[1]) : null;
-				amountPrev = (fields.length >= 3) ? (BigDecimal)numberFormat.parse(fields[2]) : null;
+				for (int i = 0; i < startDates.length; i++) {
+					if (fields.length >= 2 + i) {
+						row.amounts[i] = (BigDecimal)numberFormat.parse(fields[1 + i]);
+					}
+				}
 			}
 			catch (ParseException e) {
-				amount = null;
-				amountPrev = null;
+				e.printStackTrace();
 			}
-			
-			if (!previousPeriodVisible) {
-				amountPrev = null;
-			}
-			
-			rows.add(new FinancialStatementRow(null,
-					fields[0], style, level, amount, amountPrev));
+
+			rows.add(row);
 			emptyRow = false;
 			return;
 		}
@@ -444,6 +414,7 @@ public class FinancialStatementModel implements PrintModel {
 		pos1 = offset + 3;
 		pos2 = line.indexOf(';', pos1);
 		pos3 = line.indexOf(';', pos2 + 1);
+		BigDecimal[] amounts = new BigDecimal[startDates.length];
 		
 		while (pos2 >= 0) {
 			String start = line.substring(pos1, pos2);
@@ -453,9 +424,9 @@ public class FinancialStatementModel implements PrintModel {
 				addDetailRows(start, stop, style, level, line.charAt(1));
 			}
 			else {
-				amount = amount.add(calculateBalance(balances, start, stop));
-				amountPrev = previousPeriodVisible ?
-						amountPrev.add(calculateBalance(balancesPrev, start, stop)) : null;
+				for (int i = 0; i < amounts.length; i++) {
+					amounts[i] = calculateBalance(balances[i], start, stop, amounts[i]);
+				}
 			}
 			
 			pos1 = pos3 + 1;
@@ -467,24 +438,27 @@ public class FinancialStatementModel implements PrintModel {
 		
 		/* H- ja S-rivit näytetään aina, G- ja T-rivit vain, jos
 		 * jokin summattavista tileistä on ollut käytössä. */
-		if (previousPeriodVisible) {
-			if (!nonZeroAccounts && (typeChar == 'G' || typeChar == 'T')) {
-				return;
+		boolean nonZero = false;
+
+		for (BigDecimal amount : amounts) {
+			if (amount != null) {
+				nonZero = true;
+				break;
 			}
 		}
-		else if (!nonZeroAccounts && (typeChar == 'G' || typeChar == 'T')) {
+
+		if (!nonZero && (typeChar == 'G' || typeChar == 'T')) {
 			return;
 		}
-		
+
 		/* Otsikkoriveillä ei näytetä euromäärää. */
 		if (typeChar == 'H' || typeChar == 'G') {
-			amount = null;
-			amountPrev = null;
+			amounts = null;
 		}
 		
 		if (typeChar != 'D') {
 			rows.add(new FinancialStatementRow(null,
-				text, style, level, amount, amountPrev));
+				text, style, level, amounts));
 			emptyRow = false;
 		}
 	}
@@ -499,10 +473,9 @@ public class FinancialStatementModel implements PrintModel {
 	 * @return saldojen summa
 	 */
 	private BigDecimal calculateBalance(AccountBalances balances,
-			String start, String stop) {
+			String start, String stop, BigDecimal sum) {
 		String number;
 		BigDecimal balance;
-		BigDecimal sum = BigDecimal.ZERO;
 		boolean singleAccount = start.equals(stop);
 		
 		for (Account account : accounts) {
@@ -517,20 +490,22 @@ public class FinancialStatementModel implements PrintModel {
 				if (balance != null) {
 					if (account.getType() == Account.TYPE_EXPENSE)
 						balance = balance.negate();
-					
-					sum = sum.add(balance);
-					nonZeroAccounts = true;
+
+					if (sum == null) {
+						sum = balance;
+					}
+					else {
+						sum = sum.add(balance);
+					}
 				}
 			}
 		}
-		
+
 		return sum;
 	}
 	
 	private void addDetailRows(String start, String stop, int style, int level, char filterChar) {
 		String number;
-		BigDecimal balance;
-		BigDecimal balancePrev;
 		boolean singleAccount = start.equals(stop);
 		
 		for (Account account : accounts) {
@@ -538,36 +513,41 @@ public class FinancialStatementModel implements PrintModel {
 			
 			if ((number.compareTo(start) >= 0 && number.compareTo(stop) < 0) ||
 					(singleAccount && number.equals(start))) {
-				if (previousPeriodVisible) {
-					balancePrev = balancesPrev.getBalance(account.getId());
+				
+				BigDecimal[] amounts = new BigDecimal[startDates.length];
+				boolean nonZero = false;
+				
+				for (int i = 0; i < startDates.length; i++) {
+					amounts[i] = balances[i].getBalance(account.getId());
+
+					if (amounts[i] != null) {
+						nonZero = true;
+					}
 				}
-				else {
-					balancePrev = null;
+
+				if (amounts[0] == null && filterChar == '0') {
+					amounts[0] = BigDecimal.ZERO;
+					nonZero = true;
 				}
 				
-				balance = balances.getBalance(account.getId());
-				
-				if (balance == null && filterChar == '0') {
-					balance = BigDecimal.ZERO;
-				}
-				
-				if (balance == null && balancePrev == null) {
+				if (!nonZero) {
 					continue;
 				}
 				
 				if (account.getType() == Account.TYPE_EXPENSE) {
-					if (balance != null) balance = balance.negate();
-					if (balancePrev != null) balancePrev = balancePrev.negate();
+					for (int i = 0; i < startDates.length; i++) {
+						if (amounts[i] != null) amounts[i] = amounts[i].negate();
+					}
 				}
-				
-				if (balance != null) {
-					if (filterChar == '+' && balance.compareTo(BigDecimal.ZERO) < 0) {
+
+				if (amounts[0] != null) {
+					if (filterChar == '+' && amounts[0].compareTo(BigDecimal.ZERO) < 0) {
 						continue;
 					}
-					else if (filterChar == '-' && balance.compareTo(BigDecimal.ZERO) > 0) {
+					else if (filterChar == '-' && amounts[0].compareTo(BigDecimal.ZERO) > 0) {
 						continue;
 					}
-					else if (filterChar == '0' && balance.compareTo(BigDecimal.ZERO) != 0) {
+					else if (filterChar == '0' && amounts[0].compareTo(BigDecimal.ZERO) != 0) {
 						continue;
 					}
 				}
@@ -575,39 +555,11 @@ public class FinancialStatementModel implements PrintModel {
 				details = true;
 				emptyRow = false;
 				rows.add(new FinancialStatementRow(account.getNumber(),
-						account.getName(), style, level,
-						balance, balancePrev));
+						account.getName(), style, level, amounts));
 			}
 		}
 	}
-	
-	/**
-	 * Palauttaa käyttäjän nimen.
-	 * 
-	 * @return käyttäjän nimi
-	 */
-	public String getName() {
-		return settings.getName();
-	}
-	
-	/**
-	 * Palauttaa Y-tunnuksen.
-	 * 
-	 * @return y-tunnus
-	 */
-	public String getBusinessId() {
-		return settings.getBusinessId();
-	}
-	
-	/**
-	 * Palauttaa edellisen tilikauden.
-	 * 
-	 * @return edellinen tilikausi
-	 */
-	public Period getPreviousPeriod() {
-		return periodPrev;
-	}
-	
+
 	/**
 	 * Palauttaa rivien lukumäärän.
 	 * 
@@ -615,6 +567,15 @@ public class FinancialStatementModel implements PrintModel {
 	 */
 	public int getRowCount() {
 		return rows.size();
+	}
+
+	/**
+	 * Palauttaa sarakkeiden lukumäärän.
+	 *
+	 * @return sarakkeiden lukumäärä
+	 */
+	public int getColumnCount() {
+		return startDates.length;
 	}
 	
 	/**
@@ -663,18 +624,9 @@ public class FinancialStatementModel implements PrintModel {
 	 * @param index rivinumero
 	 * @return rahamäärä
 	 */
-	public BigDecimal getAmount(int index) {
-		return rows.get(index).amount;
-	}
-	
-	/**
-	 * Palauttaa edellisen tilikauden rahamäärän rivillä <code>index</code>.
-	 * 
-	 * @param index rivinumero
-	 * @return rahamäärä
-	 */
-	public BigDecimal getAmountPrev(int index) {
-		return rows.get(index).amountPrev;
+	public BigDecimal getAmount(int index, int col) {
+		FinancialStatementRow row = rows.get(index);
+		return (row.amounts == null) ? null : row.amounts[col];
 	}
 	
 	public boolean containsDetails() {
@@ -686,18 +638,16 @@ public class FinancialStatementModel implements PrintModel {
 		public String text;
 		public int style;
 		public int level;
-		public BigDecimal amount;
-		public BigDecimal amountPrev;
+		public BigDecimal[] amounts;
 		
 		public FinancialStatementRow(String number, String text,
-				int style, int level, BigDecimal amount, BigDecimal amountPrev)
+				int style, int level, BigDecimal[] amounts)
 		{
 			this.number = number;
 			this.text = text;
 			this.style = style;
 			this.level = level;
-			this.amount = amount;
-			this.amountPrev = amountPrev;
+			this.amounts = amounts;
 		}
 	}
 }
