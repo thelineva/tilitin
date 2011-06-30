@@ -1,5 +1,6 @@
 package kirjanpito.ui;
 
+import java.awt.Toolkit;
 import java.io.File;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.logging.ConsoleHandler;
@@ -59,6 +60,19 @@ public class Kirjanpito implements Runnable {
 			
 			try {
 				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		else if (osName.startsWith("linux")) {
+			try {
+				/* Vaihdetaan WM_CLASS. */
+				Toolkit toolkit = Toolkit.getDefaultToolkit();
+				java.lang.reflect.Field awtAppClassNameField =
+					toolkit.getClass().getDeclaredField("awtAppClassName");
+				awtAppClassNameField.setAccessible(true);
+				awtAppClassNameField.set(toolkit, "Tilitin");
 			}
 			catch (Exception e) {
 				e.printStackTrace();
