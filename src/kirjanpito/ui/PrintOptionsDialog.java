@@ -135,7 +135,6 @@ public class PrintOptionsDialog extends JDialog {
 	public void create() {
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		setMinimumSize(getFrameMinimumSize());
-		setLocationRelativeTo(getOwner());
 		addWindowListener(new WindowAdapter() {
 			public void windowOpened(WindowEvent e) {
 				if (tab == 0) {
@@ -192,6 +191,7 @@ public class PrintOptionsDialog extends JDialog {
 		
 		showTab(0);
 		pack();
+		setLocationRelativeTo(getOwner());
 	}
 	
 	private void createOptionButtonPanel() {
