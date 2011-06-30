@@ -1972,7 +1972,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	public void showHelp() {
 		try {
 			Desktop.getDesktop().browse(
-				new URI("http://helineva.net/tilitin/ohjeet/"));
+				new URI("http://helineva.net/tilitin/ohjeet/?v=" + Kirjanpito.APP_VERSION));
 		}
 		catch (Exception e) {
 			SwingUtils.showErrorMessage(this, "Web-selaimen avaaminen epäonnistui. " +
