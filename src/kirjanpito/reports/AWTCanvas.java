@@ -6,6 +6,8 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.print.PageFormat;
 
+import kirjanpito.util.AppSettings;
+
 public class AWTCanvas implements PrintCanvas {
 	private Graphics2D g;
 	private PageFormat pageFormat;
@@ -17,11 +19,13 @@ public class AWTCanvas implements PrintCanvas {
 	
 	public AWTCanvas(PageFormat pageFormat) {
 		this.pageFormat = pageFormat;
-		normalFont = new Font(Font.SANS_SERIF, Font.PLAIN, 10);
-		smallFont = new Font(Font.SANS_SERIF, Font.PLAIN, 9);
-		boldFont = new Font(Font.SANS_SERIF, Font.BOLD, 10);
-		italicFont = new Font(Font.SANS_SERIF, Font.ITALIC, 10);
-		headingFont = new Font(Font.SANS_SERIF, Font.PLAIN, 14);
+		AppSettings settings = AppSettings.getInstance();
+		String fontFamily = settings.getString("font", Font.SANS_SERIF);
+		normalFont = new Font(fontFamily, Font.PLAIN, 10);
+		smallFont = new Font(fontFamily, Font.PLAIN, 9);
+		boldFont = new Font(fontFamily, Font.BOLD, 10);
+		italicFont = new Font(fontFamily, Font.ITALIC, 10);
+		headingFont = new Font(fontFamily, Font.PLAIN, 14);
 	}
 	
 	void setGraphics(Graphics2D g) {
