@@ -355,10 +355,20 @@ public class COAModel {
 	 * Tiliä ei voi poistaa, jos jossakin viennissä on viittaus tiliin.
 	 * 
 	 * @param account tarkistettava tili
-	 * @return <code>true</code>, jos tilin voi poistaa
+	 * @return 0, jos tilin voi poistaa; 1, jos jossakin viennissä on viittaus tiliin;
+	 *         2, jos tili on määritelty ALV-vastatiliksi
 	 * @throws DataAccessException jos tietojen hakeminen epäonnistuu
 	 */
-	public boolean canRemoveAccount(Account account) throws DataAccessException {
+	public int canRemoveAccount(Account account) throws DataAccessException {
+		int accountId = account.getId();
+
+		for (Account a : accounts) {
+			if (a.getVatAccount1Id() == accountId ||
+					a.getVatAccount2Id() == accountId) {
+				return 2;
+			}
+		}
+
 		DataSource dataSource = registry.getDataSource();
 		Session sess = null;
 		
@@ -366,8 +376,8 @@ public class COAModel {
 			sess = dataSource.openSession();
 			CountDTOCallback<Entry> callback = new CountDTOCallback<Entry>();
 			dataSource.getEntryDAO(sess).getByPeriodIdAndAccountId(-1,
-					account.getId(), callback);
-			return callback.getCount() == 0;
+					accountId, callback);
+			return callback.getCount() == 0 ? 0 : 1;
 		}
 		finally {
 			if (sess != null) sess.close();

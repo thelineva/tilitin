@@ -592,7 +592,7 @@ public class COADialog extends JDialog {
 			
 		if (coa.getType(index) == ChartOfAccounts.TYPE_ACCOUNT) {
 			Account account = coa.getAccount(index);
-			boolean canRemove = false;
+			int canRemove;
 			
 			try {
 				canRemove = model.canRemoveAccount(account);
@@ -604,9 +604,15 @@ public class COADialog extends JDialog {
 				return;
 			}
 			
-			if (!canRemove) {
+			if (canRemove == 1) {
 				JOptionPane.showMessageDialog(this,
 						"Tiliä ei voi poistaa, koska jokin vienti kohdistuu valittuun tiliin.",
+						Kirjanpito.APP_NAME, JOptionPane.OK_OPTION);
+				return;
+			}
+			else if (canRemove == 2) {
+				JOptionPane.showMessageDialog(this,
+						"Tiliä ei voi poistaa, koska tili on määritelty ALV-vastatiliksi.",
 						Kirjanpito.APP_NAME, JOptionPane.OK_OPTION);
 				return;
 			}
