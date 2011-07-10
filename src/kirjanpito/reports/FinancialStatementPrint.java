@@ -113,6 +113,7 @@ public class FinancialStatementPrint extends Print {
 			int width = stringWidth("00.00.0000") + 20;
 			int cx = getPageWidth() - margins.right - model.getColumnCount() * width;
 			cx = Math.min(cx, columns[1] + maxWidth + 20);
+			cx = Math.max(cx, getPageWidth() / 2);
 
 			for (int i = 2; i < columns.length; i++) {
 				cx += width;
@@ -171,8 +172,19 @@ public class FinancialStatementPrint extends Print {
 				drawText(number);
 			}
 			
+			int maxX = getPageWidth() - margins.right;
+
+			for (int j = 0; j < colCount; j++) {
+				BigDecimal amount = model.getAmount(i, j);
+
+				if (amount != null) {
+					maxX = columns[2 + j] - stringWidth(numberFormat.format(amount)) - 10;
+					break;
+				}
+			}
+
 			setX(columns[1] + model.getLevel(i) * 12);
-			drawText(model.getText(i));
+			drawText(cutString(model.getText(i), maxX - getX()));
 			setNormalStyle();
 			
 			for (int j = 0; j < colCount; j++) {
