@@ -10,7 +10,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JSeparator;
 
 public class GeneralLJOptionsDialog extends PrintOptionsDialog {
 	private static final long serialVersionUID = 1L;
@@ -55,7 +54,7 @@ public class GeneralLJOptionsDialog extends PrintOptionsDialog {
 		orderByNumberRadioButton = new JRadioButton("Tositenumerojärjestys");
 		orderByNumberRadioButton.setMnemonic('n');
 		orderByDateRadioButton = new JRadioButton("Aikajärjestys");
-		orderByDateRadioButton.setMnemonic('A');
+		orderByDateRadioButton.setMnemonic('r');
 		groupByDocumentTypesCheckBox = new JCheckBox("Tositelajeittain");
 		groupByDocumentTypesCheckBox.setMnemonic('l');
 		JPanel container = new JPanel(new GridBagLayout());
@@ -72,8 +71,6 @@ public class GeneralLJOptionsDialog extends PrintOptionsDialog {
 		c.insets = new Insets(8, 8, 8, 8);
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridy = 1;
-		panel.add(new JSeparator(JSeparator.HORIZONTAL), c);
-		c.gridy = 2;
 		c.insets = new Insets(8, 8, 16, 8);
 		panel.add(container, c);
 

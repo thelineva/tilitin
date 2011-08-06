@@ -35,6 +35,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
@@ -1616,8 +1617,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		AppSettings settings = AppSettings.getInstance();
 		AccountSummaryOptionsDialog dialog = new AccountSummaryOptionsDialog(this);
-		dialog.setPeriod(registry.getPeriod());
 		dialog.create();
+		dialog.setPeriod(registry.getPeriod());
 		dialog.setPreviousPeriodVisible(settings.getBoolean("previous-period", false));
 		dialog.setVisible(true);
 
@@ -1632,10 +1633,11 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			printModel.setEndDate(dialog.getEndDate());
 			printModel.setPreviousPeriodVisible(previousPeriodVisible);
 			printModel.setPrintedAccounts(printedAccounts);
-
 			showPrintPreview(printModel, new AccountSummaryPrint(printModel,
 					printedAccounts != 1));
 		}
+
+		dialog.dispose();
 	}
 
 	/**
@@ -1661,8 +1663,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 
 		AccountStatementOptionsDialog dialog = new AccountStatementOptionsDialog(this, registry);
-		dialog.setPeriod(registry.getPeriod());
 		dialog.create();
+		dialog.setPeriod(registry.getPeriod());
 		dialog.setVisible(true);
 
 		if (dialog.getResult() == JOptionPane.OK_OPTION) {
@@ -1675,6 +1677,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			printModel.setEndDate(dialog.getEndDate());
 			showPrintPreview(printModel, new AccountStatementPrint(printModel));
 		}
+
+		dialog.dispose();
 	}
 
 	/**
@@ -1764,8 +1768,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		AppSettings settings = AppSettings.getInstance();
 		GeneralLJOptionsDialog dialog = new GeneralLJOptionsDialog(this, "Päiväkirja");
-		dialog.setPeriod(registry.getPeriod());
 		dialog.create();
+		dialog.setPeriod(registry.getPeriod());
 		dialog.setOrderByDate(settings.getString("sort-entries", "number").equals("date"));
 		dialog.setGroupByDocumentTypesEnabled(!registry.getDocumentTypes().isEmpty());
 		dialog.setGroupByDocumentTypesSelected(settings.getBoolean("group-by-document-types", true));
@@ -1784,6 +1788,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			settings.set("group-by-document-types", dialog.isGroupByDocumentTypesSelected());
 			showPrintPreview(printModel, new GeneralJournalPrint(printModel));
 		}
+
+		dialog.dispose();
 	}
 
 	/**
@@ -1796,8 +1802,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		AppSettings settings = AppSettings.getInstance();
 		GeneralLJOptionsDialog dialog = new GeneralLJOptionsDialog(this, "Pääkirja");
-		dialog.setPeriod(registry.getPeriod());
 		dialog.create();
+		dialog.setPeriod(registry.getPeriod());
 		dialog.setOrderByDate(settings.getString("sort-entries", "number").equals("date"));
 		dialog.setGroupByDocumentTypesEnabled(!registry.getDocumentTypes().isEmpty());
 		dialog.setGroupByDocumentTypesSelected(settings.getBoolean("group-by-document-types", true));
@@ -1816,6 +1822,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			settings.set("group-by-document-types", dialog.isGroupByDocumentTypesSelected());
 			showPrintPreview(printModel, new GeneralLedgerPrint(printModel));
 		}
+
+		dialog.dispose();
 	}
 
 	/**
@@ -1826,10 +1834,17 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return;
 		}
 
+		Document document = model.getDocument();
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(document.getDate());
+
 		PrintOptionsDialog dialog = new PrintOptionsDialog(this, "ALV-laskelma");
-		dialog.setPeriod(registry.getPeriod());
 		dialog.create();
-		dialog.showTab(1);
+		dialog.setPeriod(registry.getPeriod());
+		cal.set(Calendar.DAY_OF_MONTH, 1);
+		dialog.setStartDate(cal.getTime());
+		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+		dialog.setEndDate(cal.getTime());
 		dialog.setVisible(true);
 
 		if (dialog.getResult() == JOptionPane.OK_OPTION) {
@@ -1842,6 +1857,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			printModel.setEndDate(dialog.getEndDate());
 			showPrintPreview(printModel, new VATReportPrint(printModel));
 		}
+
+		dialog.dispose();
 	}
 
 	public void showChartOfAccountsPrint(int mode) {

@@ -22,11 +22,9 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
-import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
@@ -78,13 +76,7 @@ public class AccountStatementOptionsDialog extends PrintOptionsDialog {
 		container.setLayout(new BorderLayout(0, 4));
 		GridBagConstraints c = new GridBagConstraints();
 		
-		c.fill = GridBagConstraints.BOTH;
 		c.gridy = 1;
-		c.insets = new Insets(4, 8, 4, 8);
-		c.weightx = 1.0;
-		panel.add(new JSeparator(SwingConstants.HORIZONTAL), c);
-		
-		c.gridy = 2;
 		c.insets = new Insets(4, 8, 8, 8);
 		c.weighty = 1.0;
 		panel.add(container, c);

@@ -20,7 +20,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import javax.swing.AbstractSpinnerModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
@@ -427,67 +426,6 @@ public class FinancialStatementOptionsDialog extends JDialog {
 		focusPolicy.add(okButton);
 		focusPolicy.add(cancelButton);
 		focusPolicy.add(resetButton);
-	}
-
-	private class SpinnerDateModel extends AbstractSpinnerModel {
-		private DateTextField editor;
-		private Calendar cal;
-
-		public SpinnerDateModel(DateTextField editor) {
-			this.editor = editor;
-			this.cal = Calendar.getInstance();
-			cal.setLenient(true);
-		}
-
-		@Override
-		public Object getNextValue() {
-			return addMonth(1);
-		}
-
-		@Override
-		public Object getPreviousValue() {
-			return addMonth(-1);
-		}
-
-		@Override
-		public Object getValue() {
-			try {
-				return editor.getDate();
-			}
-			catch (ParseException e) {
-				return null;
-			}
-		}
-
-		@Override
-		public void setValue(Object value) {
-			editor.setDate((Date)value);
-		}
-
-		private Date addMonth(int month) {
-			Date date;
-
-			try {
-				date = editor.getDate();
-			}
-			catch (ParseException e) {
-				return null;
-			}
-
-			if (date == null) {
-				return null;
-			}
-
-			cal.setTime(date);
-			boolean lastDay = (cal.getActualMaximum(Calendar.DAY_OF_MONTH) == cal.get(Calendar.DAY_OF_MONTH));
-			cal.add(Calendar.MONTH, month);
-
-			if (lastDay) {
-				cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
-			}
-
-			return cal.getTime();
-		}
 	}
 
 	private static class CustomFocusTraversalPolicy extends FocusTraversalPolicy {
