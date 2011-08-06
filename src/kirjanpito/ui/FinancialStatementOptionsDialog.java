@@ -11,6 +11,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -266,6 +268,13 @@ public class FinancialStatementOptionsDialog extends JDialog {
 
 			endDateSpinners[1].setValue(period.getEndDate());
 		}
+		else {
+			if (type == TYPE_INCOME_STATEMENT) {
+				startDateSpinners[1].setValue(null);
+			}
+			
+			endDateSpinners[1].setValue(null);
+		}
 
 		if (type == TYPE_INCOME_STATEMENT) {
 			startDateSpinners[2].setValue(null);
@@ -308,8 +317,32 @@ public class FinancialStatementOptionsDialog extends JDialog {
 
 			if (type == TYPE_INCOME_STATEMENT) {
 				c.gridy = 1;
+				final int fieldIndex = i;
 				startDateFields[i] = new DateTextField();
 				startDateFields[i].setColumns(10);
+				startDateFields[i].addFocusListener(new FocusAdapter() {
+					@Override
+					public void focusLost(FocusEvent e) {
+						try {
+							Date startDate = startDateFields[fieldIndex].getDate();
+							Date endDate = endDateFields[fieldIndex].getDate();
+
+							if (startDate == null || (endDate != null && !endDate.before(startDate))) {
+								return;
+							}
+
+							Calendar cal = Calendar.getInstance();
+							cal.setTime(startDate);
+
+							if (cal.get(Calendar.DAY_OF_MONTH) == 1) {
+								cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+								endDateFields[fieldIndex].setDate(cal.getTime());
+							}
+						}
+						catch (ParseException ex) {
+						}
+					}
+				});
 				startDateSpinners[i] = new JSpinner(new SpinnerDateModel(startDateFields[i]));
 				startDateSpinners[i].setEditor(startDateFields[i]);
 				panel.add(startDateSpinners[i], c);
