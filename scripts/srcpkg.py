@@ -13,8 +13,6 @@ FILES = (
 	('lib/itext.jar', 'tilitin-%(VERSION)s/lib/itext.jar'),
 	('build.xml', 'tilitin-%(VERSION)s/build.xml'),
 	('tilikarttamallit+', 'tilitin-%(VERSION)s/tilikarttamallit'),
-	('sql/postgresql.sql', 'tilitin-%(VERSION)s/sql/postgresql.sql'),
-	('sql/mysql.sql', 'tilitin-%(VERSION)s/sql/mysql.sql'),
 	('COPYING', 'tilitin-%(VERSION)s/COPYING')
 )
 
