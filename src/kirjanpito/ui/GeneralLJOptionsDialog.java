@@ -3,9 +3,10 @@ package kirjanpito.ui;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.Insets;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
@@ -16,6 +17,7 @@ public class GeneralLJOptionsDialog extends PrintOptionsDialog {
 	private JRadioButton orderByNumberRadioButton;
 	private JRadioButton orderByDateRadioButton;
 	private JCheckBox groupByDocumentTypesCheckBox;
+	private JCheckBox totalAmountVisibleCheckBox;
 
 	public GeneralLJOptionsDialog(Frame owner, String title) {
 		super(owner, title);
@@ -46,6 +48,14 @@ public class GeneralLJOptionsDialog extends PrintOptionsDialog {
 		groupByDocumentTypesCheckBox.setSelected(groupByDocumentTypesCheckBox.isEnabled() && selected);
 	}
 
+	public boolean isTotalAmountVisible() {
+		return totalAmountVisibleCheckBox.isSelected();
+	}
+
+	public void setTotalAmountVisible(boolean visible) {
+		totalAmountVisibleCheckBox.setSelected(visible);
+	}
+
 	protected Dimension getFrameMinimumSize() {
 		return new Dimension(450, 250);
 	}
@@ -57,21 +67,28 @@ public class GeneralLJOptionsDialog extends PrintOptionsDialog {
 		orderByDateRadioButton.setMnemonic('r');
 		groupByDocumentTypesCheckBox = new JCheckBox("Tositelajeittain");
 		groupByDocumentTypesCheckBox.setMnemonic('l');
-		JPanel container = new JPanel(new GridBagLayout());
+		totalAmountVisibleCheckBox = new JCheckBox("Näytä summarivi");
+		totalAmountVisibleCheckBox.setMnemonic('s');
+
 		GridBagConstraints c = new GridBagConstraints();
-		c.anchor = GridBagConstraints.WEST;
-		c.insets = new Insets(0, 0, 0, 8);
-		c.gridy = 0;
-		container.add(orderByNumberRadioButton, c);
-		container.add(orderByDateRadioButton, c);
-		c.anchor = GridBagConstraints.EAST;
-		c.insets = new Insets(0, 8, 0, 0);
-		c.weightx = 1.0;
-		container.add(groupByDocumentTypesCheckBox, c);
+		JPanel container = new JPanel();
+		container.setLayout(new BoxLayout(container, BoxLayout.LINE_AXIS));
+
+		container.add(orderByNumberRadioButton);
+		container.add(Box.createRigidArea(new Dimension(10, 0)));
+		container.add(orderByDateRadioButton);
 		c.insets = new Insets(8, 8, 8, 8);
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridy = 1;
-		c.insets = new Insets(8, 8, 16, 8);
+		c.insets = new Insets(4, 8, 4, 8);
+		panel.add(container, c);
+
+		container = new JPanel();
+		container.setLayout(new BoxLayout(container, BoxLayout.LINE_AXIS));
+		container.add(totalAmountVisibleCheckBox);
+		container.add(Box.createRigidArea(new Dimension(10, 0)));
+		container.add(groupByDocumentTypesCheckBox);
+		c.gridy = 2;
 		panel.add(container, c);
 
 		ButtonGroup group = new ButtonGroup();

@@ -1773,6 +1773,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		dialog.setOrderByDate(settings.getString("sort-entries", "number").equals("date"));
 		dialog.setGroupByDocumentTypesEnabled(!registry.getDocumentTypes().isEmpty());
 		dialog.setGroupByDocumentTypesSelected(settings.getBoolean("group-by-document-types", true));
+		dialog.setTotalAmountVisible(settings.getBoolean("general-journal.total-amount-visible", true));
 		dialog.setVisible(true);
 
 		if (dialog.getResult() == JOptionPane.OK_OPTION) {
@@ -1784,8 +1785,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			printModel.setEndDate(dialog.getEndDate());
 			printModel.setOrderBy(dialog.isOrderByDate() ? GeneralJournalModel.ORDER_BY_DATE :
 				GeneralJournalModel.ORDER_BY_NUMBER);
+			printModel.setTotalAmountVisible(dialog.isTotalAmountVisible());
 			settings.set("sort-entries", dialog.isOrderByDate() ? "date" : "number");
 			settings.set("group-by-document-types", dialog.isGroupByDocumentTypesSelected());
+			settings.set("general-journal.total-amount-visible", dialog.isTotalAmountVisible());
 			showPrintPreview(printModel, new GeneralJournalPrint(printModel));
 		}
 
@@ -1807,6 +1810,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		dialog.setOrderByDate(settings.getString("sort-entries", "number").equals("date"));
 		dialog.setGroupByDocumentTypesEnabled(!registry.getDocumentTypes().isEmpty());
 		dialog.setGroupByDocumentTypesSelected(settings.getBoolean("group-by-document-types", true));
+		dialog.setTotalAmountVisible(settings.getBoolean("general-ledger.total-amount-visible", true));
 		dialog.setVisible(true);
 
 		if (dialog.getResult() == JOptionPane.OK_OPTION) {
@@ -1818,8 +1822,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			printModel.setEndDate(dialog.getEndDate());
 			printModel.setOrderBy(dialog.isOrderByDate() ? GeneralLedgerModel.ORDER_BY_DATE :
 				GeneralLedgerModel.ORDER_BY_NUMBER);
+			printModel.setTotalAmountVisible(dialog.isTotalAmountVisible());
 			settings.set("sort-entries", dialog.isOrderByDate() ? "date" : "number");
 			settings.set("group-by-document-types", dialog.isGroupByDocumentTypesSelected());
+			settings.set("general-ledger.total-amount-visible", dialog.isTotalAmountVisible());
 			showPrintPreview(printModel, new GeneralLedgerPrint(printModel));
 		}
 

@@ -40,6 +40,7 @@ public class GeneralLedgerModel implements PrintModel {
 	protected int lastDocumentNumber;
 	protected BigDecimal totalDebit;
 	protected BigDecimal totalCredit;
+	protected boolean totalAmountVisible;
 	private int prevAccountId;
 
 	public static final int ORDER_BY_NUMBER = 3; // EntryDAO.ORDER_BY_ACCOUNT_NUMBER_AND_DOCUMENT_NUMBER
@@ -125,6 +126,14 @@ public class GeneralLedgerModel implements PrintModel {
 		this.orderBy = orderBy;
 	}
 
+	public boolean isTotalAmountVisible() {
+		return totalAmountVisible;
+	}
+
+	public void setTotalAmountVisible(boolean totalAmountVisible) {
+		this.totalAmountVisible = totalAmountVisible;
+	}
+
 	public void run() throws DataAccessException {
 		List<Document> documents;
 		DataSource dataSource = registry.getDataSource();
@@ -203,8 +212,11 @@ public class GeneralLedgerModel implements PrintModel {
 		}
 
 		addProfitRow(balances.getProfit());
-		rows.add(new GeneralLedgerRow(0, null, null, null, null, null));
-		rows.add(new GeneralLedgerRow(5, null, null, null, null, null));
+
+		if (totalAmountVisible) {
+			rows.add(new GeneralLedgerRow(0, null, null, null, null, null));
+			rows.add(new GeneralLedgerRow(5, null, null, null, null, null));
+		}
 	}
 
 	/**

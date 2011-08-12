@@ -146,8 +146,11 @@ public class GeneralLedgerModelT extends GeneralLedgerModel {
 		}
 
 		addProfitRow(balances.getProfit());
-		rows.add(new GeneralLedgerRow(0, null, null, null, null, null));
-		rows.add(new GeneralLedgerRow(5, null, null, null, null, null));
+
+		if (totalAmountVisible) {
+			rows.add(new GeneralLedgerRow(0, null, null, null, null, null));
+			rows.add(new GeneralLedgerRow(5, null, null, null, null, null));
+		}
 	}
 
 	public void writeCSV(CSVWriter writer) throws IOException {

@@ -131,8 +131,10 @@ public class GeneralJournalModelT extends GeneralJournalModel {
 			prevDocument = row.document.getId();
 		}
 
-		rows.add(new GeneralJournalRow(0, null, null, null, null));
-		rows.add(new GeneralJournalRow(4, null, null, null, null));
+		if (totalAmountVisible) {
+			rows.add(new GeneralJournalRow(0, null, null, null, null));
+			rows.add(new GeneralJournalRow(4, null, null, null, null));
+		}
 	}
 
 	public void writeCSV(CSVWriter writer) throws IOException {

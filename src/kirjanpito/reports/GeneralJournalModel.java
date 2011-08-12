@@ -38,6 +38,7 @@ public class GeneralJournalModel implements PrintModel {
 	protected int lastDocumentNumber;
 	protected BigDecimal totalDebit;
 	protected BigDecimal totalCredit;
+	protected boolean totalAmountVisible;
 	private int prevDocumentId;
 
 	public static final int ORDER_BY_NUMBER = 1; // EntryDAO.ORDER_BY_DOCUMENT_NUMBER
@@ -123,6 +124,14 @@ public class GeneralJournalModel implements PrintModel {
 		this.orderBy = orderBy;
 	}
 
+	public boolean isTotalAmountVisible() {
+		return totalAmountVisible;
+	}
+
+	public void setTotalAmountVisible(boolean totalAmountVisible) {
+		this.totalAmountVisible = totalAmountVisible;
+	}
+
 	public void run() throws DataAccessException {
 		List<Document> documents;
 		DataSource dataSource = registry.getDataSource();
@@ -182,8 +191,10 @@ public class GeneralJournalModel implements PrintModel {
 			if (sess != null) sess.close();
 		}
 
-		rows.add(new GeneralJournalRow(0, null, null, null, null));
-		rows.add(new GeneralJournalRow(4, null, null, null, null));
+		if (totalAmountVisible) {
+			rows.add(new GeneralJournalRow(0, null, null, null, null));
+			rows.add(new GeneralJournalRow(4, null, null, null, null));
+		}
 	}
 
 	public void writeCSV(CSVWriter writer) throws IOException {
