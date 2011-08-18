@@ -182,6 +182,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private AccountSelectionDialog accountSelectionDialog;
 	private PrintPreviewFrame printPreviewFrame;
 	private boolean searchEnabled;
+	private BigDecimal debitTotal;
+	private BigDecimal creditTotal;
 
 	private static Logger logger = Logger.getLogger(Kirjanpito.LOGGER_NAME);
 	private static final long serialVersionUID = 1L;
@@ -190,6 +192,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		super(Kirjanpito.APP_NAME);
 		this.registry = registry;
 		this.model = model;
+		this.debitTotal = BigDecimal.ZERO;
+		this.creditTotal = BigDecimal.ZERO;
 		registry.addListener(registryListener);
 	}
 
@@ -2201,8 +2205,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	 * Päivittää summarivin tiedot.
 	 */
 	protected void updateTotalRow() {
-		BigDecimal debitTotal = BigDecimal.ZERO;
-		BigDecimal creditTotal = BigDecimal.ZERO;
+		debitTotal = BigDecimal.ZERO;
+		creditTotal = BigDecimal.ZERO;
 		int count = model.getEntryCount();
 		Entry entry;
 
@@ -2465,6 +2469,12 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		if (!model.isDocumentChanged() || !model.isDocumentEditable()) {
 			return true;
+		}
+
+		if (registry.getSettings().getProperty("debitCreditRemark", "false").equals("true")) {
+			if (debitTotal.compareTo(creditTotal) != 0) {
+				SwingUtils.showInformationMessage(this, "Debet- ja kredit-vientien summat eroavat toisistaan.");
+			}
 		}
 
 		if (logger.isLoggable(Level.FINE)) {

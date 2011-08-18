@@ -41,6 +41,7 @@ public class SettingsDialog extends JDialog {
 	private JCheckBox vatVisibleCheckBox;
 	private JCheckBox vatLockedCheckBox;
 	private JCheckBox autoCompleteEnabledCheckBox;
+	private JCheckBox debitCreditRemarkCheckBox;
 	private JButton okButton;
 	private JButton cancelButton;
 	private JTable monthTable;
@@ -89,6 +90,8 @@ public class SettingsDialog extends JDialog {
 		vatLockedCheckBox.setMnemonic('l');
 		autoCompleteEnabledCheckBox = new JCheckBox("Ota käyttöön vientiselitteen täydennys");
 		autoCompleteEnabledCheckBox.setMnemonic('s');
+		debitCreditRemarkCheckBox = new JCheckBox("Huomauta, jos debet ja kredit eroavat toisistaan");
+		debitCreditRemarkCheckBox.setMnemonic('H');
 
 		c = new GridBagConstraints();
 		c.insets = new Insets(0, 5, 5, 0);
@@ -100,12 +103,14 @@ public class SettingsDialog extends JDialog {
 		panel.add(vatLockedCheckBox, c);
 		c.gridy = 2;
 		panel.add(autoCompleteEnabledCheckBox, c);
+		c.gridy = 3;
+		panel.add(debitCreditRemarkCheckBox, c);
 
 		JPanel monthPanel = new JPanel(new BorderLayout());
 		monthPanel.setBorder(BorderFactory.createTitledBorder("Lukitse kuukaudet"));
 		c = new GridBagConstraints();
 		c.fill = GridBagConstraints.BOTH;
-		c.gridy = 3;
+		c.gridy = 4;
 		c.weightx = 1.0;
 		c.weighty = 1.0;
 		c.insets = new Insets(15, 0, 0, 0);
@@ -226,6 +231,9 @@ public class SettingsDialog extends JDialog {
 		autoCompleteEnabledCheckBox.setSelected(!settings.getProperty(
 				"autoCompleteEnabled", "true").equals("false"));
 
+		debitCreditRemarkCheckBox.setSelected(settings.getProperty(
+				"debitCreditRemark", "false").equals("true"));
+
 		String key = "locked/" + registry.getPeriod().getId();
 		String[] lockedMonths = settings.getProperty(key, "").split(",");
 		Arrays.sort(lockedMonths);
@@ -258,6 +266,7 @@ public class SettingsDialog extends JDialog {
 		settings.setProperty("vatVisible", vatVisibleCheckBox.isSelected() ? "" : "false");
 		settings.setProperty("vatLocked", vatLockedCheckBox.isSelected() ? "" : "false");
 		settings.setProperty("autoCompleteEnabled", autoCompleteEnabledCheckBox.isSelected() ? "" : "false");
+		settings.setProperty("debitCreditRemark", debitCreditRemarkCheckBox.isSelected() ? "true" : "");
 		
 		String key = "locked/" + registry.getPeriod().getId();
 		StringBuilder sb = new StringBuilder();
