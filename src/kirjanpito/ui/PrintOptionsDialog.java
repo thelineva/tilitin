@@ -81,6 +81,10 @@ public class PrintOptionsDialog extends JDialog {
 		endDateTextField.setDate(period.getEndDate());
 	}
 
+	public void setDateSelectionMode(int mode) {
+		toggleButtons[mode].setSelected(true);
+	}
+
 	/**
 	 * Palauttaa alkamispäivämäärän.
 	 * 
