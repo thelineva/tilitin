@@ -673,6 +673,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		entryTable.setPreferredScrollableViewportSize(new Dimension(680, 250));
 		entryTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		entryTable.setSurrendersFocusOnKeystroke(true);
+		entryTable.setColumnSelectionAllowed(true);
 
 		tableHeaderRenderer = new EntryTableHeaderRenderer(
 				entryTable.getTableHeader().getDefaultRenderer());
