@@ -686,6 +686,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		DescriptionCellEditor descriptionCellEditor = new DescriptionCellEditor(model);
 		CurrencyCellRenderer currencyCellRenderer = new CurrencyCellRenderer();
 		CurrencyCellEditor currencyCellEditor = new CurrencyCellEditor();
+		currencyCellEditor.setActionListener(toggleDebitCreditListener);
 		tableModel.setCurrencyCellEditor(currencyCellEditor);
 
 		TableCellRenderer[] renderers = new TableCellRenderer[] {
@@ -748,6 +749,13 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 				KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0), "insertRow");
 
 		entryTable.getActionMap().put("insertRow", addEntryListener);
+
+		/* Vaihdetaan debet-vienti kredit-vienniksi ja toisin päin, kun
+		 * §-näppäintä painetaan. */
+		entryTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+				KeyStroke.getKeyStroke('§'), "toggleDebitCredit");
+
+		entryTable.getActionMap().put("toggleDebitCredit", toggleDebitCreditListener);
 
 		/* Kun F12-näppäintä painetaan, aloitetaan selitteen muokkaaminen
 		 * ja poistetaan teksti viimeiseen pilkkuun asti. */
@@ -3133,6 +3141,40 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 				column = mapColumnIndexToView(column);
 				entryTable.changeSelection(row, column, false, false);
 				entryTable.editCellAt(row, column);
+			}
+		}
+	};
+
+	private AbstractAction toggleDebitCreditListener = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
+		public void actionPerformed(ActionEvent e) {
+			if (entryTable.getSelectedRowCount() != 1 || entryTable.getSelectedColumnCount() != 1) {
+				return;
+			}
+
+			int column = entryTable.getSelectedColumn();
+
+			if (column != 1 && column != 2) {
+				return;
+			}
+
+			boolean editing = entryTable.isEditing();
+			int index = entryTable.getSelectedRow();
+
+			if (editing) {
+				entryTable.getCellEditor().stopCellEditing();
+			}
+
+			boolean addVatEntries = model.getVatAmount(index).compareTo(BigDecimal.ZERO) != 0;
+			Entry entry = model.getEntry(index);
+			entry.setDebit(!entry.isDebit());
+			model.updateAmount(index, model.getVatIncludedAmount(index), addVatEntries);
+			model.setDocumentChanged();
+			tableModel.fireTableRowsUpdated(index, index);
+
+			if (editing) {
+				entryTable.editCellAt(index, entry.isDebit() ? 1 : 2);
 			}
 		}
 	};

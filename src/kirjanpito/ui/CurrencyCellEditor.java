@@ -2,6 +2,8 @@ package kirjanpito.ui;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -31,6 +33,7 @@ public class CurrencyCellEditor extends AbstractCellEditor
 	private JTextField textField;
 	private char decimalSeparator;
 	private int lastModifiers;
+	private ActionListener actionListener;
 
 	private static final long serialVersionUID = 1L;
 	
@@ -58,6 +61,13 @@ public class CurrencyCellEditor extends AbstractCellEditor
 				if (c == '.' || c == ',') {
 					e.setKeyChar(decimalSeparator);
 				}
+				else if (c == '§') {
+					if (actionListener != null) {
+						actionListener.actionPerformed(new ActionEvent(this, 0, null));
+					}
+
+					e.consume();
+				}
 			}
 		});
 	}
@@ -70,10 +80,22 @@ public class CurrencyCellEditor extends AbstractCellEditor
 		this.lastModifiers = lastModifiers;
 	}
 
+	public ActionListener getActionListener() {
+		return actionListener;
+	}
+
+	public void setActionListener(ActionListener actionListener) {
+		this.actionListener = actionListener;
+	}
+
 	public boolean isCellEditable(EventObject evt) {
 		if (evt instanceof MouseEvent) {
 			/* Aloitetaan muokkaaminen tuplaklikkauksen jälkeen. */
 			return ((MouseEvent)evt).getClickCount() >= 2;
+		}
+
+		if (evt instanceof KeyEvent) {
+			return ((KeyEvent)evt).getKeyChar() != '§';
 		}
 
 		return true;
