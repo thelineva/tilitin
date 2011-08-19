@@ -65,7 +65,7 @@ public class VATChangeDialog extends JDialog implements AccountSelectionListener
 		
 		TableColumn column = ruleTable.getColumnModel().getColumn(0);
 		column.setCellEditor(accountCellEditor);
-		column.setCellRenderer(new AccountCellRenderer(registry));
+		column.setCellRenderer(new AccountCellRenderer(registry, ruleTableModel));
 		column.setPreferredWidth(80);
 		
 		ComboBoxCellEditor percentCellEditor = new ComboBoxCellEditor(VATUtil.VAT_RATE_TEXTS);

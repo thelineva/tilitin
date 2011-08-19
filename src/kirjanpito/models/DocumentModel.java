@@ -911,6 +911,7 @@ public class DocumentModel {
 				entry.setAmount(balance);
 				entry.setDescription("");
 				entry.setRowNumber(amounts.size());
+				entry.setFlag(0, true);
 				
 				this.amounts.add(balance);
 				this.vatAmounts.add(BigDecimal.ZERO);

@@ -83,7 +83,7 @@ public class EntryTableModel extends AbstractTableModel {
 		Entry entry = model.getEntry(row);
 		
 		if (col == 0) {
-			value = entry.getAccountId();
+			value = row;
 		}
 		else if (col == 1) {
 			value = entry.isDebit() ? model.getVatIncludedAmount(row) : null;
@@ -96,6 +96,12 @@ public class EntryTableModel extends AbstractTableModel {
 		}
 		else if (col == 4) {
 			value = entry.getDescription();
+		}
+		else if (col == -1) {
+			return entry.getAccountId();
+		}
+		else if (col == -2) {
+			return (entry.getFlags() & 0x01) > 0;
 		}
 		
 		return value;

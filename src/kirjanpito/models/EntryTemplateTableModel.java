@@ -74,7 +74,7 @@ public class EntryTemplateTableModel extends AbstractTableModel {
 			return template.getName();
 		}
 		else if (col == 2) {
-			return template.getAccountId();
+			return row;
 		}
 		else if (col == 3) {
 			return template.isDebit() ? template.getAmount() : null;
@@ -84,6 +84,9 @@ public class EntryTemplateTableModel extends AbstractTableModel {
 		}
 		else if (col == 5) {
 			return template.getDescription();
+		}
+		else if (col == -1) {
+			return template.getAccountId();
 		}
 		
 		return null;

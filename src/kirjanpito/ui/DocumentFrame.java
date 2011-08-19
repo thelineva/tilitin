@@ -473,6 +473,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		menu.add(vatDocumentMenuItem);
 
+		menu.add(SwingUtils.createMenuItem("Ohita vienti ALV-laskelmassa", null, 'O',
+				KeyStroke.getKeyStroke(KeyEvent.VK_F4, shortcutKeyMask),
+				setIgnoreFlagToEntryAction));
+
 		menu.add(SwingUtils.createMenuItem("Tilien saldojen vertailu", null, 'T',
 				null, balanceComparisonListener));
 
@@ -662,7 +666,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			}
 		});
 
-		accountCellRenderer = new AccountCellRenderer(registry);
+		accountCellRenderer = new AccountCellRenderer(registry, tableModel);
 		accountCellEditor = new AccountCellEditor(registry, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String q = accountCellEditor.getTextField().getText();
@@ -691,7 +695,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		DescriptionCellEditor descriptionCellEditor = new DescriptionCellEditor(model);
 		CurrencyCellRenderer currencyCellRenderer = new CurrencyCellRenderer();
 		CurrencyCellEditor currencyCellEditor = new CurrencyCellEditor();
-		currencyCellEditor.setActionListener(toggleDebitCreditListener);
+		currencyCellEditor.setActionListener(toggleDebitCreditAction);
 		tableModel.setCurrencyCellEditor(currencyCellEditor);
 
 		TableCellRenderer[] renderers = new TableCellRenderer[] {
@@ -760,7 +764,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		entryTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
 				KeyStroke.getKeyStroke('§'), "toggleDebitCredit");
 
-		entryTable.getActionMap().put("toggleDebitCredit", toggleDebitCreditListener);
+		entryTable.getActionMap().put("toggleDebitCredit", toggleDebitCreditAction);
 
 		/* Kun F12-näppäintä painetaan, aloitetaan selitteen muokkaaminen
 		 * ja poistetaan teksti viimeiseen pilkkuun asti. */
@@ -806,6 +810,12 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 				KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "removeRow");
 
 		entryTable.getActionMap().put("removeRow", removeEntryListener);
+
+		/* Merkitään vienti ohitettavaksi ALV-laskelmassa, kun painetaan Ctrl+F4 */
+		entryTable.getInputMap(JComponent.WHEN_FOCUSED).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_F4, shortcutKeyMask), "setIgnoreFlag");
+
+		entryTable.getActionMap().put("setIgnoreFlag", setIgnoreFlagToEntryAction);
 	}
 
 	/**
@@ -2882,13 +2892,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 	};
 
-	/* ALV-tilien päättäminen */
-	private ActionListener vatDocumentListener = new ActionListener() {
-		public void actionPerformed(ActionEvent e) {
-			createVATDocument();
-		}
-	};
-
 	/* Vie */
 	private ActionListener exportListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
@@ -3046,6 +3049,47 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 	};
 
+	/* ALV-tilien päättäminen */
+	private ActionListener vatDocumentListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			createVATDocument();
+		}
+	};
+
+	/* Ohita vienti ALV-laskelmassa */
+	private AbstractAction setIgnoreFlagToEntryAction = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
+		public void actionPerformed(ActionEvent e) {
+			int[] rows = entryTable.getSelectedRows();
+
+			if (rows.length == 0) {
+				return;
+			}
+
+			boolean ignore = !model.getEntry(rows[0]).getFlag(0);
+
+			for (int index : rows) {
+				Entry entry = model.getEntry(index);
+				Account account = registry.getAccountById(entry.getAccountId());
+
+				if (account == null) {
+					continue;
+				}
+
+				if (account.getVatCode() == 2 || account.getVatCode() == 3) {
+					entry.setFlag(0, ignore);
+				}
+				else {
+					entry.setFlag(0, false);
+				}
+
+				model.setDocumentChanged();
+				tableModel.fireTableRowsUpdated(index, index);
+			}
+		}
+	};
+
 	/* Muuta tositenumeroita */
 	private ActionListener numberShiftListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
@@ -3157,7 +3201,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 	};
 
-	private AbstractAction toggleDebitCreditListener = new AbstractAction() {
+	private AbstractAction toggleDebitCreditAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
 
 		public void actionPerformed(ActionEvent e) {

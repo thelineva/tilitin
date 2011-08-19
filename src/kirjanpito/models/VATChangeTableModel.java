@@ -61,7 +61,7 @@ public class VATChangeTableModel extends AbstractTableModel {
 	 */
 	public Object getValueAt(int row, int col) {
 		if (col == 0) {
-			return model.getAccountId(row);
+			return row;
 		}
 		else if (col == 1) {
 			int index = model.getOldVatIndex(row);
@@ -70,6 +70,9 @@ public class VATChangeTableModel extends AbstractTableModel {
 		else if (col == 2) {
 			int index = model.getNewVatIndex(row);
 			return (index < 0) ? -1 : VATUtil.VAT_RATE_M2V[index];
+		}
+		else if (col == -1) {
+			return model.getAccountId(row);
 		}
 		else {
 			int accountId = model.getAccountId(row);
