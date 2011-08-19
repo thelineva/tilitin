@@ -359,7 +359,7 @@ public abstract class SQLEntryDAO implements EntryDAO {
 	protected void executeUpdateQuery(Entry obj) throws SQLException {
 		PreparedStatement stmt = getUpdateQuery();
 		setValuesToStatement(stmt, obj);
-		stmt.setInt(7, obj.getId());
+		stmt.setInt(8, obj.getId());
 		stmt.executeUpdate();
 		stmt.close();
 	}
@@ -443,6 +443,7 @@ public abstract class SQLEntryDAO implements EntryDAO {
 		obj.setAmount(rs.getBigDecimal(5));
 		obj.setDescription(rs.getString(6));
 		obj.setRowNumber(rs.getInt(7));
+		obj.setFlags(rs.getInt(8));
 		return obj;
 	}
 
@@ -462,5 +463,6 @@ public abstract class SQLEntryDAO implements EntryDAO {
 		stmt.setBigDecimal(4, obj.getAmount());
 		stmt.setString(5, obj.getDescription());
 		stmt.setInt(6, obj.getRowNumber());
+		stmt.setInt(7, obj.getFlags());
 	}
 }

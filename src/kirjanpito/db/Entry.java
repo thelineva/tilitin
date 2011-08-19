@@ -15,6 +15,7 @@ public class Entry {
 	private BigDecimal amount;
 	private String description;
 	private int rowNumber;
+	private int flags;
 	
 	/**
 	 * Palauttaa viennin tunnisteen.
@@ -144,6 +145,27 @@ public class Entry {
 		this.rowNumber = rowNumber;
 	}
 	
+	public int getFlags() {
+		return flags;
+	}
+
+	public void setFlags(int flags) {
+		this.flags = flags;
+	}
+
+	public boolean getFlag(int index) {
+		return (flags & (1 << index)) > 0;
+	}
+
+	public void setFlag(int index, boolean value) {
+		if (value) {
+			flags |= 1 << index;
+		}
+		else {
+			flags &= ~(1 << index);
+		}
+	}
+
 	/**
 	 * Luo oliosta kopion.
 	 * 

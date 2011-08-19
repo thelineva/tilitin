@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.jar.JarFile;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -77,6 +78,9 @@ public class DatabaseUpgradeUtil {
 		
 		stmt.executeUpdate("UPDATE settings SET version=4");
 		conn.commit();
+
+		Logger logger = Logger.getLogger("kirjanpito.db");
+		logger.info("Tietokannan päivittäminen versioon 4 onnistui");
 	}
 	
 	public static void upgrade4to5(Connection conn, Statement stmt) throws SQLException {
@@ -88,6 +92,9 @@ public class DatabaseUpgradeUtil {
 		
 		stmt.executeUpdate("UPDATE settings SET version=5");
 		conn.commit();
+
+		Logger logger = Logger.getLogger("kirjanpito.db");
+		logger.info("Tietokannan päivittäminen versioon 5 onnistui");
 	}
 	
 	public static void upgrade5to6(Connection conn, Statement stmt) throws IOException, SQLException {
@@ -178,6 +185,9 @@ public class DatabaseUpgradeUtil {
 		
 		stmt.executeUpdate("UPDATE settings SET version=6");
 		conn.commit();
+
+		Logger logger = Logger.getLogger("kirjanpito.db");
+		logger.info("Tietokannan päivittäminen versioon 6 onnistui");
 	}
 	
 	public static void upgrade6to7(Connection conn, Statement stmt) throws SQLException {
@@ -204,6 +214,9 @@ public class DatabaseUpgradeUtil {
 		
 		stmt.executeUpdate("UPDATE settings SET version=7");
 		conn.commit();
+
+		Logger logger = Logger.getLogger("kirjanpito.db");
+		logger.info("Tietokannan päivittäminen versioon 7 onnistui");
 	}
 	
 	public static void upgrade7to8(Connection conn, Statement stmt) throws SQLException {
@@ -440,12 +453,18 @@ public class DatabaseUpgradeUtil {
 		
 		stmt.executeUpdate("UPDATE settings SET version=8");
 		conn.commit();
+
+		Logger logger = Logger.getLogger("kirjanpito.db");
+		logger.info("Tietokannan päivittäminen versioon 8 onnistui");
 	}
 	
 	public static void upgrade8to9(Connection conn, Statement stmt) throws SQLException {
 		stmt.executeUpdate("ALTER TABLE settings ADD properties text NOT NULL DEFAULT ''");
 		stmt.executeUpdate("UPDATE settings SET version=9");
 		conn.commit();
+
+		Logger logger = Logger.getLogger("kirjanpito.db");
+		logger.info("Tietokannan päivittäminen versioon 9 onnistui");
 	}
 	
 	public static void upgrade9to10(Connection conn, Statement stmt) throws SQLException {
@@ -471,12 +490,18 @@ public class DatabaseUpgradeUtil {
 		
 		stmt.executeUpdate("UPDATE settings SET version=10");
 		conn.commit();
+
+		Logger logger = Logger.getLogger("kirjanpito.db");
+		logger.info("Tietokannan päivittäminen versioon 10 onnistui");
 	}
 	
 	public static void upgrade10to11(Connection conn, Statement stmt) throws SQLException {
 		stmt.executeUpdate("ALTER TABLE account ADD flags integer NOT NULL DEFAULT 0");
 		stmt.executeUpdate("UPDATE settings SET version=11");
 		conn.commit();
+
+		Logger logger = Logger.getLogger("kirjanpito.db");
+		logger.info("Tietokannan päivittäminen versioon 11 onnistui");
 	}
 	
 	public static void upgrade11to12(Connection conn, Statement stmt) throws SQLException {
@@ -525,6 +550,18 @@ public class DatabaseUpgradeUtil {
 
 		stmt.executeUpdate("UPDATE settings SET version=12");
 		conn.commit();
+
+		Logger logger = Logger.getLogger("kirjanpito.db");
+		logger.info("Tietokannan päivittäminen versioon 12 onnistui");
+	}
+
+	public static void upgrade12to13(Connection conn, Statement stmt) throws SQLException {
+		stmt.executeUpdate("ALTER TABLE entry ADD flags integer NOT NULL DEFAULT 0");
+		stmt.executeUpdate("UPDATE settings SET version=13");
+		conn.commit();
+
+		Logger logger = Logger.getLogger("kirjanpito.db");
+		logger.info("Tietokannan päivittäminen versioon 13 onnistui");
 	}
 
 	private static String readTextFile(JarFile jarFile, String name) throws IOException {

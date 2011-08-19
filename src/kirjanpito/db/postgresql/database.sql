@@ -56,6 +56,7 @@ CREATE TABLE entry (
 	amount numeric(10, 2) NOT NULL,
 	description varchar(100) NOT NULL,
 	row_number int4 NOT NULL,
+	flags int4 NOT NULL,
 	PRIMARY KEY (id),
 	FOREIGN KEY (document_id) REFERENCES document (id),
 	FOREIGN KEY (account_id) REFERENCES account (id)

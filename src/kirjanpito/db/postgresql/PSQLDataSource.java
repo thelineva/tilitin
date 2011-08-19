@@ -142,50 +142,55 @@ public class PSQLDataSource implements DataSource {
 			}
 			
 			if (version == 3) {
-				upgrade3to4(conn, stmt);
+				DatabaseUpgradeUtil.upgrade3to4(conn, stmt);
 				version = 4;
 			}
 			
 			if (version == 4) {
-				upgrade4to5(conn, stmt);
+				DatabaseUpgradeUtil.upgrade4to5(conn, stmt);
 				version = 5;
 			}
 			
 			if (version == 5) {
-				upgrade5to6(conn, stmt);
+				DatabaseUpgradeUtil.upgrade5to6(conn, stmt);
 				version = 6;
 			}
 			
 			if (version == 6) {
-				upgrade6to7(conn, stmt);
+				DatabaseUpgradeUtil.upgrade6to7(conn, stmt);
 				version = 7;
 			}
 			
 			if (version == 7) {
-				upgrade7to8(conn, stmt);
+				DatabaseUpgradeUtil.upgrade7to8(conn, stmt);
 				version = 8;
 			}
 			
 			if (version == 8) {
-				upgrade8to9(conn, stmt);
+				DatabaseUpgradeUtil.upgrade8to9(conn, stmt);
 				version = 9;
 			}
 			
 			if (version == 9) {
-				upgrade9to10(conn, stmt);
+				DatabaseUpgradeUtil.upgrade9to10(conn, stmt);
 				version = 10;
 			}
 			
 			if (version == 10) {
-				upgrade10to11(conn, stmt);
+				DatabaseUpgradeUtil.upgrade10to11(conn, stmt);
 				version = 11;
 			}
 
 			if (version == 11) {
-				upgrade11to12(conn, stmt);
+				DatabaseUpgradeUtil.upgrade11to12(conn, stmt);
 				version = 12;
 			}
 			
+			if (version == 12) {
+				DatabaseUpgradeUtil.upgrade12to13(conn, stmt);
+				version = 13;
+			}
+
 			stmt.close();
 		}
 		catch (Exception e) {
@@ -223,59 +228,5 @@ public class PSQLDataSource implements DataSource {
 		
 		Logger logger = Logger.getLogger("kirjanpito.db.postgresql");
 		logger.info("Tietokannan päivittäminen versioon 3 onnistui");
-	}
-	
-	private static void upgrade3to4(Connection conn, Statement stmt) throws SQLException {
-		DatabaseUpgradeUtil.upgrade3to4(conn, stmt);
-		Logger logger = Logger.getLogger("kirjanpito.db.postgresql");
-		logger.info("Tietokannan päivittäminen versioon 4 onnistui");
-	}
-	
-	private static void upgrade4to5(Connection conn, Statement stmt) throws SQLException {
-		DatabaseUpgradeUtil.upgrade4to5(conn, stmt);
-		Logger logger = Logger.getLogger("kirjanpito.db.postgresql");
-		logger.info("Tietokannan päivittäminen versioon 5 onnistui");
-	}
-	
-	private static void upgrade5to6(Connection conn, Statement stmt) throws IOException, SQLException {
-		DatabaseUpgradeUtil.upgrade5to6(conn, stmt);
-		Logger logger = Logger.getLogger("kirjanpito.db.postgresql");
-		logger.info("Tietokannan päivittäminen versioon 6 onnistui");
-	}
-	
-	private static void upgrade6to7(Connection conn, Statement stmt) throws SQLException {
-		DatabaseUpgradeUtil.upgrade6to7(conn, stmt);
-		Logger logger = Logger.getLogger("kirjanpito.db.postgresql");
-		logger.info("Tietokannan päivittäminen versioon 7 onnistui");
-	}
-	
-	private static void upgrade7to8(Connection conn, Statement stmt) throws SQLException {
-		DatabaseUpgradeUtil.upgrade7to8(conn, stmt);
-		Logger logger = Logger.getLogger("kirjanpito.db.postgresql");
-		logger.info("Tietokannan päivittäminen versioon 8 onnistui");
-	}
-	
-	private static void upgrade8to9(Connection conn, Statement stmt) throws SQLException {
-		DatabaseUpgradeUtil.upgrade8to9(conn, stmt);
-		Logger logger = Logger.getLogger("kirjanpito.db.postgresql");
-		logger.info("Tietokannan päivittäminen versioon 9 onnistui");
-	}
-	
-	private static void upgrade9to10(Connection conn, Statement stmt) throws SQLException {
-		DatabaseUpgradeUtil.upgrade9to10(conn, stmt);
-		Logger logger = Logger.getLogger("kirjanpito.db.postgresql");
-		logger.info("Tietokannan päivittäminen versioon 10 onnistui");
-	}
-	
-	private static void upgrade10to11(Connection conn, Statement stmt) throws SQLException {
-		DatabaseUpgradeUtil.upgrade10to11(conn, stmt);
-		Logger logger = Logger.getLogger("kirjanpito.db.postgresql");
-		logger.info("Tietokannan päivittäminen versioon 11 onnistui");
-	}
-
-	private static void upgrade11to12(Connection conn, Statement stmt) throws SQLException {
-		DatabaseUpgradeUtil.upgrade11to12(conn, stmt);
-		Logger logger = Logger.getLogger("kirjanpito.db.postgresql");
-		logger.info("Tietokannan päivittäminen versioon 12 onnistui");
 	}
 }
