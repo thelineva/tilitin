@@ -197,15 +197,15 @@ public class VATReportModel implements PrintModel {
 					Account account = accountMap.get(entry.getAccountId());
 					addVatAmount(account, entry);
 					
-					/* Verollinen myynti, verollinen osto tai yhteisöosto */
+					/* Verollinen myynti, verollinen osto, yhteisöosto tai rakentamispalvelun osto */
 					if (account.getVatCode() == 4 || account.getVatCode() == 5 ||
 							account.getVatCode() == 9 || account.getVatCode() == 11) {
 						entryMap.put(entry.getRowNumber(), entry);
 					}
 					
-					/* Veroton myynti, veroton osto tai yhteisömyynti */
+					/* Veroton myynti, veroton osto, yhteisömyynti tai rakentamispalvelun myynti */
 					if (account.getVatCode() == 6 || account.getVatCode() == 7 ||
-							account.getVatCode() == 8) {
+							account.getVatCode() == 8 || account.getVatCode() == 10) {
 						balances.addEntry(entry);
 					}
 
