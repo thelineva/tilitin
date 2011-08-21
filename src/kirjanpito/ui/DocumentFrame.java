@@ -35,7 +35,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
@@ -1642,6 +1641,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		AccountSummaryOptionsDialog dialog = new AccountSummaryOptionsDialog(this);
 		dialog.create();
 		dialog.setPeriod(registry.getPeriod());
+		dialog.setDocumentDate(model.getDocument().getDate());
+		dialog.setDateSelectionMode(0);
 		dialog.setPreviousPeriodVisible(settings.getBoolean("previous-period", false));
 		dialog.setVisible(true);
 
@@ -1688,6 +1689,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		AccountStatementOptionsDialog dialog = new AccountStatementOptionsDialog(this, registry);
 		dialog.create();
 		dialog.setPeriod(registry.getPeriod());
+		dialog.setDocumentDate(model.getDocument().getDate());
+		dialog.setDateSelectionMode(0);
 		dialog.setVisible(true);
 
 		if (dialog.getResult() == JOptionPane.OK_OPTION) {
@@ -1793,6 +1796,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		GeneralLJOptionsDialog dialog = new GeneralLJOptionsDialog(this, "Päiväkirja");
 		dialog.create();
 		dialog.setPeriod(registry.getPeriod());
+		dialog.setDocumentDate(model.getDocument().getDate());
+		dialog.setDateSelectionMode(0);
 		dialog.setOrderByDate(settings.getString("sort-entries", "number").equals("date"));
 		dialog.setGroupByDocumentTypesEnabled(!registry.getDocumentTypes().isEmpty());
 		dialog.setGroupByDocumentTypesSelected(settings.getBoolean("group-by-document-types", true));
@@ -1830,6 +1835,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		GeneralLJOptionsDialog dialog = new GeneralLJOptionsDialog(this, "Pääkirja");
 		dialog.create();
 		dialog.setPeriod(registry.getPeriod());
+		dialog.setDocumentDate(model.getDocument().getDate());
+		dialog.setDateSelectionMode(0);
 		dialog.setOrderByDate(settings.getString("sort-entries", "number").equals("date"));
 		dialog.setGroupByDocumentTypesEnabled(!registry.getDocumentTypes().isEmpty());
 		dialog.setGroupByDocumentTypesSelected(settings.getBoolean("group-by-document-types", true));
@@ -1863,18 +1870,11 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return;
 		}
 
-		Document document = model.getDocument();
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(document.getDate());
-
 		PrintOptionsDialog dialog = new PrintOptionsDialog(this, "ALV-laskelma");
 		dialog.create();
 		dialog.setPeriod(registry.getPeriod());
+		dialog.setDocumentDate(model.getDocument().getDate());
 		dialog.setDateSelectionMode(1);
-		cal.set(Calendar.DAY_OF_MONTH, 1);
-		dialog.setStartDate(cal.getTime());
-		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
-		dialog.setEndDate(cal.getTime());
 		dialog.setVisible(true);
 
 		if (dialog.getResult() == JOptionPane.OK_OPTION) {

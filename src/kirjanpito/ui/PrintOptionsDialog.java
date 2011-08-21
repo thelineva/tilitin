@@ -53,6 +53,7 @@ public class PrintOptionsDialog extends JDialog {
 	private Date startDate;
 	private Date endDate;
 	private Period period;
+	private Date documentDate;
 	private int result;
 	
 	private static final long serialVersionUID = 1L;
@@ -77,12 +78,17 @@ public class PrintOptionsDialog extends JDialog {
 	 */
 	public void setPeriod(Period period) {
 		this.period = period;
-		startDateTextField.setDate(period.getStartDate());
-		endDateTextField.setDate(period.getEndDate());
 	}
 
 	public void setDateSelectionMode(int mode) {
 		toggleButtons[mode].setSelected(true);
+
+		if (mode == 1) {
+			monthActionListener.actionPerformed(null);
+		}
+		else {
+			periodActionListener.actionPerformed(null);
+		}
 	}
 
 	/**
@@ -120,7 +126,25 @@ public class PrintOptionsDialog extends JDialog {
 	public void setEndDate(Date endDate) {
 		endDateTextField.setDate(endDate);
 	}
-	
+
+	/**
+	 * Palauttaa tositepäivämäärän.
+	 *
+	 * @return tositepäivämäärä
+	 */
+	public Date getDocumentDate() {
+		return documentDate;
+	}
+
+	/**
+	 * Asettaa tositepäivämäärän.
+	 *
+	 * @param documentDate tositepäivämäärä
+	 */
+	public void setDocumentDate(Date documentDate) {
+		this.documentDate = documentDate;
+	}
+
 	public int getResult() {
 		return result;
 	}
@@ -161,44 +185,11 @@ public class PrintOptionsDialog extends JDialog {
 		toggleButtons[0] = new JRadioButton("Koko tilikausi");
 		toggleButtons[0].setMnemonic('t');
 		toggleButtons[0].setSelected(true);
-		toggleButtons[0].addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				startDateTextField.setDate(period.getStartDate());
-				endDateTextField.setDate(period.getEndDate());
-			}
-		});
+		toggleButtons[0].addActionListener(periodActionListener);
 		
 		toggleButtons[1] = new JRadioButton("Kuukausi");
 		toggleButtons[1].setMnemonic('K');
-		toggleButtons[1].addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				Calendar cal = Calendar.getInstance();
-				Date date = null;
-
-				try {
-					date = endDateTextField.getDate();
-				}
-				catch (ParseException ex) {
-				}
-
-				if (date == null) {
-					try {
-						date = startDateTextField.getDate();
-					}
-					catch (ParseException ex) {
-					}
-				}
-
-				if (date != null) {
-					cal.setTime(date);
-				}
-
-				cal.set(Calendar.DAY_OF_MONTH, 1);
-				startDateTextField.setDate(cal.getTime());
-				cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
-				endDateTextField.setDate(cal.getTime());
-			}
-		});
+		toggleButtons[1].addActionListener(monthActionListener);
 
 		toggleButtons[2] = new JRadioButton("Muu aikaväli");
 		toggleButtons[2].setMnemonic('M');
@@ -355,7 +346,25 @@ public class PrintOptionsDialog extends JDialog {
 		catch (ParseException ex) {
 		}
 	}
-	
+
+	private ActionListener periodActionListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			startDateTextField.setDate(period.getStartDate());
+			endDateTextField.setDate(period.getEndDate());
+		}
+	};
+
+	private ActionListener monthActionListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(documentDate);
+			cal.set(Calendar.DAY_OF_MONTH, 1);
+			startDateTextField.setDate(cal.getTime());
+			cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+			endDateTextField.setDate(cal.getTime());
+		}
+	};
+
 	private FocusListener startDateFieldFocusListener = new FocusAdapter() {
 		@Override
 		public void focusLost(FocusEvent e) {
