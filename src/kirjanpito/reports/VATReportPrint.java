@@ -88,14 +88,17 @@ public class VATReportPrint extends Print {
 		
 		for (int i = offset; i < numRows; i++) {
 			if (model.getType(i) == 1) {
+				String vatExcludedTotal = numberFormat.format(model.getVatExcludedTotal(i));
+
 				setX(columns[0]);
 				drawText(model.getAccount(i).getNumber());
 				
 				setX(columns[1]);
-				drawText(model.getAccount(i).getName());
+				drawText(cutString(model.getAccount(i).getName(),
+						columns[2] - columns[1] - stringWidth(vatExcludedTotal) - 10));
 				
 				setX(columns[2]);
-				drawTextRight(numberFormat.format(model.getVatExcludedTotal(i)));
+				drawTextRight(vatExcludedTotal);
 				
 				setX(columns[3]);
 				drawTextRight(numberFormat.format(model.getVatAmountTotal(i)));
