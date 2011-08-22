@@ -2708,6 +2708,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		if (printPreviewFrame == null) {
 			previewModel = new PrintPreviewModel();
 			printPreviewFrame = new PrintPreviewFrame(this, previewModel);
+			printPreviewFrame.setIconImage(getIconImage());
 			printPreviewFrame.create();
 		}
 		else {
