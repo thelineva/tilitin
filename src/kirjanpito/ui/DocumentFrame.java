@@ -473,7 +473,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		menu.add(vatDocumentMenuItem);
 
 		menu.add(SwingUtils.createMenuItem("Ohita vienti ALV-laskelmassa", null, 'O',
-				KeyStroke.getKeyStroke(KeyEvent.VK_F4, shortcutKeyMask),
+				KeyStroke.getKeyStroke(KeyEvent.VK_H, shortcutKeyMask),
 				setIgnoreFlagToEntryAction));
 
 		menu.add(SwingUtils.createMenuItem("Tilien saldojen vertailu", null, 'T',
@@ -810,9 +810,9 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		entryTable.getActionMap().put("removeRow", removeEntryListener);
 
-		/* Merkitään vienti ohitettavaksi ALV-laskelmassa, kun painetaan Ctrl+F4 */
+		/* Merkitään vienti ohitettavaksi ALV-laskelmassa, kun painetaan Ctrl+H */
 		entryTable.getInputMap(JComponent.WHEN_FOCUSED).put(
-				KeyStroke.getKeyStroke(KeyEvent.VK_F4, shortcutKeyMask), "setIgnoreFlag");
+				KeyStroke.getKeyStroke(KeyEvent.VK_H, shortcutKeyMask), "setIgnoreFlag");
 
 		entryTable.getActionMap().put("setIgnoreFlag", setIgnoreFlagToEntryAction);
 	}
