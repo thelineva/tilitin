@@ -2482,12 +2482,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return true;
 		}
 
-		if (registry.getSettings().getProperty("debitCreditRemark", "false").equals("true")) {
-			if (debitTotal.compareTo(creditTotal) != 0) {
-				SwingUtils.showInformationMessage(this, "Debet- ja kredit-vientien summat eroavat toisistaan.");
-			}
-		}
-
 		if (logger.isLoggable(Level.FINE)) {
 			Document document = model.getDocument();
 			logger.fine(String.format("Tallennetaan tosite %d (ID %d)",
@@ -2501,6 +2495,12 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 			if (result < 0) {
 				return false;
+			}
+
+			if (registry.getSettings().getProperty("debitCreditRemark", "false").equals("true")) {
+				if (debitTotal.compareTo(creditTotal) != 0) {
+					SwingUtils.showInformationMessage(this, "Debet- ja kredit-vientien summat eroavat toisistaan.");
+				}
 			}
 
 			model.saveDocument();
