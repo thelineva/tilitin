@@ -70,7 +70,10 @@ public class AccountCellEditor extends AbstractCellEditor
 			
 			return false;
 		}
-		
+		else if (evt instanceof KeyEvent) {
+			return (((KeyEvent)evt).getModifiersEx() & KeyEvent.CTRL_DOWN_MASK) == 0;
+		}
+
 		return true;
 	}
 
