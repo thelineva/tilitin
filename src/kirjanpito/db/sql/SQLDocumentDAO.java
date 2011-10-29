@@ -632,14 +632,15 @@ public abstract class SQLDocumentDAO implements DocumentDAO {
 	 * @param shift muutos
 	 * @throws DataAccessException jos tositenumeroiden muuttaminen epäonnistuu
 	 */
-	public void shiftNumbers(int startNumber, int endNumber, int shift)
+	public void shiftNumbers(int periodId, int startNumber, int endNumber, int shift)
 			throws DataAccessException {
 		
 		try {
 			PreparedStatement stmt = getNumberShiftQuery();
 			stmt.setInt(1, shift);
-			stmt.setInt(2, startNumber);
-			stmt.setInt(3, endNumber);
+			stmt.setInt(2, periodId);
+			stmt.setInt(3, startNumber);
+			stmt.setInt(4, endNumber);
 			stmt.executeUpdate();
 			stmt.close();
 		}

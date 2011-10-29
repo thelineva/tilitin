@@ -51,12 +51,13 @@ public interface DocumentDAO {
 	/**
 	 * Muuttaa tositenumeroita välillä <code>startNumber</code>..<code>endNumber</code>.
 	 *
+	 * @param periodId tilikauden tunniste
 	 * @param startNumber välin alku
 	 * @param endNumber välin loppu
 	 * @param shift muutos
 	 * @throws DataAccessException jos tositenumeroiden muuttaminen epäonnistuu
 	 */
-	public void shiftNumbers(int startNumber, int endNumber, int shift) throws DataAccessException;
+	public void shiftNumbers(int periodId, int startNumber, int endNumber, int shift) throws DataAccessException;
 	
 	/**
 	 * Hakee tietokannasta kaikki tietyn tilikauden tositteet.

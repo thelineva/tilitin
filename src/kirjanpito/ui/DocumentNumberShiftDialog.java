@@ -223,7 +223,8 @@ public class DocumentNumberShiftDialog extends JDialog {
 		
 		try {
 			sess = dataSource.openSession();
-			dataSource.getDocumentDAO(sess).shiftNumbers(start, end, shift);
+			dataSource.getDocumentDAO(sess).shiftNumbers(
+					registry.getPeriod().getId(), start, end, shift);
 			sess.commit();
 		}
 		catch (DataAccessException e) {

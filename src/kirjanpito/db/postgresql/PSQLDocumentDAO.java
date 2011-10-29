@@ -76,6 +76,6 @@ public class PSQLDocumentDAO extends SQLDocumentDAO {
 	}
 	
 	protected PreparedStatement getNumberShiftQuery() throws SQLException {
-		return sess.prepareStatement("UPDATE document SET number = number + ? WHERE number BETWEEN ? AND ?");
+		return sess.prepareStatement("UPDATE document SET number = number + ? WHERE period_id = ? AND number BETWEEN ? AND ?");
 	}
 }
