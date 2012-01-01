@@ -10,7 +10,7 @@
 	</target>
 
 	<target name="compile" depends="init">
-		<javac srcdir="${src}" destdir="${build}" classpath="${lib}/itext.jar" encoding="UTF-8" includeantruntime="false" debug="true" debuglevel="lines, source"/>
+		<javac srcdir="${src}" destdir="${build}" classpath="${lib}/itext.jar" encoding="UTF-8" includeantruntime="false" debug="true" debuglevel="lines"/>
 		<copy todir="${build}">
 			<fileset dir="${src}">
 				<exclude name="**/*.java"/>
