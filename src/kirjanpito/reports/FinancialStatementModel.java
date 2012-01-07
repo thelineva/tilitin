@@ -338,11 +338,13 @@ public class FinancialStatementModel implements PrintModel {
 			writer.writeField(row.text.isEmpty() ? "" : Integer.toString(row.level));
 			writer.writeField((row.number == null) ? "" : row.number);
 			writer.writeField(row.text);
-			
-			for (BigDecimal amount : row.amounts) {
-				writer.writeField((amount == null) ? "" : numberFormat.format(amount));
+
+			if (row.amounts != null) {
+				for (BigDecimal amount : row.amounts) {
+					writer.writeField((amount == null) ? "" : numberFormat.format(amount));
+				}
 			}
-			
+
 			writer.writeLine();
 		}
 	}
