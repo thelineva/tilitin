@@ -3,6 +3,7 @@ package kirjanpito.ui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -51,6 +52,7 @@ import kirjanpito.util.AppSettings;
 public class PrintPreviewFrame extends JFrame {
 	private PrintPreviewModel model;
 	private PrintPreviewPanel previewPanel;
+	private JScrollPane scrollPane;
 	private JLabel pageLabel;
 	private JComboBox zoomComboBox;
 	private int px, py, dx, dy;
@@ -80,6 +82,7 @@ public class PrintPreviewFrame extends JFrame {
 		AppSettings settings = AppSettings.getInstance();
 		settings.set("print-preview-window.width", getWidth());
 		settings.set("print-preview-window.height", getHeight());
+		settings.set("print-preview-window.zoom-level", previewPanel.getScale());
 		dispose();
 	}
 
@@ -97,6 +100,7 @@ public class PrintPreviewFrame extends JFrame {
 		setLayout(new BorderLayout());
 		createToolBar();
 		createPrintPreviewPanel();
+		int shortcutKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
 		/* Suljetaan ikkuna, kun Escape-näppäintä painetaan. */
 		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
@@ -108,14 +112,44 @@ public class PrintPreviewFrame extends JFrame {
 				KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, 0), "prev");
 		rootPane.getActionMap().put("prev", prevPageListener);
 
-		/* Siirrytään edelliselle sivulle, kun Page Down -näppäintä painetaan. */
+		/* Siirrytään seuraavalle sivulle, kun Page Down -näppäintä painetaan. */
 		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
 				KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0), "next");
 		rootPane.getActionMap().put("next", nextPageListener);
 
+		/* Siirrytään ensimmäiselle sivulle, kun Ctrl+Page Up painetaan. */
+		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, shortcutKeyMask), "first");
+		rootPane.getActionMap().put("first", firstPageListener);
+
+		/* Siirrytään viimeiselle sivulle, kun Ctrl+Page Down painetaan. */
+		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, shortcutKeyMask), "last");
+		rootPane.getActionMap().put("last", lastPageListener);
+
+		/* Tallennetaan tuloste, kun Ctrl+S painetaan. */
+		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_S, shortcutKeyMask), "save");
+		rootPane.getActionMap().put("save", saveListener);
+
+		/* Tallennetaan tuloste, kun Ctrl+P painetaan. */
+		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_P, shortcutKeyMask), "print");
+		rootPane.getActionMap().put("print", printListener);
+
 		AppSettings settings = AppSettings.getInstance();
 		int width = settings.getInt("print-preview-window.width", 0);
 		int height = settings.getInt("print-preview-window.height", 0);
+		double scale = Math.min(4.00, settings.getDouble("print-preview-window.zoom-level", 1.0));
+		int zoomLevel = 4;
+
+		for (int i = 0; i < ZOOM_LEVELS.length; i++) {
+			if (scale >= ZOOM_LEVELS[i]) {
+				zoomLevel = i;
+			}
+		}
+
+		zoomComboBox.setSelectedIndex(zoomLevel);
 
 		if (width > 0 && height > 0) {
 			setSize(width, height);
@@ -134,6 +168,18 @@ public class PrintPreviewFrame extends JFrame {
 	private void createToolBar() {
 		JToolBar toolBar = new JToolBar();
 		toolBar.setFloatable(false);
+		toolBar.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "scrollUp");
+		toolBar.getActionMap().put("scrollUp", scrollUpListener);
+		toolBar.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "scrollDown");
+		toolBar.getActionMap().put("scrollDown", scrollDownListener);
+		toolBar.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "scrollLeft");
+		toolBar.getActionMap().put("scrollLeft", scrollLeftListener);
+		toolBar.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "scrollRight");
+		toolBar.getActionMap().put("scrollRight", scrollRightListener);
 
 		/* Luodaan työkalurivin painikkeet. */
 		JButton button = SwingUtils.createToolButton("close-22x22.png",
@@ -193,7 +239,7 @@ public class PrintPreviewFrame extends JFrame {
 		previewPanel.setScale(1.00);
 		previewPanel.setPreferredSize(new Dimension(710, 500));
 
-		JScrollPane scrollPane = new JScrollPane(previewPanel,
+		scrollPane = new JScrollPane(previewPanel,
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
@@ -215,41 +261,14 @@ public class PrintPreviewFrame extends JFrame {
 					}
 				}
 				else {
-					Point pos = viewport.getViewPosition();
-					Dimension size = viewport.getViewSize();
-
 					/* Vieritetään sivua vaakatasossa, jos käytetään
 					 * shift-näppäintä. */
 					if ((e.getModifiers() & KeyEvent.SHIFT_MASK) > 0) {
-						pos.x = Math.max(0, Math.min(
-								pos.x + e.getWheelRotation() * 50,
-								size.width - viewport.getWidth()));
+						scrollPage(e.getWheelRotation() * 50, 0);
 					}
 					else {
-						/* Siirrytään edellisen sivun alareunaan, jos sivun
-						 * yläreunassa rullataan ylöspäin. */
-						if (pos.y == 0 && e.getWheelRotation() < 0) {
-							if (gotoPreviousPage()) {
-								pos.y = size.height - viewport.getHeight();
-							}
-						}
-						/* Siirrytään seuraavan sivun yläreunaan, jos sivun
-						 * alareunassa rullataan alaspäin. */
-						else if (pos.y >= size.height - viewport.getHeight()
-								&& e.getWheelRotation() > 0) {
-
-							if (gotoNextPage()) {
-								pos.y = 0;
-							}
-						}
-						else {
-							pos.y = Math.max(0, Math.min(
-									pos.y + e.getWheelRotation() * 50,
-									size.height - viewport.getHeight()));
-						}
+						scrollPage(0, e.getWheelRotation() * 50);
 					}
-
-					viewport.setViewPosition(pos);
 				}
 			}
 		});
@@ -491,24 +510,66 @@ public class PrintPreviewFrame extends JFrame {
 		previewPanel.setPageIndex(model.getPageIndex());
 	}
 
+	private void scrollPage(int deltaX, int deltaY) {
+		final JViewport viewport = scrollPane.getViewport();
+		Point pos = viewport.getViewPosition();
+		Dimension size = viewport.getViewSize();
+		int bottom = size.height - viewport.getHeight();
+		pos.x = Math.max(0, Math.min(pos.x + deltaX,
+				size.width - viewport.getWidth()));
+
+		/* Siirrytään edellisen sivun alareunaan, jos sivun
+		 * yläreunassa vieritetään ylöspäin. */
+		if (pos.y == 0 && deltaY < 0) {
+			if (gotoPreviousPage()) {
+				pos.y = bottom;
+			}
+		}
+		/* Siirrytään seuraavan sivun yläreunaan, jos sivun
+		 * alareunassa vieritetään alaspäin. */
+		else if (pos.y >= bottom && deltaY > 0) {
+			if (gotoNextPage()) {
+				pos.y = 0;
+			}
+		}
+		else {
+			pos.y = Math.max(0, Math.min(pos.y + deltaY, bottom));
+
+			if (deltaY != 0) {
+				if (pos.y < 30) {
+					pos.y = 0;
+				}
+				else if (pos.y > bottom - 30) {
+					pos.y = bottom;
+				}
+			}
+		}
+
+		viewport.setViewPosition(pos);
+	}
+
 	/* Kuuntelija Sulje-painikkeelle */
 	private AbstractAction closeListener = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
 
 		public void actionPerformed(ActionEvent e) {
-			close();
+			setVisible(false);
 		}
 	};
 
 	/* Kuuntelija Tulosta-painikkeelle */
-	private ActionListener printListener = new ActionListener() {
+	private AbstractAction printListener = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
 		public void actionPerformed(ActionEvent e) {
 			print();
 		}
 	};
 
 	/* Kuuntelija Tallenna-painikkeelle */
-	private ActionListener saveListener = new ActionListener() {
+	private AbstractAction saveListener = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
 		public void actionPerformed(ActionEvent e) {
 			save();
 		}
@@ -536,6 +597,62 @@ public class PrintPreviewFrame extends JFrame {
 
 		public void actionPerformed(ActionEvent e) {
 			gotoNextPage();
+		}
+	};
+
+	private AbstractAction firstPageListener = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
+		public void actionPerformed(ActionEvent e) {
+			if (model.getPageCount() > 0) {
+				model.setPageIndex(0);
+				updatePage();
+			}
+		}
+	};
+
+	private AbstractAction lastPageListener = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
+		public void actionPerformed(ActionEvent e) {
+			int numPages = model.getPageCount();
+
+			if (numPages > 0) {
+				model.setPageIndex(numPages - 1);
+				updatePage();
+			}
+		}
+	};
+
+	private AbstractAction scrollUpListener = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
+		public void actionPerformed(ActionEvent e) {
+			scrollPage(0, -100);
+		}
+	};
+
+	private AbstractAction scrollDownListener = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
+		public void actionPerformed(ActionEvent e) {
+			scrollPage(0, 100);
+		}
+	};
+
+	private AbstractAction scrollLeftListener = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
+		public void actionPerformed(ActionEvent e) {
+			scrollPage(-100, 0);
+		}
+	};
+
+	private AbstractAction scrollRightListener = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
+		public void actionPerformed(ActionEvent e) {
+			scrollPage(100, 0);
 		}
 	};
 }
