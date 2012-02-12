@@ -310,7 +310,6 @@ public class GeneralJournalModel implements PrintModel {
 			if (row.type == 3) {
 				s.addRow();
 				s.writeTextCell(row.documentType.getName(), "bold");
-				s.addRow();
 			}
 			else if (row.type == 2) {
 				s.writeTextCell(Integer.toString(row.document.getNumber()), "num0AlignLeft");
