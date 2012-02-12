@@ -666,7 +666,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		});
 
 		accountCellRenderer = new AccountCellRenderer(registry, tableModel);
-		accountCellEditor = new AccountCellEditor(registry, new ActionListener() {
+		accountCellEditor = new AccountCellEditor(registry, tableModel, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String q = accountCellEditor.getTextField().getText();
 				showAccountSelection(q);

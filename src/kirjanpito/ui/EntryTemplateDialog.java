@@ -165,7 +165,7 @@ public class EntryTemplateDialog extends JDialog implements AccountSelectionList
 		tableModel.setModel(model);
 		
 		accountCellRenderer = new AccountCellRenderer(registry, tableModel);
-		accountCellEditor = new AccountCellEditor(registry,
+		accountCellEditor = new AccountCellEditor(registry, tableModel,
 				new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e) {

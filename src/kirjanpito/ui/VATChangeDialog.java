@@ -57,7 +57,7 @@ public class VATChangeDialog extends JDialog implements AccountSelectionListener
 		ruleTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		ruleTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 		
-		accountCellEditor = new AccountCellEditor(registry, new ActionListener() {
+		accountCellEditor = new AccountCellEditor(registry, ruleTableModel, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				showAccountSelectionDialog();
 			}

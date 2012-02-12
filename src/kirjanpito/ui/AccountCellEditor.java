@@ -19,6 +19,7 @@ import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableModel;
 
 import kirjanpito.db.Account;
 import kirjanpito.util.ChartOfAccounts;
@@ -35,17 +36,19 @@ public class AccountCellEditor extends AbstractCellEditor
 {
 	private AccountTextField textField;
 	private ActionListener listener;
+	private TableModel tableModel;
 	private Registry registry;
 
 	private static final long serialVersionUID = 1L;
 	
-	public AccountCellEditor(Registry registry, ActionListener listener)
+	public AccountCellEditor(Registry registry, TableModel tableModel, ActionListener listener)
 	{
 		this.textField = new AccountTextField();
 		this.textField.getDocument().addDocumentListener(documentListener);
 		this.textField.addKeyListener(keyListener);
 		this.textField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		this.registry = registry;
+		this.tableModel = tableModel;
 		this.listener = listener;
 	}
 
@@ -85,7 +88,8 @@ public class AccountCellEditor extends AbstractCellEditor
 	public Component getTableCellEditorComponent(JTable table, Object value,
 			boolean isSelected, int rowIndex, int vColIndex) {
 		
-		Account account = registry.getAccountById((Integer)value);
+		Integer accountId = (Integer)tableModel.getValueAt((Integer)value, -1);
+		Account account = registry.getAccountById(accountId);
 		
 		if (account == null) {
 			textField.setText("");
