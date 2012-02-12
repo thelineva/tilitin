@@ -48,7 +48,7 @@ import kirjanpito.util.RegistryAdapter;
 
 /**
  * Tilinvalintaikkuna.
- * 
+ *
  * @author Tommi Helineva
  */
 public class AccountSelectionDialog extends JDialog {
@@ -65,9 +65,9 @@ public class AccountSelectionDialog extends JDialog {
 	private COATableModel tableModel;
 	private String searchPhrase;
 	private boolean firstFocus;
-	
+
 	private static final long serialVersionUID = 1L;
-	
+
 	public AccountSelectionDialog(Window owner, Registry registry) {
 		super(owner, "Tilin valinta", Dialog.ModalityType.APPLICATION_MODAL);
 		this.registry = registry;
@@ -78,7 +78,7 @@ public class AccountSelectionDialog extends JDialog {
 
 	/**
 	 * Palauttaa kuuntelijan.
-	 * 
+	 *
 	 * @return kuuntelija
 	 */
 	public AccountSelectionListener getListener() {
@@ -87,7 +87,7 @@ public class AccountSelectionDialog extends JDialog {
 
 	/**
 	 * Asettaa kuuntelijan.
-	 * 
+	 *
 	 * @param listener kuuntelija
 	 */
 	public void setListener(AccountSelectionListener listener) {
@@ -96,36 +96,36 @@ public class AccountSelectionDialog extends JDialog {
 
 	/**
 	 * Palauttaa valitun tilin.
-	 * 
+	 *
 	 * @return tili
 	 */
 	public Account getSelectedAccount() {
 		int index = accountTable.getSelectedRow();
-		
+
 		if (index >= 0) {
 			index = accountTable.convertRowIndexToModel(index);
 		}
-		
+
 		return tableModel.getChartOfAccounts().getAccount(index);
 	}
-	
+
 	/**
 	 * Asettaa valitun rivin.
-	 * 
+	 *
 	 * @param index rivinumero
 	 */
 	public void setSelectedRow(int index) {
 		accountTable.getSelectionModel().setSelectionInterval(
 				index, index);
-		
+
 		/* Vieritetään taulukkoa niin, että valittu rivi on näkyvissä. */
 		Rectangle rect = accountTable.getCellRect(index, 0, true);
 		accountTable.scrollRectToVisible(rect);
 	}
-	
+
 	/**
 	 * Asettaa hakusanan.
-	 * 
+	 *
 	 * @param q hakusana
 	 */
 	public void setSearchPhrase(String q) {
@@ -134,7 +134,7 @@ public class AccountSelectionDialog extends JDialog {
 		searchTextField.setText(q);
 		searchTextField.requestFocusInWindow();
 	}
-	
+
 	/**
 	 * Luo ikkunan komponentit.
 	 */
@@ -150,11 +150,11 @@ public class AccountSelectionDialog extends JDialog {
 				registry.removeListener(registryListener);
 			}
 		});
-		
+
 		createSearchPanel();
 		createTable();
 		createButtonPanel();
-		
+
 		rootPane.setDefaultButton(okButton);
 		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
 					KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "cancel");
@@ -165,14 +165,14 @@ public class AccountSelectionDialog extends JDialog {
 
 		pack();
 		setLocationRelativeTo(getOwner());
-		
+
 		registry.addListener(new RegistryAdapter() {
 			public void chartOfAccountsChanged() {
 				/* Päivitetään taulukko, kun tilikartan sisältö muuttuu. */
 				tableModel.fireTableDataChanged();
 			}
 		});
-		
+
 		AppSettings settings = AppSettings.getInstance();
 		hideNonFavAccountsCheckBox.setSelected(settings.getBoolean("account-selection.hide-non-favourite-accounts", false));
 		hideNonFavAccountsCheckBoxListener.actionPerformed(null);
@@ -193,7 +193,7 @@ public class AccountSelectionDialog extends JDialog {
 				 * painetaan alanuolinäppäintä. */
 				if (e.getKeyCode() == KeyEvent.VK_DOWN) {
 					int index = accountTable.getSelectedRow();
-					
+
 					if (index < accountTable.getRowCount() - 1)
 						setSelectedRow(index + 1);
 				}
@@ -201,26 +201,26 @@ public class AccountSelectionDialog extends JDialog {
 				 * painetaan ylänuolinäppäintä. */
 				else if (e.getKeyCode() == KeyEvent.VK_UP) {
 					int index = accountTable.getSelectedRow();
-					
+
 					if (index > 0)
 						setSelectedRow(index - 1);
 				}
 			}
 		});
-		
+
 		searchTextField.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e) {
 				if (firstFocus) {
 					/* Kun Mac L&F on käytössä, tekstikentän sisältö maalataan automaattisesti
 					 * kun kohdistus siirtyy tekstikenttään. Poistetaan maalaus, jotta sisältöä ei korvata,
-					 * kun käyttäjä jatkaa hakusanan kirjoittamista.*/ 
+					 * kun käyttäjä jatkaa hakusanan kirjoittamista.*/
 					searchTextField.setCaretPosition(searchTextField.getText().length());
 					firstFocus = false;
 				}
 			}
 		});
-		
+
 		searchTextField.getDocument().addDocumentListener(
 				searchTextFieldListener);
 		JLabel label = new JLabel("Haku");
@@ -230,18 +230,18 @@ public class AccountSelectionDialog extends JDialog {
 		panel.add(searchTextField, BorderLayout.CENTER);
 		add(panel, BorderLayout.NORTH);
 	}
-	
+
 	/**
 	 * Luo tilikarttataulukon.
-	 * 
+	 *
 	 * @param container taulukon säiliö
 	 */
 	private void createTable() {
 		TableColumn column;
-		
+
 		tableModel = new COATableModel();
 		tableModel.setChartOfAccounts(registry.getChartOfAccounts());
-		
+
 		accountTable = new JTable(tableModel);
 		accountTable.setFillsViewportHeight(true);
 		accountTable.setPreferredScrollableViewportSize(
@@ -255,86 +255,86 @@ public class AccountSelectionDialog extends JDialog {
 				}
 			}
 		});
-		
+
 		/* Muutetaan enter-näppäimen toiminta. */
 		accountTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
 				KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "accept");
-		
+
 		accountTable.getActionMap().put("accept", okButtonListener);
-		
+
 		sorter = new TableRowSorter<COATableModel>(tableModel);
 	    sorter.setRowFilter(accountFilter);
-		
+
 		cellRenderer = new COATableCellRenderer();
 		cellRenderer.setChartOfAccounts(registry.getChartOfAccounts());
-		
+
 		column = accountTable.getColumnModel().getColumn(0);
 		column.setPreferredWidth(80);
-		
+
 		column = accountTable.getColumnModel().getColumn(1);
 		column.setPreferredWidth(470);
 		column.setCellRenderer(cellRenderer);
-		
+
 		add(new JScrollPane(accountTable,
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER), BorderLayout.CENTER);
 	}
-	
+
 	private void createButtonPanel() {
 		GridBagConstraints c;
-		
+
 		JPanel panel = new JPanel(new GridBagLayout());
 		panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		add(panel, BorderLayout.SOUTH);
-		
+
 		allAccountsCheckBox = new JCheckBox("Vain hakutulokset");
 		allAccountsCheckBox.setMnemonic('h');
 		allAccountsCheckBox.addActionListener(allAccountsCheckBoxListener);
-		
+
 		hideNonFavAccountsCheckBox = new JCheckBox("Vain suosikkitilit");
 		hideNonFavAccountsCheckBox.setMnemonic('s');
 		hideNonFavAccountsCheckBox.addActionListener(hideNonFavAccountsCheckBoxListener);
-		
+
 		okButton = new JButton("OK");
 		okButton.setMnemonic('O');
 		okButton.setPreferredSize(new Dimension(100, 30));
 		okButton.addActionListener(okButtonListener);
-		
+
 		JButton cancelButton = new JButton("Peruuta");
 		cancelButton.setMnemonic('P');
 		cancelButton.setPreferredSize(new Dimension(100, 30));
 		cancelButton.addActionListener(cancelButtonListener);
-		
+
 		c = new GridBagConstraints();
 		c.anchor = GridBagConstraints.WEST;
 		panel.add(allAccountsCheckBox, c);
-		
+
 		c.weightx = 1.0;
 		c.insets = new Insets(0, 5, 0, 5);
 		panel.add(hideNonFavAccountsCheckBox, c);
-		
+
 		c.weightx = 0.0;
 		c.insets = new Insets(0, 0, 0, 5);
 		c.anchor = GridBagConstraints.EAST;
 		panel.add(okButton, c);
-		
+
 		c = new GridBagConstraints();
 		panel.add(cancelButton, c);
 	}
-	
+
 	private void search() {
 		searchPhrase = searchTextField.getText().toLowerCase();
-		
+
 		if (!allAccountsCheckBox.isSelected()) {
 			int index = coa.search(searchTextField.getText());
-			
+
 			if (index >= 0) {
 				setSelectedRow(index);
 			}
 		}
 		else {
 			sorter.allRowsChanged();
-			
+
 			if (accountTable.getRowCount() == 0) {
 				return;
 			}
@@ -367,14 +367,14 @@ public class AccountSelectionDialog extends JDialog {
 			}
 
 			setSelectedRow(index1);
-		}		
+		}
 	}
-	
+
 	protected void fireAccountSelected() {
 		if (listener != null)
 			listener.accountSelected();
 	}
-	
+
 	private DocumentListener searchTextFieldListener = new DocumentListener() {
 		public void changedUpdate(DocumentEvent e) { }
 
@@ -386,21 +386,21 @@ public class AccountSelectionDialog extends JDialog {
 			search();
 		}
 	};
-	
+
 	private ListSelectionListener selectionListener = new ListSelectionListener() {
 		public void valueChanged(ListSelectionEvent e) {
 			int index = accountTable.getSelectedRow();
-			
+
 			if (index >= 0) {
 				index = accountTable.convertRowIndexToModel(index);
 			}
-			
+
 			/* OK-painiketta voi painaa, jos taulukosta on valittu tili. */
 			okButton.setEnabled(index >= 0 &&
 				tableModel.getChartOfAccounts().getType(index) == ChartOfAccounts.TYPE_ACCOUNT);
 		}
 	};
-	
+
 	private AbstractAction okButtonListener = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
 
@@ -408,15 +408,15 @@ public class AccountSelectionDialog extends JDialog {
 			fireAccountSelected();
 		}
 	};
-	
+
 	private AbstractAction cancelButtonListener = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
-		
+
 		public void actionPerformed(ActionEvent e) {
 			setVisible(false);
 		}
 	};
-	
+
 	private ActionListener allAccountsCheckBoxListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			boolean results = allAccountsCheckBox.isSelected();
@@ -427,7 +427,7 @@ public class AccountSelectionDialog extends JDialog {
 			search();
 		}
 	};
-	
+
 	private AbstractAction toggleFavAccountsAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
 
@@ -436,13 +436,11 @@ public class AccountSelectionDialog extends JDialog {
 			hideNonFavAccountsCheckBoxListener.actionPerformed(null);
 		}
 	};
-	
-	private ActionListener hideNonFavAccountsCheckBoxListener = new ActionListener() {
-		private static final long serialVersionUID = 1L;
 
+	private ActionListener hideNonFavAccountsCheckBoxListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			boolean enabled = hideNonFavAccountsCheckBox.isSelected();
-			
+
 			if (enabled) {
 				coa = new ChartOfAccounts();
 				coa.set(registry.getAccounts(), registry.getCOAHeadings());
@@ -451,7 +449,7 @@ public class AccountSelectionDialog extends JDialog {
 			else {
 				coa = registry.getChartOfAccounts();
 			}
-			
+
 			AppSettings settings = AppSettings.getInstance();
 			settings.set("account-selection.hide-non-favourite-accounts", enabled);
 			cellRenderer.setHighlightFavouriteAccounts(!enabled);
@@ -460,14 +458,14 @@ public class AccountSelectionDialog extends JDialog {
 			search();
 		}
 	};
-	
+
 	private RowFilter<COATableModel, Integer> accountFilter = new RowFilter<COATableModel, Integer>() {
 		@Override
 		public boolean include(Entry<? extends COATableModel, ? extends Integer> entry) {
 			if (coa.getType(entry.getIdentifier()) == ChartOfAccounts.TYPE_HEADING) {
 				return false;
 			}
-			
+
 			return entry.getStringValue(0).startsWith(searchPhrase) ||
 				entry.getStringValue(1).toLowerCase().contains(searchPhrase);
 		}
