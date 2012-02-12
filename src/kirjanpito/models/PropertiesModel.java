@@ -21,7 +21,7 @@ import kirjanpito.util.Registry;
 
 /**
  * Malli perustietojen muokkausikkunalle.
- * 
+ *
  * @author Tommi Helineva
  */
 public class PropertiesModel {
@@ -30,16 +30,16 @@ public class PropertiesModel {
 	private List<Period> periods;
 	private HashSet<Period> changedPeriods;
 	private int currentPeriodIndex;
-	
+
 	public PropertiesModel(Registry registry) {
 		this.registry = registry;
 		this.settings = registry.getSettings();
 		this.changedPeriods = new HashSet<Period>();
 	}
-	
+
 	/**
 	 * Palauttaa asetukset.
-	 * 
+	 *
 	 * @return asetukset
 	 */
 	public Settings getSettings() {
@@ -48,13 +48,13 @@ public class PropertiesModel {
 
 	/**
 	 * Hakee tarvittavat tiedot tietokannasta.
-	 * 
+	 *
 	 * @throws DataAccessException jos tietojen hakeminen epäonnistuu
 	 */
 	public void initialize() throws DataAccessException {
 		DataSource dataSource = registry.getDataSource();
 		Session sess = null;
-		
+
 		try {
 			sess = dataSource.openSession();
 			periods = dataSource.getPeriodDAO(sess).getAll();
@@ -62,30 +62,30 @@ public class PropertiesModel {
 		finally {
 			if (sess != null) sess.close();
 		}
-		
+
 		changedPeriods.clear();
 		int index = 0;
-		
+
 		/* Etsitään nykyinen tilikausi. */
 		for (Period period : periods) {
 			if (period.getId() == settings.getCurrentPeriodId()) {
 				currentPeriodIndex = index;
 				break;
 			}
-			
+
 			index++;
 		}
 	}
-	
+
 	/**
 	 * Tallentaa muutokset tietokantaan.
-	 * 
+	 *
 	 * @throws DataAccessException jos tallentaminen epäonnistuu
 	 */
 	public void save() throws DataAccessException {
 		DataSource dataSource = registry.getDataSource();
 		Session sess = null;
-		
+
 		try {
 			sess = dataSource.openSession();
 			savePeriods(sess);
@@ -98,23 +98,22 @@ public class PropertiesModel {
 		finally {
 			if (sess != null) sess.close();
 		}
-		
+
 		registry.setPeriod(periods.get(currentPeriodIndex));
 		registry.fireSettingsChanged();
 		registry.firePeriodChanged();
 	}
-	
+
 	private void savePeriods(Session sess) throws DataAccessException {
 		DataSource dataSource = registry.getDataSource();
 		Period prevPeriod = null;
 		boolean created;
-		int index = 0;
-		
+
 		for (Period period : periods) {
 			if (changedPeriods.contains(period)) {
 				created = period.getId() <= 0;
 				dataSource.getPeriodDAO(sess).save(period);
-				
+
 				/* Jos tilikausi on uusi, luodaan 0-tosite, johon tallennetaan
 				 * alkusaldot. */
 				if (created) {
@@ -136,19 +135,18 @@ public class PropertiesModel {
 					dataSource.getDocumentDAO(sess).save(doc);
 				}
 			}
-			
-			index++;
+
 			prevPeriod = period;
 		}
-		
+
 		changedPeriods.clear();
 		settings.setCurrentPeriodId(periods.get(currentPeriodIndex).getId());
 		dataSource.getSettingsDAO(sess).save(settings);
 	}
-	
+
 	/**
 	 * Palauttaa nykyisen tilikauden järjestysnumeron.
-	 * 
+	 *
 	 * @return nykyisen tilikauden järjestysnumero
 	 */
 	public int getCurrentPeriodIndex() {
@@ -157,7 +155,7 @@ public class PropertiesModel {
 
 	/**
 	 * Asettaa nykyisen tilikauden järjestysnumeron.
-	 * 
+	 *
 	 * @param currentPeriodIndex nykyisen tilikauden järjestysnumero
 	 */
 	public void setCurrentPeriodIndex(int currentPeriodIndex) {
@@ -166,51 +164,51 @@ public class PropertiesModel {
 
 	/**
 	 * Palauttaa tilikausien lukumäärän.
-	 * 
+	 *
 	 * @return tilikausien lukumäärä
 	 */
 	public int getPeriodCount() {
 		return periods.size();
 	}
-	
+
 	/**
 	 * Palauttaa rivillä <code>index</code> olevan tilikauden.
-	 *  
+	 *
 	 * @param index rivinumero
 	 * @return tilikausi
 	 */
 	public Period getPeriod(int index) {
 		return periods.get(index);
 	}
-	
+
 	/**
 	 * Merkitsee rivillä <code>index</code> olevan
 	 * tilikauden tiedot muuttuneiksi.
-	 * 
+	 *
 	 * @param index rivinumero
 	 */
 	public void updatePeriod(int index) {
 		changedPeriods.add(periods.get(index));
 	}
-	
+
 	/**
 	 * Luo uuden tilikauden.
 	 */
 	public void createPeriod() {
 		Calendar cal = Calendar.getInstance();
-		
+
 		/* Asetetaan uuden tilikauden alkamisajaksi nykyisen tilikauden
 		 * päättymisaika + 1 päivä ja uuden tilikauden päättymisajaksi
 		 * alkamisaika + 1 vuosi - 1 päivä. */
 		Period period = periods.get(periods.size() - 1);
-		
+
 		cal.setTime(period.getEndDate());
 		cal.add(Calendar.DAY_OF_MONTH, 1);
 		Date startDate = cal.getTime();
 		cal.add(Calendar.YEAR, 1);
 		cal.add(Calendar.DAY_OF_MONTH, -1);
 		Date endDate = cal.getTime();
-		
+
 		period = new Period();
 		period.setStartDate(startDate);
 		period.setEndDate(endDate);
@@ -219,10 +217,10 @@ public class PropertiesModel {
 		changedPeriods.add(period);
 		currentPeriodIndex = periods.size() - 1;
 	}
-	
+
 	/**
 	 * Poistaa rivillä <code>index</code> olevan tilikauden tiedot.
-	 * 
+	 *
 	 * @param index rivinumero
 	 */
 	public void deletePeriod(int index) throws DataAccessException {
@@ -233,7 +231,7 @@ public class PropertiesModel {
 		periods.remove(index);
 		currentPeriodIndex = periods.size() - 1;
 		settings.setCurrentPeriodId(periods.get(currentPeriodIndex).getId());
-		
+
 		try {
 			dataSource.backup();
 			sess = dataSource.openSession();
@@ -250,19 +248,19 @@ public class PropertiesModel {
 		finally {
 			if (sess != null) sess.close();
 		}
-		
+
 		registry.setPeriod(periods.get(currentPeriodIndex));
 		registry.fireSettingsChanged();
 		registry.firePeriodChanged();
 	}
-	
+
 	public void copyStartingBalances(Session sess,
 			Period period, Period prevPeriod) throws DataAccessException {
-		
+
 		DataSource dataSource = registry.getDataSource();
 		List<Account> accounts = dataSource.getAccountDAO(sess).getAll();
 		final AccountBalances balances = new AccountBalances(accounts);
-		
+
 		/* Luetaan edellisen tilikauden viennit ja lasketaan taseen tilien
 		 * loppusaldot. */
 		dataSource.getEntryDAO(sess).getByPeriodId(prevPeriod.getId(), EntryDAO.ORDER_BY_DOCUMENT_NUMBER,
@@ -271,17 +269,16 @@ public class PropertiesModel {
 						balances.addEntry(obj);
 					}
 				});
-		
+
 		/* Luodaan 0-tosite. */
 		Document doc = new Document();
 		doc.setDate(period.getStartDate());
 		doc.setPeriodId(period.getId());
 		doc.setNumber(0);
 		dataSource.getDocumentDAO(sess).save(doc);
-		
+
 		BigDecimal balance;
-		int index = 0;
-		
+
 		for (Account account : accounts) {
 			/* Jos tili kuuluu taseeseen, lisätään vienti. */
 			if (account.getType() == Account.TYPE_ASSET ||
@@ -290,20 +287,19 @@ public class PropertiesModel {
 					account.getType() == Account.TYPE_PROFIT_PREV)
 			{
 				balance = balances.getBalance(account.getId());
-				
+
 				if (account.getType() == Account.TYPE_PROFIT_PREV) {
 					if (balance == null)
 						balance = BigDecimal.ZERO;
-					
+
 					balance = balance.add(balances.getProfit());
 				}
-				
+
 				if (balance != null && balance.compareTo(BigDecimal.ZERO) != 0) {
 					Entry entry = new Entry();
 					StartingBalanceModel.createStartingBalanceEntry(account,
 							balance, doc.getId(), entry);
 					dataSource.getEntryDAO(sess).save(entry);
-					index++;
 				}
 			}
 		}
