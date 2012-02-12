@@ -347,15 +347,6 @@ public class PrintPreviewFrame extends JFrame {
 		AppSettings settings = AppSettings.getInstance();
 		String path = settings.getString("pdf-directory", ".");
 		JFileChooser fc = new JFileChooser(path);
-		fc.setFileFilter(new FileFilter() {
-			public boolean accept(File file) {
-				return file.isDirectory() || file.getName().endsWith(".pdf");
-			}
-
-			public String getDescription() {
-				return "PDF-tiedosto";
-			}
-		});
 
 		FileFilter csvCommaFilter = new FileFilter() {
 			public boolean accept(File file) {
@@ -390,6 +381,16 @@ public class PrintPreviewFrame extends JFrame {
 		fc.addChoosableFileFilter(csvCommaFilter);
 		fc.addChoosableFileFilter(csvSemicolonFilter);
 		fc.addChoosableFileFilter(odsFilter);
+
+		fc.setFileFilter(new FileFilter() {
+			public boolean accept(File file) {
+				return file.isDirectory() || file.getName().endsWith(".pdf");
+			}
+
+			public String getDescription() {
+				return "PDF-tiedosto";
+			}
+		});
 
 		if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
 			File file = fc.getSelectedFile();
