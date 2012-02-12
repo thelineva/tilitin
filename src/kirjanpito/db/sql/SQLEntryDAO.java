@@ -164,7 +164,7 @@ public abstract class SQLEntryDAO implements EntryDAO {
 	 */
 	protected abstract PreparedStatement getSelectByPeriodIdOrderByAccountAndDateQuery() throws SQLException;
 
-	public void getByPeriodIdAndAccountId(int periodId, int accountId,
+	public void getByPeriodIdAndAccountId(int periodId, int accountId, int orderBy,
 			DTOCallback<Entry> callback) throws DataAccessException
 	{
 		ResultSet rs;
@@ -176,8 +176,13 @@ public abstract class SQLEntryDAO implements EntryDAO {
 				stmt = getSelectByAccountIdQuery();
 				stmt.setInt(1, accountId);
 			}
+			else if (orderBy == ORDER_BY_DOCUMENT_NUMBER) {
+				stmt = getSelectByPeriodIdAndAccountIdOrderByNumberQuery();
+				stmt.setInt(1, periodId);
+				stmt.setInt(2, accountId);
+			}
 			else {
-				stmt = getSelectByPeriodIdAndAccountIdQuery();
+				stmt = getSelectByPeriodIdAndAccountIdOrderByDateQuery();
 				stmt.setInt(1, periodId);
 				stmt.setInt(2, accountId);
 			}
@@ -207,12 +212,21 @@ public abstract class SQLEntryDAO implements EntryDAO {
 
 	/**
 	 * Palauttaa SELECT-kyselyn, jonka avulla haetaan tietyn tilikauden
-	 * viennit, jotka kohdistuvat tiettyyn tiliin.
+	 * viennit, jotka kohdistuvat tiettyyn tiliin. Rivit järjestetään päivämäärän mukaan.
 	 *
 	 * @return SELECT-kysely
 	 * @throws SQLException jos kyselyn luominen epäonnistuu
 	 */
-	protected abstract PreparedStatement getSelectByPeriodIdAndAccountIdQuery() throws SQLException;
+	protected abstract PreparedStatement getSelectByPeriodIdAndAccountIdOrderByDateQuery() throws SQLException;
+
+	/**
+	 * Palauttaa SELECT-kyselyn, jonka avulla haetaan tietyn tilikauden
+	 * viennit, jotka kohdistuvat tiettyyn tiliin. Rivit järjestetään tositenumeron mukaan.
+	 *
+	 * @return SELECT-kysely
+	 * @throws SQLException jos kyselyn luominen epäonnistuu
+	 */
+	protected abstract PreparedStatement getSelectByPeriodIdAndAccountIdOrderByNumberQuery() throws SQLException;
 
 	public void getByPeriodIdAndDate(int periodId, Date startDate,
 			Date endDate, DTOCallback<Entry> callback) throws DataAccessException {

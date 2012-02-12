@@ -95,11 +95,13 @@ public interface EntryDAO {
 	 *
 	 * @param periodId tilikauden tunniste
 	 * @param accountId tilin tunniste
+	 * @param orderBy <code>ORDER_BY_DOCUMENT_NUMBER</code> tai
+	 * <code>ORDER_BY_DOCUMENT_DATE</code>
 	 * @param callback callback
 	 * @throws DataAccessException jos tietojen hakeminen epäonnistuu
 	 */
 	public void getByPeriodIdAndAccountId(int periodId,
-			int accountId, DTOCallback<Entry> callback) throws DataAccessException;
+			int accountId, int orderBy, DTOCallback<Entry> callback) throws DataAccessException;
 
 	/**
 	 * Hakee tietokannasta tietyn tilikauden viennit tietyltä

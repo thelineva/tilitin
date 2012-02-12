@@ -50,8 +50,12 @@ public class SQLiteEntryDAO extends SQLEntryDAO {
 		return sess.prepareStatement("SELECT e.id, e.document_id, e.account_id, e.debit, e.amount, e.description, e.row_number, e.flags FROM entry e INNER JOIN account a ON a.id = e.account_id INNER JOIN document d ON d.id = e.document_id WHERE d.period_id = ? ORDER BY a.number, d.date, d.number, e.row_number");
 	}
 
-	protected PreparedStatement getSelectByPeriodIdAndAccountIdQuery() throws SQLException {
+	protected PreparedStatement getSelectByPeriodIdAndAccountIdOrderByDateQuery() throws SQLException {
 		return sess.prepareStatement("SELECT e.id, e.document_id, e.account_id, e.debit, e.amount, e.description, e.row_number, e.flags FROM entry e INNER JOIN document d ON d.id = e.document_id WHERE d.period_id = ? AND e.account_id = ? ORDER BY d.date, d.number, e.row_number");
+	}
+
+	protected PreparedStatement getSelectByPeriodIdAndAccountIdOrderByNumberQuery() throws SQLException {
+		return sess.prepareStatement("SELECT e.id, e.document_id, e.account_id, e.debit, e.amount, e.description, e.row_number, e.flags FROM entry e INNER JOIN document d ON d.id = e.document_id WHERE d.period_id = ? AND e.account_id = ? ORDER BY d.number, d.date, e.row_number");
 	}
 
 	protected PreparedStatement getSelectByAccountIdQuery() throws SQLException {

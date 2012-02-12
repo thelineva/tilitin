@@ -15,6 +15,7 @@ import kirjanpito.db.DataAccessException;
 import kirjanpito.db.DataSource;
 import kirjanpito.db.Document;
 import kirjanpito.db.Entry;
+import kirjanpito.db.EntryDAO;
 import kirjanpito.db.Period;
 import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
@@ -176,7 +177,7 @@ public class AccountStatementModel implements PrintModel {
 			}
 
 			dataSource.getEntryDAO(sess).getByPeriodIdAndAccountId(
-					period.getId(), account.getId(),
+					period.getId(), account.getId(), EntryDAO.ORDER_BY_DOCUMENT_DATE,
 					new DTOCallback<Entry>() {
 						public void process(Entry entry) {
 							balances.addEntry(entry);
