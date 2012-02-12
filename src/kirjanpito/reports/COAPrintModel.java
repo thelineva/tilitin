@@ -1,6 +1,7 @@
 package kirjanpito.reports;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 
 import kirjanpito.db.Account;
@@ -16,6 +17,7 @@ import kirjanpito.db.Settings;
 import kirjanpito.util.AccountBalances;
 import kirjanpito.util.CSVWriter;
 import kirjanpito.util.ChartOfAccounts;
+import kirjanpito.util.ODFSpreadsheet;
 import kirjanpito.util.Registry;
 import kirjanpito.util.VATUtil;
 
@@ -28,7 +30,7 @@ public class COAPrintModel implements PrintModel {
 	public static final int ALL_ACCOUNTS = 0;
 	public static final int USED_ACCOUNTS = 1;
 	public static final int FAVOURITE_ACCOUNTS = 2;
-	
+
 	public Registry getRegistry() {
 		return registry;
 	}
@@ -71,7 +73,7 @@ public class COAPrintModel implements PrintModel {
 
 		accountLevel = maxLevel + 1;
 	}
-	
+
 	public void writeCSV(CSVWriter writer) throws IOException {
 		Settings settings = registry.getSettings();
 		writer.writeField("Tilikartta");
@@ -88,7 +90,7 @@ public class COAPrintModel implements PrintModel {
 		writer.writeField("Tilin nimi");
 		writer.writeField("ALV");
 		writer.writeLine();
-		
+
 		for (int i = 0; i < coa.getSize(); i++) {
 			if (coa.getType(i) == ChartOfAccounts.TYPE_ACCOUNT) {
 				Account account = coa.getAccount(i);
@@ -96,7 +98,7 @@ public class COAPrintModel implements PrintModel {
 				writer.writeField(account.getNumber());
 				writer.writeField(account.getName());
 				int vatRate = account.getVatRate();
-				
+
 				if (vatRate > 0 && vatRate < VATUtil.VAT_RATE_M2V.length) {
 					writer.writeField(VATUtil.VAT_RATE_TEXTS[VATUtil.VAT_RATE_M2V[vatRate]]);
 				}
@@ -111,11 +113,46 @@ public class COAPrintModel implements PrintModel {
 				writer.writeField(heading.getText());
 				writer.writeField("");
 			}
-			
+
 			writer.writeLine();
 		}
 	}
-	
+
+	public void writeODS(ODFSpreadsheet s) {
+		s.setTitle("Tilikartta");
+		s.defineColumn("co1", new BigDecimal("0.30").multiply(
+				new BigDecimal(accountLevel + 1)).toPlainString() + "cm");
+		s.defineColumn("co2", "1.5cm");
+		s.defineColumn("co3", "7cm");
+		s.defineColumn("co4", "3.5cm");
+		s.addIndentLevels(accountLevel + 1, true, false);
+		s.addTable("Tilikartta");
+		s.addColumn("co1", "Default");
+		s.addColumn("co2", "Default");
+		s.addColumn("co3", "Default");
+		s.addColumn("co4", "Default");
+
+		for (int i = 0; i < coa.getSize(); i++) {
+			s.addRow();
+
+			if (coa.getType(i) == ChartOfAccounts.TYPE_ACCOUNT) {
+				Account account = coa.getAccount(i);
+				s.writeEmptyCell();
+				s.writeTextCell(account.getNumber());
+				s.writeTextCell(account.getName());
+				int vatRate = account.getVatRate();
+
+				if (vatRate > 0 && vatRate < VATUtil.VAT_RATE_M2V.length) {
+					s.writeTextCell("ALV " + VATUtil.VAT_RATE_TEXTS[VATUtil.VAT_RATE_M2V[vatRate]]);
+				}
+			}
+			else {
+				COAHeading heading = coa.getHeading(i);
+				s.writeTextCell(heading.getText(), "indent" + heading.getLevel() + "Bold");
+			}
+		}
+	}
+
 	private AccountBalances fetchAccountBalances() throws DataAccessException {
 		final AccountBalances balances = new AccountBalances(registry.getAccounts());
 		DataSource dataSource = registry.getDataSource();
@@ -124,11 +161,11 @@ public class COAPrintModel implements PrintModel {
 		Period period = null;
 		int periodIndex = -1;
 		List<Period> periods;
-		
+
 		try {
 			sess = dataSource.openSession();
 			periods = dataSource.getPeriodDAO(sess).getAll();
-			
+
 			for (int i = 0; i < periods.size(); i++) {
 				if (periods.get(i).getId() == currentPeriodId) {
 					periodIndex = i;
@@ -136,16 +173,16 @@ public class COAPrintModel implements PrintModel {
 					break;
 				}
 			}
-			
+
 			DTOCallback<Entry> callback = new DTOCallback<Entry>() {
 				public void process(Entry obj) {
 					balances.addEntry(obj);
 				}
 			};
-			
+
 			dataSource.getEntryDAO(sess).getByPeriodId(period.getId(),
 					EntryDAO.ORDER_BY_DOCUMENT_NUMBER, callback);
-			
+
 			if (periodIndex > 0) {
 				period = periods.get(periodIndex - 1);
 				dataSource.getEntryDAO(sess).getByPeriodId(period.getId(),
@@ -155,10 +192,10 @@ public class COAPrintModel implements PrintModel {
 		finally {
 			if (sess != null) sess.close();
 		}
-		
+
 		return balances;
 	}
-	
+
 	public Settings getSettings() {
 		return registry.getSettings();
 	}

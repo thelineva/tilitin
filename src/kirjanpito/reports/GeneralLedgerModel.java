@@ -22,6 +22,7 @@ import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
 import kirjanpito.util.AccountBalances;
 import kirjanpito.util.CSVWriter;
+import kirjanpito.util.ODFSpreadsheet;
 import kirjanpito.util.Registry;
 
 /**
@@ -351,22 +352,97 @@ public class GeneralLedgerModel implements PrintModel {
 		}
 	}
 
-	/**
-	 * Palauttaa käyttäjän nimen.
-	 *
-	 * @return käyttäjän nimi
-	 */
-	public String getName() {
-		return settings.getName();
-	}
+	public void writeODS(ODFSpreadsheet s) {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
+		s.setTitle(String.format("Pääkirja: %s - %s",
+				dateFormat.format(startDate), dateFormat.format(endDate)));
+		s.defineColumn("co1", "1.5cm");
+		s.defineColumn("co2", "1.5cm");
+		s.defineColumn("co3", "2.6cm");
+		s.defineColumn("co4", "5cm");
+		s.defineColumn("co5", "2.6cm");
+		s.defineColumn("co6", "7cm");
+		s.addTable("Pääkirja");
+		s.addColumn("co1", "Default");
+		s.addColumn("co2", "num0AlignLeft");
+		s.addColumn("co3", "dateAlignLeft");
+		s.addColumn("co5", "num2");
+		s.addColumn("co5", "num2");
+		s.addColumn("co5", "num2");
+		s.addColumn("co6", "Default");
 
-	/**
-	 * Palauttaa Y-tunnuksen.
-	 *
-	 * @return y-tunnus
-	 */
-	public String getBusinessId() {
-		return settings.getBusinessId();
+		s.addRow();
+		s.setColSpan(4);
+		s.writeTextCell("Tili", "bold");
+		s.setColSpan(1);
+		s.addRow();
+		s.writeTextCell("", "boldBorderBottom");
+		s.writeTextCell("Nro", "boldAlignRightBorderBottom");
+		s.writeTextCell("Päivämäärä", "boldAlignRightBorderBottom");
+		s.writeTextCell("Debet", "boldAlignRightBorderBottom");
+		s.writeTextCell("Kredit", "boldAlignRightBorderBottom");
+		s.writeTextCell("Saldo", "boldAlignRightBorderBottom");
+		s.writeTextCell("Selite", "boldBorderBottom");
+
+		for (GeneralLedgerRow row : rows) {
+			s.addRow();
+
+			if (row.type == 3) {
+				s.addRow();
+				s.writeTextCell(row.documentType.getName(), "bold");
+				s.addRow();
+			}
+			else if (row.type == 2) {
+				s.writeTextCell(row.account.getNumber());
+				s.setColSpan(3);
+				s.writeTextCell(row.account.getName());
+				s.setColSpan(1);
+			}
+			else if (row.type == 1) {
+				s.writeEmptyCell();
+
+				if (row.document.getNumber() != 0) {
+					s.writeFloatCell(row.document.getNumber(), "num0");
+					s.writeDateCell(row.document.getDate(), "date");
+
+					if (row.entry.isDebit()) {
+						s.writeFloatCell(row.entry.getAmount(), "num2");
+						s.writeTextCell("", "num2");
+					}
+					else {
+						s.writeTextCell("", "num2");
+						s.writeFloatCell(row.entry.getAmount(), "num2");
+					}
+				}
+				else {
+					s.writeTextCell("", "num0");
+					s.writeTextCell("", "date");
+					s.writeTextCell("", "num2");
+					s.writeTextCell("", "num2");
+				}
+
+				s.writeFloatCell(row.balance, "num2");
+				s.writeTextCell(row.entry.getDescription());
+			}
+			else if (row.type == 4) {
+				s.writeTextCell(row.account.getNumber());
+				s.setColSpan(3);
+				s.writeTextCell(row.account.getName());
+				s.setColSpan(1);
+				s.writeEmptyCell();
+				s.writeEmptyCell();
+				s.writeEmptyCell();
+				s.writeFloatCell(row.balance, "num2");
+			}
+			else if (row.type == 5) {
+				s.writeEmptyCell();
+				s.writeEmptyCell();
+				s.writeEmptyCell();
+				s.writeEmptyCell();
+				s.writeFloatCell(totalDebit, "num2Bold");
+				s.writeFloatCell(totalCredit, "num2Bold");
+			}
+		}
 	}
 
 	/**

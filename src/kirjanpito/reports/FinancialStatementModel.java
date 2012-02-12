@@ -22,10 +22,11 @@ import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
 import kirjanpito.util.AccountBalances;
 import kirjanpito.util.CSVWriter;
+import kirjanpito.util.ODFSpreadsheet;
 
 /**
  * Malli tuloslaskelmalle ja taseelle.
- * 
+ *
  * @author Tommi Helineva
  */
 public class FinancialStatementModel implements PrintModel {
@@ -43,7 +44,10 @@ public class FinancialStatementModel implements PrintModel {
 	private DecimalFormat numberFormat;
 	private boolean details;
 	private boolean emptyRow;
-	
+	private int maxLevel;
+	private boolean styleBold;
+	private boolean styleItalic;
+
 	public static final int STYLE_PLAIN = 0;
 	public static final int STYLE_BOLD = 1;
 	public static final int STYLE_ITALIC = 2;
@@ -52,16 +56,16 @@ public class FinancialStatementModel implements PrintModel {
 	public static final int TYPE_INCOME_STATEMENT_DETAILED = 2;
 	public static final int TYPE_BALANCE_SHEET = 3;
 	public static final int TYPE_BALANCE_SHEET_DETAILED = 4;
-	
+
 	public FinancialStatementModel(int type) {
 		this.type = type;
 		numberFormat = new DecimalFormat();
 		numberFormat.setParseBigDecimal(true);
 	}
-	
+
 	/**
 	 * Palauttaa tietokannan, josta tiedot haetaan.
-	 * 
+	 *
 	 * @return tietokanta
 	 */
 	public DataSource getDataSource() {
@@ -70,7 +74,7 @@ public class FinancialStatementModel implements PrintModel {
 
 	/**
 	 * Asettaa tietokannan, josta tiedot haetaan.
-	 * 
+	 *
 	 * @param dataSource tietokanta
 	 */
 	public void setDataSource(DataSource dataSource) {
@@ -79,7 +83,7 @@ public class FinancialStatementModel implements PrintModel {
 
 	/**
 	 * Palauttaa tulosteen tyypin.
-	 * 
+	 *
 	 * @return tulosteen tyyppi
 	 */
 	public int getType() {
@@ -88,7 +92,7 @@ public class FinancialStatementModel implements PrintModel {
 
 	/**
 	 * Palauttaa alkamispäivämäärät.
-	 * 
+	 *
 	 * @return alkamispäivämäärät
 	 */
 	public Date[] getStartDates() {
@@ -97,7 +101,7 @@ public class FinancialStatementModel implements PrintModel {
 
 	/**
 	 * Asettaa alkamispäivämäärät.
-	 * 
+	 *
 	 * @param startDate alkamispäivämäärät
 	 */
 	public void setStartDates(Date[] startDates) {
@@ -106,7 +110,7 @@ public class FinancialStatementModel implements PrintModel {
 
 	/**
 	 * Palauttaa päättymispäivämäärät.
-	 * 
+	 *
 	 * @return päättymispäivämäärät
 	 */
 	public Date[] getEndDates() {
@@ -115,7 +119,7 @@ public class FinancialStatementModel implements PrintModel {
 
 	/**
 	 * Asettaa päättymispäivämäärät.
-	 * 
+	 *
 	 * @param endDate päättymispäivämäärät
 	 */
 	public void setEndDates(Date[] endDates) {
@@ -124,7 +128,7 @@ public class FinancialStatementModel implements PrintModel {
 
 	/**
 	 * Palauttaa asetukset.
-	 * 
+	 *
 	 * @return asetukset
 	 */
 	public Settings getSettings() {
@@ -133,16 +137,16 @@ public class FinancialStatementModel implements PrintModel {
 
 	/**
 	 * Asettaa asetukset.
-	 * 
+	 *
 	 * @param settings asetukset
 	 */
 	public void setSettings(Settings settings) {
 		this.settings = settings;
 	}
-	
+
 	/**
 	 * Palauttaa tulosteen nimen.
-	 * 
+	 *
 	 * @return tulosteen nimi
 	 */
 	public String getTitle() {
@@ -151,7 +155,7 @@ public class FinancialStatementModel implements PrintModel {
 
 	/**
 	 * Palauttaa tilit.
-	 * 
+	 *
 	 * @return tilit
 	 */
 	public List<Account> getAccounts() {
@@ -160,7 +164,7 @@ public class FinancialStatementModel implements PrintModel {
 
 	/**
 	 * Asettaa tilit.
-	 * 
+	 *
 	 * @param accounts tilit
 	 */
 	public void setAccounts(List<Account> accounts) {
@@ -188,7 +192,7 @@ public class FinancialStatementModel implements PrintModel {
 	public void run() throws DataAccessException {
 		Session sess = null;
 		String reportId;
-		
+
 		switch (type) {
 		case TYPE_INCOME_STATEMENT:
 			reportId = "income-statement";
@@ -213,15 +217,15 @@ public class FinancialStatementModel implements PrintModel {
 		default:
 			throw new IllegalArgumentException("Invalid report type: " + type);
 		}
-		
+
 		try {
 			sess = dataSource.openSession();
 			structure = dataSource.getReportStructureDAO(
 					sess).getById(reportId);
-			
+
 			if (type == TYPE_BALANCE_SHEET || type == TYPE_BALANCE_SHEET_DETAILED) {
 				List<Period> periods = dataSource.getPeriodDAO(sess).getAll();
-				
+
 				for (int i = 0; i < startDates.length; i++) {
 					for (Period period : periods) {
 						if (!period.getStartDate().after(endDates[i]) &&
@@ -230,7 +234,7 @@ public class FinancialStatementModel implements PrintModel {
 							break;
 						}
 					}
-					
+
 					if (startDates[i] == null) {
 						startDates[i] = endDates[i];
 					}
@@ -263,7 +267,7 @@ public class FinancialStatementModel implements PrintModel {
 		/* Tulosteen sisältö on tallennettu CSV-tiedostoon, jossa
 		 * erottimena käytetään ;-merkkiä. Ensimmäinen kenttä sisältää
 		 * kolme merkkiä:
-		 * 
+		 *
 		 * 1. merkki 'D': Tilierittelyt.
 		 * 1. merkki 'H': Tulostetaan otsikkorivi, ei rahamäärää.
 		 *                Rivi näytetään aina.
@@ -278,18 +282,21 @@ public class FinancialStatementModel implements PrintModel {
 		 * 2. merkki 'I': Teksti kursivoidaan.
 		 * 3. merkki:     Ilmoittaa, kuinka paljon tekstiä sisennetään.
 		 *                Kokonaisluku välillä 0 .. 9.
-		 *                
+		 *
 		 * Seuraavat kentät ilmoittavat, miltä tilinumeroväleiltä
 		 * summa lasketaan. Kenttiä on oltava parillinen määrä,
 		 * jokaisen välin alku- ja loppunumero.
-		 * 
+		 *
 		 * Viimeinen kenttä on tulostettava teksti.
 		 */
 		BufferedReader reader = new BufferedReader(
 				new StringReader(structure.getData()));
 		String line;
 		rows = new ArrayList<FinancialStatementRow>();
-		
+		maxLevel = 0;
+		styleBold = false;
+		styleItalic = false;
+
 		try {
 			while ((line = reader.readLine()) != null) {
 				if (line.length() > 0) {
@@ -303,13 +310,13 @@ public class FinancialStatementModel implements PrintModel {
 
 		balances = null;
 	}
-	
+
 	public void writeCSV(CSVWriter writer) throws IOException {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
 		DecimalFormat numberFormat = new DecimalFormat();
 		numberFormat.setMinimumFractionDigits(2);
 		numberFormat.setMaximumFractionDigits(2);
-		
+
 		writer.writeField(title);
 		writer.writeLine();
 		writer.writeField("Nimi");
@@ -333,7 +340,7 @@ public class FinancialStatementModel implements PrintModel {
 
 		writer.writeLine();
 		writer.writeLine();
-		
+
 		for (FinancialStatementRow row : rows) {
 			writer.writeField(row.text.isEmpty() ? "" : Integer.toString(row.level));
 			writer.writeField((row.number == null) ? "" : row.number);
@@ -348,7 +355,70 @@ public class FinancialStatementModel implements PrintModel {
 			writer.writeLine();
 		}
 	}
-	
+
+	public void writeODS(ODFSpreadsheet s) {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
+		s.setTitle(title);
+		s.defineColumn("co1", "1.5cm");
+		s.defineColumn("co2", "10cm");
+		s.defineColumn("co3", "2.6cm");
+		s.addIndentLevels(maxLevel + 1, styleBold, styleItalic);
+		s.addTable(title);
+		s.addColumn("co1", "Default");
+		s.addColumn("co2", "Default");
+
+		for (int i = 0; i < startDates.length; i++) {
+			s.addColumn("co3", "num2");
+		}
+
+		s.addRow();
+		s.writeEmptyCell();
+		s.writeEmptyCell();
+
+		if (type != FinancialStatementModel.TYPE_BALANCE_SHEET &&
+				type != FinancialStatementModel.TYPE_BALANCE_SHEET_DETAILED) {
+			for (int i = 0; i < startDates.length; i++) {
+				s.writeTextCell(dateFormat.format(startDates[i]) + " -", "boldAlignRight");
+			}
+		}
+
+		s.addRow();
+		s.writeEmptyCell();
+		s.writeEmptyCell();
+
+		for (int i = 0; i < endDates.length; i++) {
+			s.writeTextCell(dateFormat.format(endDates[i]), "boldAlignRight");
+		}
+
+		s.addRow();
+
+		for (FinancialStatementRow row : rows) {
+			s.addRow();
+			String style = "indent" + row.level;
+
+			if (row.style == STYLE_BOLD) {
+				style += "Bold";
+			}
+			else if (row.style == STYLE_ITALIC) {
+				style += "Italic";
+			}
+
+			s.writeTextCell((row.number == null) ? "" : row.number);
+			s.writeTextCell(row.text, style);
+
+			if (row.amounts != null) {
+				for (BigDecimal amount : row.amounts) {
+					if (amount == null) {
+						s.writeEmptyCell();
+					}
+					else {
+						s.writeFloatCell(amount, "num2");
+					}
+				}
+			}
+		}
+	}
+
 	private void processLine(String line) {
 		if (line.equals("--") && pageBreakEnabled) {
 			rows.add(new FinancialStatementRow(null,
@@ -363,28 +433,30 @@ public class FinancialStatementModel implements PrintModel {
 					"", STYLE_PLAIN, 0, null));
 				emptyRow = true;
 			}
-			
+
 			return;
 		}
-		
+
 		String text;
 		int style, level;
 		char typeChar = line.charAt(0);
 		char styleChar = line.charAt(1);
 		int offset = 1;
-		
+
 		if (typeChar == 'D' && (styleChar == '+' || styleChar == '-' || styleChar == '0')) {
 			offset = 2;
 			styleChar = line.charAt(offset);
 		}
-		
+
 		level = line.charAt(offset + 1) - '0';
-		
+
 		if (styleChar == 'B') {
 			style = STYLE_BOLD;
+			styleBold = true;
 		}
 		else if (styleChar == 'I') {
 			style = STYLE_ITALIC;
+			styleItalic = true;
 		}
 		else {
 			style = STYLE_PLAIN;
@@ -394,7 +466,7 @@ public class FinancialStatementModel implements PrintModel {
 			String[] fields = line.substring(offset + 3).split(";");
 			FinancialStatementRow row = new FinancialStatementRow(null,
 					fields[0], style, level, new BigDecimal[startDates.length]);
-			
+
 			try {
 				for (int i = 0; i < startDates.length; i++) {
 					if (fields.length >= 2 + i) {
@@ -410,18 +482,18 @@ public class FinancialStatementModel implements PrintModel {
 			emptyRow = false;
 			return;
 		}
-		
+
 		/* Luetaan tilinumerot ja lasketaan rivin rahamäärä. */
 		int pos1, pos2, pos3;
 		pos1 = offset + 3;
 		pos2 = line.indexOf(';', pos1);
 		pos3 = line.indexOf(';', pos2 + 1);
 		BigDecimal[] amounts = new BigDecimal[startDates.length];
-		
+
 		while (pos2 >= 0) {
 			String start = line.substring(pos1, pos2);
 			String stop = line.substring(pos2 + 1, pos3);
-			
+
 			if (typeChar == 'D') {
 				addDetailRows(start, stop, style, level, line.charAt(1));
 			}
@@ -430,14 +502,14 @@ public class FinancialStatementModel implements PrintModel {
 					amounts[i] = calculateBalance(balances[i], start, stop, amounts[i]);
 				}
 			}
-			
+
 			pos1 = pos3 + 1;
 			pos2 = line.indexOf(';', pos1);
 			pos3 = line.indexOf(';', pos2 + 1);
 		}
-		
+
 		text = line.substring(pos1);
-		
+
 		/* H- ja S-rivit näytetään aina, G- ja T-rivit vain, jos
 		 * jokin summattavista tileistä on ollut käytössä. */
 		boolean nonZero = false;
@@ -457,18 +529,19 @@ public class FinancialStatementModel implements PrintModel {
 		if (typeChar == 'H' || typeChar == 'G') {
 			amounts = null;
 		}
-		
+
 		if (typeChar != 'D') {
+			maxLevel = Math.max(level, maxLevel);
 			rows.add(new FinancialStatementRow(null,
 				text, style, level, amounts));
 			emptyRow = false;
 		}
 	}
-	
+
 	/**
 	 * Laskee yhteen saldot niiltä tileiltä, joiden numero
 	 * on välillä <code>[start, stop[</code>.
-	 * 
+	 *
 	 * @param balances tilien saldot
 	 * @param start välin alku
 	 * @param stop välin loppu
@@ -479,16 +552,16 @@ public class FinancialStatementModel implements PrintModel {
 		String number;
 		BigDecimal balance;
 		boolean singleAccount = start.equals(stop);
-		
+
 		for (Account account : accounts) {
 			number = account.getNumber();
-			
+
 			/* Jos tilinumero on välillä [start; stop[, lisätään tilin
 			 * saldo summaan. */
 			if ((number.compareTo(start) >= 0 && number.compareTo(stop) < 0) ||
 					(singleAccount && number.equals(start))) {
 				balance = balances.getBalance(account.getId());
-				
+
 				if (balance != null) {
 					if (account.getType() == Account.TYPE_EXPENSE)
 						balance = balance.negate();
@@ -505,20 +578,20 @@ public class FinancialStatementModel implements PrintModel {
 
 		return sum;
 	}
-	
+
 	private void addDetailRows(String start, String stop, int style, int level, char filterChar) {
 		String number;
 		boolean singleAccount = start.equals(stop);
-		
+
 		for (Account account : accounts) {
 			number = account.getNumber();
-			
+
 			if ((number.compareTo(start) >= 0 && number.compareTo(stop) < 0) ||
 					(singleAccount && number.equals(start))) {
-				
+
 				BigDecimal[] amounts = new BigDecimal[startDates.length];
 				boolean nonZero = false;
-				
+
 				for (int i = 0; i < startDates.length; i++) {
 					amounts[i] = balances[i].getBalance(account.getId());
 
@@ -531,11 +604,11 @@ public class FinancialStatementModel implements PrintModel {
 					amounts[0] = BigDecimal.ZERO;
 					nonZero = true;
 				}
-				
+
 				if (!nonZero) {
 					continue;
 				}
-				
+
 				if (account.getType() == Account.TYPE_EXPENSE) {
 					for (int i = 0; i < startDates.length; i++) {
 						if (amounts[i] != null) amounts[i] = amounts[i].negate();
@@ -553,9 +626,10 @@ public class FinancialStatementModel implements PrintModel {
 						continue;
 					}
 				}
-				
+
 				details = true;
 				emptyRow = false;
+				maxLevel = Math.max(level, maxLevel);
 				rows.add(new FinancialStatementRow(account.getNumber(),
 						account.getName(), style, level, amounts));
 			}
@@ -564,7 +638,7 @@ public class FinancialStatementModel implements PrintModel {
 
 	/**
 	 * Palauttaa rivien lukumäärän.
-	 * 
+	 *
 	 * @return rivien lukumäärä
 	 */
 	public int getRowCount() {
@@ -579,50 +653,50 @@ public class FinancialStatementModel implements PrintModel {
 	public int getColumnCount() {
 		return startDates.length;
 	}
-	
+
 	/**
 	 * Palauttaa tilinumeron rivillä <code>index</code>.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return tilinumero
 	 */
 	public String getNumber(int index) {
 		return rows.get(index).number;
 	}
-	
+
 	/**
 	 * Palauttaa tekstin rivillä <code>index</code>.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return teksti
 	 */
 	public String getText(int index) {
 		return rows.get(index).text;
 	}
-	
+
 	/**
 	 * Palauttaa tekstityylin rivillä <code>index</code>.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return STYLE_PLAIN, STYLE_BOLD tai STYLE_ITALIC
 	 */
 	public int getStyle(int index) {
 		return rows.get(index).style;
 	}
-	
+
 	/**
 	 * Palauttaa sisennystason rivillä <code>index</code>.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return sisennystaso
 	 */
 	public int getLevel(int index) {
 		return rows.get(index).level;
 	}
-	
+
 	/**
 	 * Palauttaa nykyisen tilikauden rahamäärän rivillä <code>index</code>.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return rahamäärä
 	 */
@@ -630,18 +704,18 @@ public class FinancialStatementModel implements PrintModel {
 		FinancialStatementRow row = rows.get(index);
 		return (row.amounts == null) ? null : row.amounts[col];
 	}
-	
+
 	public boolean containsDetails() {
 		return details;
 	}
-	
+
 	private class FinancialStatementRow {
 		public String number;
 		public String text;
 		public int style;
 		public int level;
 		public BigDecimal[] amounts;
-		
+
 		public FinancialStatementRow(String number, String text,
 				int style, int level, BigDecimal[] amounts)
 		{

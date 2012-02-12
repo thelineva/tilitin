@@ -20,11 +20,12 @@ import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
 import kirjanpito.util.AccountBalances;
 import kirjanpito.util.CSVWriter;
+import kirjanpito.util.ODFSpreadsheet;
 import kirjanpito.util.VATUtil;
 
 /**
  * Malli ALV-laskelmalle.
- * 
+ *
  * @author Tommi Helineva
  */
 public class VATReportModel implements PrintModel {
@@ -40,7 +41,7 @@ public class VATReportModel implements PrintModel {
 	private BigDecimal totalVatAmount3; // Vähennettävä ALV yhteensä
 	private BigDecimal totalVatAmount3M;
 	private int documentId;
-	
+
 	private static final String[] VAT_CODES = {
 		null, null, null, null,
 		"Verollinen myynti", "Verolliset ostot",
@@ -48,10 +49,10 @@ public class VATReportModel implements PrintModel {
 		"Yhteisömyynti", "Yhteisöostot",
 		"Rakentamispalvelun myynti", "Rakentamispalvelun ostot"
 	};
-	
+
 	/**
 	 * Palauttaa tietokannan, josta tiedot haetaan.
-	 * 
+	 *
 	 * @return tietokanta
 	 */
 	public DataSource getDataSource() {
@@ -60,7 +61,7 @@ public class VATReportModel implements PrintModel {
 
 	/**
 	 * Asettaa tietokannan, josta tiedot haetaan.
-	 * 
+	 *
 	 * @param dataSource tietokanta
 	 */
 	public void setDataSource(DataSource dataSource) {
@@ -69,7 +70,7 @@ public class VATReportModel implements PrintModel {
 
 	/**
 	 * Palauttaa tilikauden, jonka saldot haetaan.
-	 * 
+	 *
 	 * @return tilikausi
 	 */
 	public Period getPeriod() {
@@ -78,7 +79,7 @@ public class VATReportModel implements PrintModel {
 
 	/**
 	 * Asettaa tilikauden, jonka saldot haetaan.
-	 * 
+	 *
 	 * @param period tilikausi
 	 */
 	public void setPeriod(Period period) {
@@ -87,7 +88,7 @@ public class VATReportModel implements PrintModel {
 
 	/**
 	 * Palauttaa alkamispäivämäärän.
-	 * 
+	 *
 	 * @return alkamispäivämäärä
 	 */
 	public Date getStartDate() {
@@ -96,7 +97,7 @@ public class VATReportModel implements PrintModel {
 
 	/**
 	 * Asettaa alkamispäivämäärän.
-	 * 
+	 *
 	 * @param startDate alkamispäivämäärä
 	 */
 	public void setStartDate(Date startDate) {
@@ -105,7 +106,7 @@ public class VATReportModel implements PrintModel {
 
 	/**
 	 * Palauttaa päättymispäivämäärän.
-	 * 
+	 *
 	 * @return päättymispäivämäärä
 	 */
 	public Date getEndDate() {
@@ -114,16 +115,16 @@ public class VATReportModel implements PrintModel {
 
 	/**
 	 * Asettaa päättymispäivämäärän.
-	 * 
+	 *
 	 * @param endDate päättymispäivämäärä
 	 */
 	public void setEndDate(Date endDate) {
 		this.endDate = endDate;
 	}
-	
+
 	/**
 	 * Palauttaa tilit.
-	 * 
+	 *
 	 * @return tilit
 	 */
 	public List<Account> getAccounts() {
@@ -132,7 +133,7 @@ public class VATReportModel implements PrintModel {
 
 	/**
 	 * Asettaa tilit.
-	 * 
+	 *
 	 * @param accounts tilit
 	 */
 	public void setAccounts(List<Account> accounts) {
@@ -141,7 +142,7 @@ public class VATReportModel implements PrintModel {
 
 	/**
 	 * Palauttaa asetukset.
-	 * 
+	 *
 	 * @return asetukset
 	 */
 	public Settings getSettings() {
@@ -150,7 +151,7 @@ public class VATReportModel implements PrintModel {
 
 	/**
 	 * Asettaa asetukset.
-	 * 
+	 *
 	 * @param settings asetukset
 	 */
 	public void setSettings(Settings settings) {
@@ -160,26 +161,26 @@ public class VATReportModel implements PrintModel {
 	public void run() throws DataAccessException {
 		Session sess = null;
 		final AccountBalances balances = new AccountBalances(accounts);
-		
+
 		final HashMap<Integer, BigDecimal> vatAmounts =
 			new HashMap<Integer, BigDecimal>();
-		
+
 		final HashMap<Integer, Entry> entryMap =
 			new HashMap<Integer, Entry>();
-		
+
 		final HashMap<Integer, Account> accountMap =
 			new HashMap<Integer, Account>();
-		
+
 		for (Account a : accounts) {
 			accountMap.put(a.getId(), a);
 		}
-		
+
 		documentId = -1;
 		totalVatAmount2 = BigDecimal.ZERO;
 		totalVatAmount3 = BigDecimal.ZERO;
 		totalVatAmount2M = BigDecimal.ZERO;
 		totalVatAmount3M = BigDecimal.ZERO;
-		
+
 		try {
 			sess = dataSource.openSession();
 			dataSource.getEntryDAO(sess).getByPeriodIdAndDate(period.getId(),
@@ -193,16 +194,16 @@ public class VATReportModel implements PrintModel {
 						documentId = entry.getDocumentId();
 						entryMap.clear();
 					}
-					
+
 					Account account = accountMap.get(entry.getAccountId());
 					addVatAmount(account, entry);
-					
+
 					/* Verollinen myynti, verollinen osto, yhteisöosto tai rakentamispalvelun osto */
 					if (account.getVatCode() == 4 || account.getVatCode() == 5 ||
 							account.getVatCode() == 9 || account.getVatCode() == 11) {
 						entryMap.put(entry.getRowNumber(), entry);
 					}
-					
+
 					/* Veroton myynti, veroton osto, yhteisömyynti tai rakentamispalvelun myynti */
 					if (account.getVatCode() == 6 || account.getVatCode() == 7 ||
 							account.getVatCode() == 8 || account.getVatCode() == 10) {
@@ -211,22 +212,22 @@ public class VATReportModel implements PrintModel {
 
 					if (entry.getRowNumber() >= 100000 &&
 							entry.getRowNumber() < 300000) {
-						
+
 						int rowNumber = entry.getRowNumber() % 100000;
 						Entry entry2 = entryMap.remove(rowNumber);
-						
+
 						if (entry2 != null) {
 							balances.addEntry(entry2);
 							BigDecimal vatAmount = entry.getAmount();
-							
+
 							if (entry.isDebit())
 								vatAmount = vatAmount.negate();
-							
+
 							BigDecimal vatAmountTotal = vatAmounts.get(entry2.getAccountId());
-							
+
 							if (vatAmountTotal == null)
 								vatAmountTotal = BigDecimal.ZERO;
-							
+
 							vatAmountTotal = vatAmountTotal.add(vatAmount);
 							vatAmounts.put(entry2.getAccountId(), vatAmountTotal);
 						}
@@ -237,38 +238,38 @@ public class VATReportModel implements PrintModel {
 		finally {
 			if (sess != null) sess.close();
 		}
-		
+
 		rows = new ArrayList<VATReportRow>();
 		BigDecimal vatExcluded, vatIncluded, vatAmount;
-		
+
 		/* Otetaan talteen veron perusteet ja veron määrät. */
 		for (Account account : accounts) {
 			vatExcluded = balances.getBalance(account.getId());
 			vatAmount = vatAmounts.get(account.getId());
-			
+
 			if (vatExcluded != null && account.getVatCode() >= 4 &&
 					vatExcluded.compareTo(BigDecimal.ZERO) != 0) {
-				
+
 				if (vatAmount == null)
 					vatAmount = BigDecimal.ZERO;
-				
+
 				if (account.getVatCode() == 5 ||
 						account.getVatCode() == 7 ||
 						account.getVatCode() == 9 ||
 						account.getVatCode() == 11) {
 					vatExcluded = vatExcluded.negate();
 				}
-				
+
 				vatIncluded = vatExcluded.add(vatAmount);
-				
+
 				rows.add(new VATReportRow(1, account, vatExcluded,
 						vatIncluded, vatAmount, null));
 			}
 		}
-		
+
 		/* Lajitellaan rivit ALV-koodin ja ALV-prosentin perusteella. */
 		Collections.sort(rows);
-		
+
 		int prevCode = -1;
 		int prevRate = -1;
 		boolean codeChanged, rateChanged;
@@ -276,18 +277,18 @@ public class VATReportModel implements PrintModel {
 		vatExcluded = vatExcludedR = BigDecimal.ZERO;
 		vatIncluded = vatIncludedR = BigDecimal.ZERO;
 		vatAmount = vatAmountR = BigDecimal.ZERO;
-		
+
 		/* Lisätään otsikot ja summarivit. */
 		for (int i = 0; i < rows.size(); i++) {
 			codeChanged = rows.get(i).account.getVatCode() != prevCode;
 			rateChanged = rows.get(i).account.getVatRate() != prevRate;
-			
+
 			if ((codeChanged || rateChanged) && prevRate >= 0 &&
 					(prevCode == 4 || prevCode == 5 || prevCode == 9 || prevCode == 11)) {
-				
+
 				String text = String.format("ALV %s yhteensä",
 						VATUtil.VAT_RATE_TEXTS[VATUtil.VAT_RATE_M2V[prevRate]]);
-				
+
 				/* Lisätään ALV-prosentin summarivi. */
 				rows.add(i, new VATReportRow(3, null,
 						vatExcludedR, vatIncludedR, vatAmountR, text));
@@ -296,7 +297,7 @@ public class VATReportModel implements PrintModel {
 				vatIncludedR = BigDecimal.ZERO;
 				vatAmountR = BigDecimal.ZERO;
 			}
-			
+
 			if (codeChanged) {
 				if (prevCode != -1) {
 					/* Lisätään ALV-koodin summarivi. */
@@ -307,18 +308,18 @@ public class VATReportModel implements PrintModel {
 					vatExcluded = vatExcludedR = BigDecimal.ZERO;
 					vatIncluded = vatIncludedR = BigDecimal.ZERO;
 					vatAmount = vatAmountR = BigDecimal.ZERO;
-					
+
 					/* Lisätään tyhjä rivi ennen otsikkoa. */
 					rows.add(i, new VATReportRow(0, null, null, null, null, null));
 					i++;
 				}
-				
+
 				/* Lisätään ALV-koodin otsikko. */
 				rows.add(i, new VATReportRow(2, null, null, null, null,
 						VAT_CODES[rows.get(i).account.getVatCode()]));
 				i++;
 			}
-			
+
 			vatExcluded = vatExcluded.add(rows.get(i).vatExcludedTotal);
 			vatIncluded = vatIncluded.add(rows.get(i).vatIncludedTotal);
 			vatAmount = vatAmount.add(rows.get(i).vatAmountTotal);
@@ -328,22 +329,22 @@ public class VATReportModel implements PrintModel {
 			prevRate = rows.get(i).account.getVatRate();
 			prevCode = rows.get(i).account.getVatCode();
 		}
-		
+
 		if (prevRate != -1) {
 			if (prevCode == 4 || prevCode == 5 || prevCode == 9 || prevCode == 11) {
 				String text = String.format("ALV %s yhteensä",
 						VATUtil.VAT_RATE_TEXTS[VATUtil.VAT_RATE_M2V[prevRate]]);
-				
+
 				/* Lisätään ALV-prosentin summarivi. */
 				rows.add(new VATReportRow(3, null,
 						vatExcludedR, vatIncludedR, vatAmountR, text));
 			}
-			
+
 			/* Lisätään ALV-koodin summarivi. */
 			rows.add(new VATReportRow(3, null,
 					vatExcluded, vatIncluded, vatAmount,
 					VAT_CODES[prevCode] + " yhteensä"));
-			
+
 			vatExcluded = vatExcludedR = BigDecimal.ZERO;
 			vatIncluded = vatIncludedR = BigDecimal.ZERO;
 			vatAmount = vatAmountR = BigDecimal.ZERO;
@@ -368,13 +369,13 @@ public class VATReportModel implements PrintModel {
 			rows.add(new VATReportRow(5, null, null, null, sum, "Maksettava vero"));
 		}
 	}
-	
+
 	public void writeCSV(CSVWriter writer) throws IOException {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
 		DecimalFormat numberFormat = new DecimalFormat();
 		numberFormat.setMinimumFractionDigits(2);
 		numberFormat.setMaximumFractionDigits(2);
-		
+
 		writer.writeField("ALV-laskelma tileittäin");
 		writer.writeLine();
 		writer.writeField("Nimi");
@@ -396,7 +397,7 @@ public class VATReportModel implements PrintModel {
 		writer.writeField("Vero");
 		writer.writeField("Verollinen summa");
 		writer.writeLine();
-		
+
 		for (VATReportRow row : rows) {
 			if (row.type == 1) {
 				writer.writeField(row.account.getNumber());
@@ -426,101 +427,135 @@ public class VATReportModel implements PrintModel {
 				writer.writeField(numberFormat.format(row.vatAmountTotal));
 				writer.writeField("");
 			}
-			
+
 			writer.writeLine();
 		}
 	}
-	
-	/**
-	 * Palauttaa käyttäjän nimen.
-	 * 
-	 * @return käyttäjän nimi
-	 */
-	public String getName() {
-		return settings.getName();
+
+	public void writeODS(ODFSpreadsheet s) {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
+		s.setTitle(String.format("ALV-laskelma tileittäin: %s - %s",
+				dateFormat.format(startDate), dateFormat.format(endDate)));
+		s.defineColumn("co1", "1.5cm");
+		s.defineColumn("co2", "7cm");
+		s.defineColumn("co3", "3.5cm");
+		s.addTable("ALV-laskelma tileittäin");
+		s.addColumn("co1", "Default");
+		s.addColumn("co2", "Default");
+		s.addColumn("co3", "num2");
+		s.addColumn("co3", "num2");
+		s.addColumn("co3", "num2");
+
+		s.addRow();
+		s.writeTextCell("", "boldBorderBottom");
+		s.writeTextCell("Tili", "boldBorderBottom");
+		s.writeTextCell("Veron peruste", "boldAlignRightBorderBottom");
+		s.writeTextCell("Vero", "boldAlignRightBorderBottom");
+		s.writeTextCell("Verollinen summa", "boldAlignRightBorderBottom");
+
+		for (VATReportRow row : rows) {
+			s.addRow();
+
+			if (row.type == 1) {
+				s.writeTextCell(row.account.getNumber());
+				s.writeTextCell(row.account.getName());
+				s.writeFloatCell(row.vatExcludedTotal, "num2");
+				s.writeFloatCell(row.vatAmountTotal, "num2");
+				s.writeFloatCell(row.vatIncludedTotal, "num2");
+			}
+			else if (row.type == 2) {
+				s.writeEmptyCell();
+				s.writeTextCell(row.text, "bold");
+			}
+			else if (row.type == 3) {
+				s.writeEmptyCell();
+				s.writeTextCell(row.text, "bold");
+				s.writeFloatCell(row.vatExcludedTotal, "num2");
+				s.writeFloatCell(row.vatAmountTotal, "num2");
+				s.writeFloatCell(row.vatIncludedTotal, "num2");
+			}
+			else if (row.type == 4 || row.type == 5) {
+				s.writeEmptyCell();
+				s.writeTextCell(row.text, row.type == 4 ? "Default" : "bold");
+				s.writeTextCell("", "num2");
+				s.writeFloatCell(row.vatAmountTotal, "num2");
+				s.writeTextCell("", "num2");
+			}
+		}
 	}
-	
-	/**
-	 * Palauttaa Y-tunnuksen.
-	 * 
-	 * @return y-tunnus
-	 */
-	public String getBusinessId() {
-		return settings.getBusinessId();
-	}
-	
+
 	/**
 	 * Palauttaa tulosteessa olevien rivien lukumäärän.
-	 * 
+	 *
 	 * @return rivien lukumäärä
 	 */
 	public int getRowCount() {
 		return rows.size();
 	}
-	
+
 	/**
 	 * Palauttaa rivin <code>index</code> tyypin.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return rivin tyyppi
 	 */
 	public int getType(int index) {
 		return rows.get(index).type;
 	}
-	
+
 	/**
 	 * Palauttaa rivillä <code>index</code> olevan tilin.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return tili
 	 */
 	public Account getAccount(int index) {
 		return rows.get(index).account;
 	}
-	
+
 	/**
 	 * Palauttaa rivillä <code>index</code> olevan
 	 * summan ilman ALV:tä.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return summa
 	 */
 	public BigDecimal getVatExcludedTotal(int index) {
 		return rows.get(index).vatExcludedTotal;
 	}
-	
+
 	/**
 	 * Palauttaa rivillä <code>index</code> olevan
 	 * summan ALV:n kanssa.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return summa
 	 */
 	public BigDecimal getVatIncludedTotal(int index) {
 		return rows.get(index).vatIncludedTotal;
 	}
-	
+
 	/**
 	 * Palauttaa rivillä <code>index</code> olevan
 	 * ALV:n määrän.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return ALV:n määrä
 	 */
 	public BigDecimal getVatAmountTotal(int index) {
 		return rows.get(index).vatAmountTotal;
 	}
-	
+
 	/**
 	 * Palauttaa rivillä <code>index</code> olevan tekstin.
-	 * 
+	 *
 	 * @param index rivinumero
 	 * @return teksti
 	 */
 	public String getText(int index) {
 		return rows.get(index).text;
 	}
-	
+
 	private void addVatAmount(Account account, Entry entry) {
 		BigDecimal vatAmount = entry.getAmount();
 
@@ -551,13 +586,13 @@ public class VATReportModel implements PrintModel {
 		public BigDecimal vatIncludedTotal;
 		public BigDecimal vatAmountTotal;
 		public String text;
-		
+
 		public VATReportRow(int type, Account account,
 				BigDecimal vatExcludedTotal,
 				BigDecimal vatIncludedTotal,
 				BigDecimal vatAmountTotal,
 				String text) {
-			
+
 			this.type = type;
 			this.account = account;
 			this.vatExcludedTotal = vatExcludedTotal;

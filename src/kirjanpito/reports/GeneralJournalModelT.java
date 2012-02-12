@@ -20,7 +20,7 @@ import kirjanpito.util.CSVWriter;
 
 /**
  * Malli päiväkirja tositelajeittain -tulosteelle.
- * 
+ *
  * @author Tommi Helineva
  */
 public class GeneralJournalModelT extends GeneralJournalModel {

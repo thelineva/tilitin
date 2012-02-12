@@ -31,6 +31,7 @@ import kirjanpito.reports.PrintModel;
 import kirjanpito.ui.Kirjanpito;
 import kirjanpito.util.AppSettings;
 import kirjanpito.util.CSVWriter;
+import kirjanpito.util.ODFSpreadsheet;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
@@ -341,5 +342,11 @@ public class PrintPreviewModel {
 		csv.setDelimiter(delimiter);
 		printModel.writeCSV(csv);
 		writer.close();
+	}
+
+	public void writeODS(File file) throws IOException {
+		ODFSpreadsheet spreadsheet = new ODFSpreadsheet();
+		printModel.writeODS(spreadsheet);
+		spreadsheet.save(file);
 	}
 }

@@ -20,6 +20,7 @@ import kirjanpito.db.Period;
 import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
 import kirjanpito.util.CSVWriter;
+import kirjanpito.util.ODFSpreadsheet;
 import kirjanpito.util.Registry;
 
 /**
@@ -267,6 +268,81 @@ public class GeneralJournalModel implements PrintModel {
 
 			writer.writeField(row.entry.getDescription());
 			writer.writeLine();
+		}
+	}
+
+	public void writeODS(ODFSpreadsheet s) {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("d.M.yyyy");
+		s.setTitle(String.format("Päiväkirja: %s - %s",
+				dateFormat.format(startDate), dateFormat.format(endDate)));
+		s.defineColumn("co1", "1.5cm");
+		s.defineColumn("co2", "0.8cm");
+		s.defineColumn("co3", "1.5cm");
+		s.defineColumn("co4", "5cm");
+		s.defineColumn("co5", "2.6cm");
+		s.defineColumn("co6", "7cm");
+		s.addTable("Päiväkirja");
+		s.addColumn("co1", "num0AlignLeft");
+		s.addColumn("co2", "dateAlignLeft");
+		s.addColumn("co3", "Default");
+		s.addColumn("co4", "Default");
+		s.addColumn("co5", "num2");
+		s.addColumn("co5", "num2");
+		s.addColumn("co6", "Default");
+
+		s.addRow();
+		s.writeTextCell("Nro", "bold");
+		s.writeTextCell("Päivämäärä", "bold");
+		s.addRow();
+		s.writeTextCell("", "boldBorderBottom");
+		s.writeTextCell("", "boldBorderBottom");
+		s.setColSpan(2);
+		s.writeTextCell("Tili", "boldBorderBottom");
+		s.setColSpan(1);
+		s.writeTextCell("", "boldBorderBottom");
+		s.writeTextCell("Debet", "boldAlignRightBorderBottom");
+		s.writeTextCell("Kredit", "boldAlignRightBorderBottom");
+		s.writeTextCell("Selite", "boldBorderBottom");
+
+		for (GeneralJournalRow row : rows) {
+			s.addRow();
+
+			if (row.type == 3) {
+				s.addRow();
+				s.writeTextCell(row.documentType.getName(), "bold");
+				s.addRow();
+			}
+			else if (row.type == 2) {
+				s.writeTextCell(Integer.toString(row.document.getNumber()), "num0AlignLeft");
+				s.setColSpan(3);
+				s.writeDateCell(row.document.getDate(), "dateAlignLeft");
+				s.setColSpan(1);
+			}
+			else if (row.type == 1) {
+				s.writeEmptyCell();
+				s.writeEmptyCell();
+				s.writeTextCell(row.account.getNumber());
+				s.writeTextCell(row.account.getName());
+
+				if (row.entry.isDebit()) {
+					s.writeFloatCell(row.entry.getAmount(), "num2");
+					s.writeTextCell("", "num2");
+				}
+				else {
+					s.writeTextCell("", "num2");
+					s.writeFloatCell(row.entry.getAmount(), "num2");
+				}
+
+				s.writeTextCell(row.entry.getDescription());
+			}
+			else if (row.type == 4) {
+				s.writeEmptyCell();
+				s.writeEmptyCell();
+				s.writeEmptyCell();
+				s.writeEmptyCell();
+				s.writeFloatCell(totalDebit, "num2Bold");
+				s.writeFloatCell(totalCredit, "num2Bold");
+			}
 		}
 	}
 

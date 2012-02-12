@@ -13,6 +13,7 @@ import kirjanpito.db.Entry;
 import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
 import kirjanpito.util.CSVWriter;
+import kirjanpito.util.ODFSpreadsheet;
 import kirjanpito.util.Registry;
 
 public class DocumentPrintModel implements PrintModel {
@@ -101,6 +102,59 @@ public class DocumentPrintModel implements PrintModel {
 
 			writer.writeField(entry.getDescription());
 			writer.writeLine();
+		}
+	}
+
+	public void writeODS(ODFSpreadsheet s) {
+		s.setTitle(String.format("Tosite %d", document.getNumber()));
+		s.defineColumn("co1", "1.5cm");
+		s.defineColumn("co2", "5cm");
+		s.defineColumn("co3", "2.6cm");
+		s.defineColumn("co4", "6cm");
+		s.addTable("Tosite");
+		s.addColumn("co1", "Default");
+		s.addColumn("co2", "Default");
+		s.addColumn("co3", "Default");
+		s.addColumn("co3", "Default");
+		s.addColumn("co4", "Default");
+		s.addRow();
+		s.setColSpan(2);
+		s.writeTextCell("Tositenumero", "bold");
+		s.setColSpan(1);
+		s.writeEmptyCell();
+		s.writeFloatCell(document.getNumber(), "num0AlignLeft");
+		s.addRow();
+		s.setColSpan(2);
+		s.writeTextCell("Päivämäärä", "bold");
+		s.setColSpan(1);
+		s.writeEmptyCell();
+		s.writeDateCell(document.getDate(), "dateAlignLeft");
+		s.addRow();
+		s.addRow();
+		s.setColSpan(2);
+		s.writeTextCell("Tili", "boldBorderBottom");
+		s.setColSpan(1);
+		s.writeTextCell("", "boldBorderBottom");
+		s.writeTextCell("Debet", "boldAlignRightBorderBottom");
+		s.writeTextCell("Kredit", "boldAlignRightBorderBottom");
+		s.writeTextCell("Selite", "boldBorderBottom");
+
+		for (Entry entry : entries) {
+			s.addRow();
+			Account account = registry.getAccountById(entry.getAccountId());
+			s.writeTextCell(account.getNumber());
+			s.writeTextCell(account.getName());
+
+			if (entry.isDebit()) {
+				s.writeFloatCell(entry.getAccountId(), "num2");
+				s.writeTextCell("", "num2");
+			}
+			else {
+				s.writeTextCell("", "num2");
+				s.writeFloatCell(entry.getAccountId(), "num2");
+			}
+
+			s.writeTextCell(entry.getDescription());
 		}
 	}
 
