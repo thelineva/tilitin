@@ -180,6 +180,12 @@ public class PrintPreviewFrame extends JFrame {
 		toolBar.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
 				KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "scrollRight");
 		toolBar.getActionMap().put("scrollRight", scrollRightListener);
+		toolBar.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_ADD, 0), "zoomIn");
+		toolBar.getActionMap().put("zoomIn", zoomInListener);
+		toolBar.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_SUBTRACT, 0), "zoomOut");
+		toolBar.getActionMap().put("zoomOut", zoomOutListener);
 
 		/* Luodaan työkalurivin painikkeet. */
 		JButton button = SwingUtils.createToolButton("close-22x22.png",
@@ -252,8 +258,7 @@ public class PrintPreviewFrame extends JFrame {
 					int index = zoomComboBox.getSelectedIndex();
 
 					if (e.getWheelRotation() > 0 && index > 0) {
-						zoomComboBox.setSelectedIndex(
-								zoomComboBox.getSelectedIndex() - 1);
+						zoomComboBox.setSelectedIndex(index - 1);
 					}
 					else if (e.getWheelRotation() < 0 &&
 							index < ZOOM_LEVELS.length - 1) {
@@ -653,6 +658,30 @@ public class PrintPreviewFrame extends JFrame {
 
 		public void actionPerformed(ActionEvent e) {
 			scrollPage(100, 0);
+		}
+	};
+
+	private AbstractAction zoomInListener = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
+		public void actionPerformed(ActionEvent e) {
+			int index = zoomComboBox.getSelectedIndex();
+
+			if (index < zoomComboBox.getItemCount() - 1) {
+				zoomComboBox.setSelectedIndex(index + 1);
+			}
+		}
+	};
+
+	private AbstractAction zoomOutListener = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
+		public void actionPerformed(ActionEvent e) {
+			int index = zoomComboBox.getSelectedIndex();
+
+			if (index > 0) {
+				zoomComboBox.setSelectedIndex(index - 1);
+			}
 		}
 	};
 }
