@@ -17,10 +17,14 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -48,6 +52,8 @@ public class AccountStatementOptionsDialog extends PrintOptionsDialog {
 	private JTextField searchTextField;
 	private JTable accountTable;
 	private JCheckBox hideNonFavAccountsCheckBox;
+	private JRadioButton orderByNumberRadioButton;
+	private JRadioButton orderByDateRadioButton;
 	private COATableCellRenderer cellRenderer;
 	private COATableModel tableModel;
 	private Account account;
@@ -61,6 +67,15 @@ public class AccountStatementOptionsDialog extends PrintOptionsDialog {
 
 	public Account getSelectedAccount() {
 		return account;
+	}
+
+	public boolean isOrderByDate () {
+		return orderByDateRadioButton.isSelected();
+	}
+
+	public void setOrderByDate(boolean orderByDate) {
+		orderByDateRadioButton.setSelected(orderByDate);
+		orderByNumberRadioButton.setSelected(!orderByDate);
 	}
 
 	public void selectAccount(Account account) {
@@ -92,16 +107,8 @@ public class AccountStatementOptionsDialog extends PrintOptionsDialog {
 		});
 
 		okButton.setEnabled(false);
-		JPanel container = new JPanel();
-		container.setLayout(new BorderLayout(0, 4));
-		GridBagConstraints c = new GridBagConstraints();
-
-		c.gridy = 1;
-		c.insets = new Insets(4, 8, 8, 8);
-		c.weighty = 1.0;
-		panel.add(container, c);
-		createTable(container);
-		createSearchPanel(container);
+		createSearchPanel(panel);
+		createTable(panel);
 
 		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
 				KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0), "favAccounts");
@@ -161,27 +168,57 @@ public class AccountStatementOptionsDialog extends PrintOptionsDialog {
 		column.setPreferredWidth(420);
 		column.setCellRenderer(cellRenderer);
 
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridy = 2;
+		c.insets = new Insets(4, 8, 8, 8);
+		c.weighty = 1.0;
+		c.weightx = 1.0;
+		c.fill = GridBagConstraints.BOTH;
+
 		panel.add(new JScrollPane(accountTable,
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER),
-				BorderLayout.CENTER);
+				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER), c);
 
 		hideNonFavAccountsCheckBox = new JCheckBox("Vain suosikkitilit");
 		hideNonFavAccountsCheckBox.addActionListener(hideNonFavAccountsCheckBoxListener);
-		panel.add(hideNonFavAccountsCheckBox, BorderLayout.SOUTH);
+
+		orderByNumberRadioButton = new JRadioButton("Tositenumerojärjestys");
+		orderByNumberRadioButton.setMnemonic('n');
+		orderByDateRadioButton = new JRadioButton("Aikajärjestys");
+		orderByDateRadioButton.setMnemonic('r');
+
+		JPanel container = new JPanel();
+		container.setLayout(new BoxLayout(container, BoxLayout.LINE_AXIS));
+		container.add(hideNonFavAccountsCheckBox);
+		container.add(Box.createHorizontalGlue());
+		container.add(orderByNumberRadioButton);
+		container.add(Box.createRigidArea(new Dimension(10, 0)));
+		container.add(orderByDateRadioButton);
+
+		ButtonGroup group = new ButtonGroup();
+		group.add(orderByNumberRadioButton);
+		group.add(orderByDateRadioButton);
+		orderByNumberRadioButton.setSelected(true);
+
+		c.gridy = 3;
+		c.insets = new Insets(4, 8, 8, 8);
+		c.weighty = 0.0;
+		c.weightx = 1.0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		panel.add(container, c);
 	}
 
 	/**
 	 * Luo paneelin, joka sisältää hakusanakentän.
 	 *
-	 * @param container säiliö, johon paneeli lisätään
+	 * @param panel säiliö, johon paneeli lisätään
 	 */
-	private void createSearchPanel(JPanel container) {
-		JPanel panel = new JPanel();
+	private void createSearchPanel(JPanel panel) {
+		JPanel container = new JPanel();
 		BorderLayout layout = new BorderLayout();
 		layout.setHgap(8);
-		panel.setLayout(layout);
-		panel.setBorder(BorderFactory.createEmptyBorder(4, 4, 8, 4));
+		container.setLayout(layout);
+		container.setBorder(BorderFactory.createEmptyBorder(4, 4, 8, 4));
 		searchTextField = new JTextField();
 		searchTextField.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
@@ -209,9 +246,15 @@ public class AccountStatementOptionsDialog extends PrintOptionsDialog {
 		JLabel label = new JLabel("Haku");
 		label.setDisplayedMnemonic('H');
 		label.setLabelFor(searchTextField);
-		panel.add(label, BorderLayout.LINE_START);
-		panel.add(searchTextField, BorderLayout.CENTER);
-		container.add(panel, BorderLayout.NORTH);
+		container.add(label, BorderLayout.LINE_START);
+		container.add(searchTextField, BorderLayout.CENTER);
+
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridy = 1;
+		c.insets = new Insets(4, 8, 4, 8);
+		c.weightx = 1.0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		panel.add(container, c);
 	}
 
 	/**

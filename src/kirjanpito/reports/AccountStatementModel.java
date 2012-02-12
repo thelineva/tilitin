@@ -15,7 +15,6 @@ import kirjanpito.db.DataAccessException;
 import kirjanpito.db.DataSource;
 import kirjanpito.db.Document;
 import kirjanpito.db.Entry;
-import kirjanpito.db.EntryDAO;
 import kirjanpito.db.Period;
 import kirjanpito.db.Session;
 import kirjanpito.db.Settings;
@@ -41,7 +40,15 @@ public class AccountStatementModel implements PrintModel {
 	private int entryCount;
 	private Date startDate;
 	private Date endDate;
+	private int orderBy;
 	private AccountBalances balances;
+
+	public static final int ORDER_BY_NUMBER = 1; // EntryDAO.ORDER_BY_DOCUMENT_NUMBER
+	public static final int ORDER_BY_DATE = 2; // EntryDAO.ORDER_BY_DOCUMENT_DATE
+
+	public AccountStatementModel() {
+		orderBy = ORDER_BY_DATE;
+	}
 
 	/**
 	 * Palauttaa tietokannan, josta tiedot haetaan.
@@ -151,6 +158,24 @@ public class AccountStatementModel implements PrintModel {
 		this.account = account;
 	}
 
+	/**
+	 * Palauttaa vientien järjestyksen.
+	 *
+	 * @return ORDER_BY_NUMBER tai ORDER_BY_DATE
+	 */
+	public int getOrderBy() {
+		return orderBy;
+	}
+
+	/**
+	 * Asettaa vientien järjestyksen.
+	 *
+	 * @param orderBy ORDER_BY_NUMBER tai ORDER_BY_DATE
+	 */
+	public void setOrderBy(int orderBy) {
+		this.orderBy = orderBy;
+	}
+
 	public void run() throws DataAccessException {
 		Session sess = null;
 		final ArrayList<AccountStatementRow> rowList = new ArrayList<AccountStatementRow>();
@@ -177,7 +202,7 @@ public class AccountStatementModel implements PrintModel {
 			}
 
 			dataSource.getEntryDAO(sess).getByPeriodIdAndAccountId(
-					period.getId(), account.getId(), EntryDAO.ORDER_BY_DOCUMENT_DATE,
+					period.getId(), account.getId(), orderBy,
 					new DTOCallback<Entry>() {
 						public void process(Entry entry) {
 							balances.addEntry(entry);

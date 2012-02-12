@@ -1721,11 +1721,13 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			account = registry.getAccountById(accountId);
 		}
 
+		AppSettings settings = AppSettings.getInstance();
 		AccountStatementOptionsDialog dialog = new AccountStatementOptionsDialog(this, registry);
 		dialog.create();
 		dialog.setPeriod(registry.getPeriod());
 		dialog.setDocumentDate(model.getDocument().getDate());
 		dialog.setDateSelectionMode(1);
+		dialog.setOrderByDate(settings.getString("sort-entries", "number").equals("date"));
 		dialog.selectAccount(account);
 		dialog.setVisible(true);
 
@@ -1737,6 +1739,9 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			printModel.setAccount(dialog.getSelectedAccount());
 			printModel.setStartDate(dialog.getStartDate());
 			printModel.setEndDate(dialog.getEndDate());
+			printModel.setOrderBy(dialog.isOrderByDate() ? AccountStatementModel.ORDER_BY_DATE :
+				AccountStatementModel.ORDER_BY_NUMBER);
+			settings.set("sort-entries", dialog.isOrderByDate() ? "date" : "number");
 			showPrintPreview(printModel, new AccountStatementPrint(printModel));
 		}
 
