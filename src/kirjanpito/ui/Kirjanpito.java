@@ -19,45 +19,45 @@ import kirjanpito.util.Registry;
 
 /**
  * Kirjanpito-ohjelman käynnistävä luokka.
- * 
+ *
  * @author Tommi Helineva
  */
 public class Kirjanpito implements Runnable {
 	public static File logFile;
 	private boolean debug;
 	private File configFile;
-	
+
 	public static final String APP_NAME = "Tilitin";
-	public static final String APP_VERSION = "1.1.2";
+	public static final String APP_VERSION = "1.2.0";
 	public static final String LOGGER_NAME = "kirjanpito";
-	
+
 	private Kirjanpito() {
 	}
-	
+
 	/**
 	 * Avaa tositteiden muokkausikkunan.
 	 */
 	public void run() {
 		AppSettings settings = AppSettings.getInstance();
-		
+
 		if (configFile == null) {
 			File file = new File(AppSettings.buildDirectoryPath(APP_NAME),
 				"asetukset.properties");
-			
+
 			settings.load(file);
 		}
 		else {
 			settings.load(configFile);
 		}
-		
+
 		configureLogging(settings.getDirectoryPath());
 		Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
 		String osName = System.getProperty("os.name").toLowerCase();
-		
+
 		if (osName.startsWith("mac os x")) {
 			System.setProperty("apple.laf.useScreenMenuBar", "true");
 			System.setProperty("com.apple.mrj.application.apple.menu.about.name", APP_NAME);
-			
+
 			try {
 				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			}
@@ -78,7 +78,7 @@ public class Kirjanpito implements Runnable {
 				e.printStackTrace();
 			}
 		}
-		
+
 		Registry registry = new Registry();
 		DocumentFrame frame = new DocumentFrame(registry,
 				new DocumentModel(registry));
@@ -86,19 +86,19 @@ public class Kirjanpito implements Runnable {
 		frame.setVisible(true);
 		frame.openDataSource();
 	}
-	
+
 	private void configureLogging(String dirname) {
 		Level level = debug ? Level.FINEST : Level.WARNING;
 		File dir = new File(dirname);
 		boolean foundConsoleHandler = false;
 		boolean foundFileHandler = false;
-		
+
 		if (!dir.exists()) {
 			if (!dir.mkdirs()) {
 				System.err.println(String.format("Hakemiston %s luominen epäonnistui.", dirname));
 			}
 		}
-		
+
 		try {
 			Handler[] handlers = Logger.getLogger("").getHandlers();
 
@@ -132,14 +132,14 @@ public class Kirjanpito implements Runnable {
 				fileHandler.setFormatter(new SimpleFormatter());
 				Logger.getLogger(LOGGER_NAME).addHandler(fileHandler);
 			}
-			
+
 			Logger.getLogger(LOGGER_NAME).setLevel(level);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void main(String[] args) {
 		Kirjanpito p = new Kirjanpito();
 		boolean invalid = false;
@@ -167,14 +167,14 @@ public class Kirjanpito implements Runnable {
 			printUsage();
 			System.exit(1);
 		}
-		
+
 		SwingUtilities.invokeLater(p);
 	}
-	
+
 	private static void printUsage() {
 		System.err.println("Käyttö: tilitin [--config CONFIG] [--debug]");
 	}
-	
+
 	private static class ExceptionHandler implements UncaughtExceptionHandler {
 		public void uncaughtException(Thread t, Throwable e) {
 			Logger.getLogger("kirjanpito").log(Level.SEVERE, "Uncaught exception", e);
