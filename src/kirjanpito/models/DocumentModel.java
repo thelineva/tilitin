@@ -633,6 +633,7 @@ public class DocumentModel {
 		amounts.add(BigDecimal.ZERO);
 		vatAmounts.add(BigDecimal.ZERO);
 		setDefaultAccount(count);
+		setDocumentChanged();
 		return count;
 	}
 	
