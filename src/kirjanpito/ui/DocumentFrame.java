@@ -2578,6 +2578,14 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		try {
 			int number = Integer.parseInt(numberTextField.getText());
 
+			if (number != document.getNumber() && JOptionPane.showConfirmDialog(
+					this, "Haluatko varmasti muuttaa tositenumeroa?",
+					Kirjanpito.APP_NAME, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
+					!= JOptionPane.YES_OPTION) {
+				numberTextField.setText(Integer.toString(document.getNumber()));
+				number = document.getNumber();
+			}
+
 			/* Tarkistetaan tositenumeron oikeellisuus, jos käyttäjä on muuttanut sitä. */
 			if (number != document.getNumber()) {
 				int r;
