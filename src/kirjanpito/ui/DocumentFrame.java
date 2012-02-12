@@ -1696,11 +1696,37 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			return;
 		}
 
+		int row = entryTable.getSelectedRow();
+		Account account = null;
+
+		if (row >= 0) {
+			Entry entry = model.getEntry(row);
+			int accountId = entry.getAccountId();
+
+			if (accountId >= 0) {
+				account = registry.getAccountById(accountId);
+			}
+		}
+
+		if (account == null) {
+			Settings settings = registry.getSettings();
+			int accountId = -1;
+
+			try {
+				accountId = Integer.parseInt(settings.getProperty("defaultAccount", ""));
+			}
+			catch (NumberFormatException e) {
+			}
+
+			account = registry.getAccountById(accountId);
+		}
+
 		AccountStatementOptionsDialog dialog = new AccountStatementOptionsDialog(this, registry);
 		dialog.create();
 		dialog.setPeriod(registry.getPeriod());
 		dialog.setDocumentDate(model.getDocument().getDate());
-		dialog.setDateSelectionMode(0);
+		dialog.setDateSelectionMode(1);
+		dialog.selectAccount(account);
 		dialog.setVisible(true);
 
 		if (dialog.getResult() == JOptionPane.OK_OPTION) {
