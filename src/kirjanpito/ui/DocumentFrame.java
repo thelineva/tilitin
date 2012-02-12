@@ -402,43 +402,53 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		menu.setMnemonic('u');
 		menuBar.add(menu);
 
-		menuItem = SwingUtils.createMenuItem("Tilien saldot", null, 's', null, printListener);
+		menuItem = SwingUtils.createMenuItem("Tilien saldot", null, 's',
+				KeyStroke.getKeyStroke(KeyEvent.VK_1, shortcutKeyMask), printListener);
 		menuItem.setActionCommand("accountSummary");
 		menu.add(menuItem);
 
-		menuItem = SwingUtils.createMenuItem("Tosite", null, 'O', null, printListener);
+		menuItem = SwingUtils.createMenuItem("Tosite", null, 'O',
+				KeyStroke.getKeyStroke(KeyEvent.VK_2, shortcutKeyMask), printListener);
 		menuItem.setActionCommand("document");
 		menu.add(menuItem);
 
-		menuItem = SwingUtils.createMenuItem("Tiliote", null, 'T', null, printListener);
+		menuItem = SwingUtils.createMenuItem("Tiliote", null, 'T',
+				KeyStroke.getKeyStroke(KeyEvent.VK_3, shortcutKeyMask), printListener);
 		menuItem.setActionCommand("accountStatement");
 		menu.add(menuItem);
 
-		menuItem = SwingUtils.createMenuItem("Tuloslaskelma", null, 'u', null, printListener);
+		menuItem = SwingUtils.createMenuItem("Tuloslaskelma", null, 'u',
+				KeyStroke.getKeyStroke(KeyEvent.VK_4, shortcutKeyMask), printListener);
 		menuItem.setActionCommand("incomeStatement");
 		menu.add(menuItem);
 
-		menuItem = SwingUtils.createMenuItem("Tuloslaskelma erittelyin", null, 'e', null, printListener);
+		menuItem = SwingUtils.createMenuItem("Tuloslaskelma erittelyin", null, 'e',
+				KeyStroke.getKeyStroke(KeyEvent.VK_5, shortcutKeyMask), printListener);
 		menuItem.setActionCommand("incomeStatementDetailed");
 		menu.add(menuItem);
 
-		menuItem = SwingUtils.createMenuItem("Tase", null, 'a', null, printListener);
+		menuItem = SwingUtils.createMenuItem("Tase", null, 'a',
+				KeyStroke.getKeyStroke(KeyEvent.VK_6, shortcutKeyMask), printListener);
 		menuItem.setActionCommand("balanceSheet");
 		menu.add(menuItem);
 
-		menuItem = SwingUtils.createMenuItem("Tase erittelyin", null, 'e', null, printListener);
+		menuItem = SwingUtils.createMenuItem("Tase erittelyin", null, 'e',
+				KeyStroke.getKeyStroke(KeyEvent.VK_7, shortcutKeyMask), printListener);
 		menuItem.setActionCommand("balanceSheetDetailed");
 		menu.add(menuItem);
 
-		menuItem = SwingUtils.createMenuItem("Päiväkirja", null, 'P', null, printListener);
+		menuItem = SwingUtils.createMenuItem("Päiväkirja", null, 'P',
+				KeyStroke.getKeyStroke(KeyEvent.VK_8, shortcutKeyMask), printListener);
 		menuItem.setActionCommand("generalJournal");
 		menu.add(menuItem);
 
-		menuItem = SwingUtils.createMenuItem("Pääkirja", null, 'k', null, printListener);
+		menuItem = SwingUtils.createMenuItem("Pääkirja", null, 'k',
+				KeyStroke.getKeyStroke(KeyEvent.VK_9, shortcutKeyMask), printListener);
 		menuItem.setActionCommand("generalLedger");
 		menu.add(menuItem);
 
-		menuItem = SwingUtils.createMenuItem("ALV-laskelma tileittäin", null, 'V', null, printListener);
+		menuItem = SwingUtils.createMenuItem("ALV-laskelma tileittäin", null, 'V',
+				KeyStroke.getKeyStroke(KeyEvent.VK_0, shortcutKeyMask), printListener);
 		menuItem.setActionCommand("vatReport");
 		menu.add(menuItem);
 
@@ -2386,7 +2396,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		boolean vatEditable = settings.getProperty("vatLocked", "true").equals("false");
 		tableModel.setVatEditable(vatEditable);
-		
+
 		boolean autoCompleteEnabled = !settings.getProperty("autoCompleteEnabled", "true").equals("false");
 		model.setAutoCompleteEnabled(autoCompleteEnabled);
 	}
