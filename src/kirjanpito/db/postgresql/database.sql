@@ -6,7 +6,7 @@ CREATE TABLE account (
 	name varchar(100) NOT NULL,
 	type int2 NOT NULL,
 	vat_code int2 NOT NULL,
-	vat_rate int2 NOT NULL,
+	vat_percentage numeric(10, 2) NOT NULL,
 	vat_account1_id int4,
 	vat_account2_id int4,
 	flags int4 NOT NULL,

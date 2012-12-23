@@ -23,15 +23,15 @@ public class PSQLAccountDAO extends SQLAccountDAO {
 	}
 
 	protected PreparedStatement getSelectAllQuery() throws SQLException {
-		return sess.prepareStatement("SELECT id, number, name, type, vat_code, vat_rate, vat_account1_id, vat_account2_id, flags FROM account ORDER BY number");
+		return sess.prepareStatement("SELECT id, number, name, type, vat_code, vat_percentage, vat_account1_id, vat_account2_id, flags FROM account ORDER BY number");
 	}
 
 	protected PreparedStatement getInsertQuery() throws SQLException {
-		return sess.prepareStatement("INSERT INTO account (id, number, name, type, vat_code, vat_rate, vat_account1_id, vat_account2_id, flags) VALUES (nextval('account_id_seq'), ?, ?, ?, ?, ?, ?, ?, ?)");
+		return sess.prepareStatement("INSERT INTO account (id, number, name, type, vat_code, vat_percentage, vat_account1_id, vat_account2_id, flags) VALUES (nextval('account_id_seq'), ?, ?, ?, ?, ?, ?, ?, ?)");
 	}
 
 	protected PreparedStatement getUpdateQuery() throws SQLException {
-		return sess.prepareStatement("UPDATE account SET number=?, name=?, type=?, vat_code=?, vat_rate=?, vat_account1_id=?, vat_account2_id=?, flags=? WHERE id = ?");
+		return sess.prepareStatement("UPDATE account SET number=?, name=?, type=?, vat_code=?, vat_percentage=?, vat_account1_id=?, vat_account2_id=?, flags=? WHERE id = ?");
 	}
 
 	protected PreparedStatement getDeleteQuery() throws SQLException {

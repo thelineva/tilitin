@@ -15,45 +15,45 @@ import kirjanpito.db.DataAccessException;
  * poistaa tilitietoja sekä hakea olemassa olevien tilien tietoja.
  * Aliluokassa on määriteltävä toteutukset metodeilla, jotka palauttavat
  * SQL-kyselymerkkijonot.
- * 
+ *
  * @author Tommi Helineva
  */
 public abstract class SQLAccountDAO implements AccountDAO {
 	/**
 	 * Hakee tietokannasta kaikkien tilien tiedot
 	 * numerojärjestyksessä.
-	 * 
+	 *
 	 * @return tilit
 	 * @throws DataAccessException jos tietojen hakeminen epäonnistuu
 	 */
 	public List<Account> getAll() throws DataAccessException {
 		ArrayList<Account> list;
 		ResultSet rs;
-		
+
 		try {
 			PreparedStatement stmt = getSelectAllQuery();
 			rs = stmt.executeQuery();
 			list = new ArrayList<Account>();
-			
+
 			/* Luetaan tiedot ResultSetistä ja luodaan oliot. */
 			while (rs.next()) {
 				list.add(createObject(rs));
 			}
-			
+
 			rs.close();
 			stmt.close();
 		}
 		catch (SQLException e) {
 			throw new DataAccessException(e.getMessage(), e);
 		}
-		
+
 		return list;
 	}
-	
+
 	/**
 	 * Palauttaa SELECT-kyselyn, jonka avulla haetaan kaikkien rivien
 	 * kaikki kentät.
-	 * 
+	 *
 	 * @return SELECT-kysely
 	 * @throws SQLException jos kyselyn luominen epäonnistuu
 	 */
@@ -61,7 +61,7 @@ public abstract class SQLAccountDAO implements AccountDAO {
 
 	/**
 	 * Tallentaa tilin tiedot tietokantaan.
-	 * 
+	 *
 	 * @param account tallennettava tili
 	 * @throws DataAccessException jos tallentaminen epäonnistuu
 	 */
@@ -78,10 +78,10 @@ public abstract class SQLAccountDAO implements AccountDAO {
 			throw new DataAccessException(e.getMessage(), e);
 		}
 	}
-	
+
 	/**
 	 * Lisää tilin tiedot tietokantaan.
-	 * 
+	 *
 	 * @param obj tallennettava tili
 	 * @throws SQLException jos tallentaminen epäonnistuu
 	 */
@@ -92,15 +92,15 @@ public abstract class SQLAccountDAO implements AccountDAO {
 		stmt.close();
 		obj.setId(getGeneratedKey());
 	}
-	
+
 	/**
 	 * Palauttaa INSERT-kyselyn, jonka avulla rivi lisätään.
-	 * 
+	 *
 	 * @return INSERT-kysely
 	 * @throws SQLException jos kyselyn luominen epäonnistuu
 	 */
 	protected abstract PreparedStatement getInsertQuery() throws SQLException;
-	
+
 	/**
 	 * Palauttaa tietokantaan lisätyn tilin tunnisteen.
 	 *
@@ -111,7 +111,7 @@ public abstract class SQLAccountDAO implements AccountDAO {
 
 	/**
 	 * Päivittää tilin tiedot tietokantaan.
-	 * 
+	 *
 	 * @param obj tallennettava tili
 	 * @throws SQLException jos kyselyn suorittaminen epäonnistuu
 	 */
@@ -122,18 +122,18 @@ public abstract class SQLAccountDAO implements AccountDAO {
 		stmt.executeUpdate();
 		stmt.close();
 	}
-	
+
 	/**
 	 * Palauttaa UPDATE-kyselyn, jonka avulla rivin kaikki kentät päivitetään.
-	 * 
+	 *
 	 * @return UPDATE-kysely
 	 * @throws SQLException jos kyselyn luominen epäonnistuu
 	 */
 	protected abstract PreparedStatement getUpdateQuery() throws SQLException;
-	
+
 	/**
 	 * Poistaa tilin tiedot tietokannasta.
-	 * 
+	 *
 	 * @param accountId poistettavan tilin tunniste
 	 * @throws DataAccessException jos poistaminen epäonnistuu
 	 */
@@ -148,20 +148,20 @@ public abstract class SQLAccountDAO implements AccountDAO {
 			throw new DataAccessException(e.getMessage(), e);
 		}
 	}
-	
+
 	/**
 	 * Palauttaa DELETE-kyselyn, jonka avulla poistetaan rivi. Kyselyssä
 	 * on yksi parametri, joka on tilin tunniste.
-	 * 
+	 *
 	 * @return DELETE-kysely
 	 * @throws SQLException jos kyselyn luominen epäonnistuu
 	 */
 	protected abstract PreparedStatement getDeleteQuery() throws SQLException;
-	
+
 	/**
 	 * Lukee <code>ResultSetistä</code> rivin kentät ja
 	 * luo <code>Account</code>-olion.
-	 * 
+	 *
 	 * @param rs <code>ResultSet</code>-olio, josta kentät luetaan.
 	 * @return luotu olio
 	 * @throws SQLException jos kenttien lukeminen epäonnistuu
@@ -173,26 +173,26 @@ public abstract class SQLAccountDAO implements AccountDAO {
 		obj.setName(rs.getString(3));
 		obj.setType(rs.getInt(4));
 		obj.setVatCode(rs.getInt(5));
-		obj.setVatRate(rs.getInt(6));
+		obj.setVatRate(rs.getBigDecimal(6));
 		obj.setVatAccount1Id(rs.getInt(7));
-		
+
 		if (rs.wasNull()) {
 			obj.setVatAccount1Id(-1);
 		}
-		
+
 		obj.setVatAccount2Id(rs.getInt(8));
-		
+
 		if (rs.wasNull()) {
 			obj.setVatAccount2Id(-1);
 		}
-		
+
 		obj.setFlags(rs.getInt(9));
 		return obj;
 	}
-	
+
 	/**
 	 * Asettaa valmistellun kyselyn parametreiksi olion tiedot.
-	 * 
+	 *
 	 * @param stmt kysely, johon tiedot asetetaan
 	 * @param obj olio, josta tiedot luetaan
 	 * @throws SQLException jos tietojen asettaminen epäonnistuu
@@ -204,22 +204,22 @@ public abstract class SQLAccountDAO implements AccountDAO {
 		stmt.setString(2, obj.getName());
 		stmt.setInt(3, obj.getType());
 		stmt.setInt(4, obj.getVatCode());
-		stmt.setInt(5, obj.getVatRate());
-		
+		stmt.setBigDecimal(5, obj.getVatRate());
+
 		if (obj.getVatAccount1Id() <= 0) {
 			stmt.setNull(6, java.sql.Types.INTEGER);
 		}
 		else {
 			stmt.setInt(6, obj.getVatAccount1Id());
 		}
-		
+
 		if (obj.getVatAccount2Id() <= 0) {
 			stmt.setNull(7, java.sql.Types.INTEGER);
 		}
 		else {
 			stmt.setInt(7, obj.getVatAccount2Id());
 		}
-		
+
 		stmt.setInt(8, obj.getFlags());
 	}
 }
