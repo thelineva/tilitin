@@ -7,7 +7,7 @@ import java.util.Date;
 
 /**
  * Tuloslaskelma ja tase.
- * 
+ *
  * @author Tommi Helineva
  */
 public class FinancialStatementPrint extends Print {
@@ -17,10 +17,10 @@ public class FinancialStatementPrint extends Print {
 	private int[] columns;
 	private int numRowsPerPage;
 	private int pageCount;
-	
+
 	/**
 	 * Luo tulosteen.
-	 * 
+	 *
 	 * @param model malli
 	 * @param title tulosteen otsikko
 	 * @param printStartDate määrittää, tulostetaanko tilikauden alkamispäivä
@@ -51,7 +51,7 @@ public class FinancialStatementPrint extends Print {
 		numberFormat.setMaximumFractionDigits(2);
 		numRowsPerPage = -1;
 	}
-	
+
 	public String getTitle() {
 		return model.getTitle();
 	}
@@ -88,17 +88,17 @@ public class FinancialStatementPrint extends Print {
 
 		columns = null;
 	}
-	
+
 	public String getVariableValue(String name) {
 		return super.getVariableValue(name);
 	}
-	
+
 	protected void printHeader() {
 		super.printHeader();
 		y = margins.top + super.getHeaderHeight();
 		drawHorizontalLine(2.0f);
 		setBoldStyle();
-		
+
 		if (columns == null) {
 			int maxWidth = 0;
 
@@ -125,13 +125,13 @@ public class FinancialStatementPrint extends Print {
 		int type = model.getType();
 		Date[] startDates = model.getStartDates();
 		Date[] endDates = model.getEndDates();
-		
+
 		for (int i = 0; i < model.getColumnCount(); i++) {
 			setX(columns[2 + i]);
 
 			if (type != FinancialStatementModel.TYPE_BALANCE_SHEET &&
 					type != FinancialStatementModel.TYPE_BALANCE_SHEET_DETAILED) {
-				drawTextRight(dateFormat.format(startDates[i]) + "–");
+				drawTextRight(dateFormat.format(startDates[i]) + "-");
 			}
 
 			setY(getY() + 14);
@@ -139,7 +139,7 @@ public class FinancialStatementPrint extends Print {
 			setY(getY() - 14);
 		}
 	}
-	
+
 	protected int getHeaderHeight() {
 		return super.getHeaderHeight() + 40;
 	}
@@ -148,10 +148,10 @@ public class FinancialStatementPrint extends Print {
 		int offset = getPageIndex() * numRowsPerPage;
 		int numRows = Math.min(rowMapping.size(), offset + numRowsPerPage);
 		int colCount = model.getColumnCount();
-		
+
 		setNormalStyle();
 		y += 17;
-		
+
 		for (int r = offset; r < numRows; r++) {
 			int i = rowMapping.get(r);
 
@@ -164,14 +164,14 @@ public class FinancialStatementPrint extends Print {
 				setBoldStyle();
 			else if (model.getStyle(i) == FinancialStatementModel.STYLE_ITALIC)
 				setItalicStyle();
-			
+
 			String number = model.getNumber(i);
-			
+
 			if (number != null) {
 				setX(columns[0]);
 				drawText(number);
 			}
-			
+
 			int maxX = getPageWidth() - margins.right;
 
 			for (int j = 0; j < colCount; j++) {
@@ -186,7 +186,7 @@ public class FinancialStatementPrint extends Print {
 			setX(columns[1] + model.getLevel(i) * 12);
 			drawText(cutString(model.getText(i), maxX - getX()));
 			setNormalStyle();
-			
+
 			for (int j = 0; j < colCount; j++) {
 				setX(columns[2 + j]);
 				BigDecimal amount = model.getAmount(i, j);
@@ -195,7 +195,7 @@ public class FinancialStatementPrint extends Print {
 					drawTextRight(numberFormat.format(amount));
 				}
 			}
-			
+
 			setY(getY() + 17);
 		}
 	}

@@ -9,7 +9,7 @@ public class VATReportPrint extends Print {
 	private int[] columns;
 	private int numRowsPerPage;
 	private int pageCount;
-	
+
 	public VATReportPrint(VATReportModel model) {
 		this.model = model;
 		numberFormat = new DecimalFormat();
@@ -18,7 +18,7 @@ public class VATReportPrint extends Print {
 		numRowsPerPage = -1;
 		setPrintId("vatReport");
 	}
-	
+
 	public String getTitle() {
 		return "ALV-laskelma tileittäin";
 	}
@@ -26,11 +26,11 @@ public class VATReportPrint extends Print {
 	public int getPageCount() {
 		return pageCount;
 	}
-	
+
 	public void initialize() {
 		super.initialize();
 		numRowsPerPage = (getContentHeight() - 10) / 17;
-		
+
 		if (numRowsPerPage > 0) {
 			pageCount = (int)Math.ceil(model.getRowCount() / (double)numRowsPerPage);
 			pageCount = Math.max(1, pageCount); /* Vähintään yksi sivu. */
@@ -38,7 +38,7 @@ public class VATReportPrint extends Print {
 		else {
 			pageCount = 1;
 		}
-		
+
 		columns = new int[5];
 		columns[0] = getMargins().left;
 		columns[1] = columns[0] + 40;
@@ -46,19 +46,19 @@ public class VATReportPrint extends Print {
 		columns[3] = columns[0] + 380;
 		columns[4] = columns[0] + 500;
 	}
-	
+
 	public String getVariableValue(String name) {
 		if (name.equals("1")) {
 			return dateFormat.format(model.getStartDate()) +
-				" – " + dateFormat.format(model.getEndDate());
+				" - " + dateFormat.format(model.getEndDate());
 		}
-		
+
 		return super.getVariableValue(name);
 	}
-	
+
 	protected void printHeader() {
 		super.printHeader();
-		
+
 		/* Tulostetaan sarakeotsikot. */
 		setBoldStyle();
 		y = margins.top + super.getHeaderHeight() + 12;
@@ -75,7 +75,7 @@ public class VATReportPrint extends Print {
 		setY(getY() + 6);
 		drawHorizontalLine(2.0f);
 	}
-	
+
 	protected int getHeaderHeight() {
 		return super.getHeaderHeight() + 20;
 	}
@@ -85,24 +85,24 @@ public class VATReportPrint extends Print {
 		int numRows = Math.min(model.getRowCount(), offset + numRowsPerPage);
 		setNormalStyle();
 		y += 17;
-		
+
 		for (int i = offset; i < numRows; i++) {
 			if (model.getType(i) == 1) {
 				String vatExcludedTotal = numberFormat.format(model.getVatExcludedTotal(i));
 
 				setX(columns[0]);
 				drawText(model.getAccount(i).getNumber());
-				
+
 				setX(columns[1]);
 				drawText(cutString(model.getAccount(i).getName(),
 						columns[2] - columns[1] - stringWidth(vatExcludedTotal) - 10));
-				
+
 				setX(columns[2]);
 				drawTextRight(vatExcludedTotal);
-				
+
 				setX(columns[3]);
 				drawTextRight(numberFormat.format(model.getVatAmountTotal(i)));
-				
+
 				setX(columns[4]);
 				drawTextRight(numberFormat.format(model.getVatIncludedTotal(i)));
 			}
@@ -117,13 +117,13 @@ public class VATReportPrint extends Print {
 				setBoldStyle();
 				drawText(model.getText(i));
 				setNormalStyle();
-				
+
 				setX(columns[2]);
 				drawTextRight(numberFormat.format(model.getVatExcludedTotal(i)));
-				
+
 				setX(columns[3]);
 				drawTextRight(numberFormat.format(model.getVatAmountTotal(i)));
-				
+
 				setX(columns[4]);
 				drawTextRight(numberFormat.format(model.getVatIncludedTotal(i)));
 			}
@@ -143,7 +143,7 @@ public class VATReportPrint extends Print {
 				setX(columns[3]);
 				drawTextRight(numberFormat.format(model.getVatAmountTotal(i)));
 			}
-			
+
 			setY(getY() + 17);
 		}
 	}

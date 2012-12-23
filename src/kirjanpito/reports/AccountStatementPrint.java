@@ -55,7 +55,7 @@ public class AccountStatementPrint extends Print {
 			return model.getAccount().getNumber() + " " + model.getAccount().getName();
 		}
 		else if (name.equals("2")) {
-			return dateFormat.format(model.getStartDate()) + " – " +
+			return dateFormat.format(model.getStartDate()) + " - " +
 				dateFormat.format(model.getEndDate());
 		}
 
