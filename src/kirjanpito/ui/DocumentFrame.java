@@ -2451,6 +2451,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			indexes[4] = -1;
 		}
 
+		if (col < 0 || col >= indexes.length) {
+			return -1;
+		}
+
 		return indexes[col];
 	}
 
@@ -3185,6 +3189,11 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 			if (entryTable.isEditing())
 				entryTable.getCellEditor().stopCellEditing();
+
+			if (row < 0) {
+				addEntry();
+				return;
+			}
 
 			/* Tilisarakkeesta siirrytään debet- tai kreditsarakkeeseen. */
 			if (column == 0) {
