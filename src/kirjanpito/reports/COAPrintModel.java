@@ -2,6 +2,7 @@ package kirjanpito.reports;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.List;
 
 import kirjanpito.db.Account;
@@ -19,7 +20,6 @@ import kirjanpito.util.CSVWriter;
 import kirjanpito.util.ChartOfAccounts;
 import kirjanpito.util.ODFSpreadsheet;
 import kirjanpito.util.Registry;
-import kirjanpito.util.VATUtil;
 
 public class COAPrintModel implements PrintModel {
 	private Registry registry;
@@ -75,6 +75,9 @@ public class COAPrintModel implements PrintModel {
 	}
 
 	public void writeCSV(CSVWriter writer) throws IOException {
+		DecimalFormat formatter = new DecimalFormat();
+		formatter.setMinimumFractionDigits(0);
+		formatter.setMaximumFractionDigits(2);
 		Settings settings = registry.getSettings();
 		writer.writeField("Tilikartta");
 		writer.writeLine();
@@ -97,10 +100,9 @@ public class COAPrintModel implements PrintModel {
 				writer.writeField("");
 				writer.writeField(account.getNumber());
 				writer.writeField(account.getName());
-				int vatRate = account.getVatRate();
 
-				if (vatRate > 0 && vatRate < VATUtil.VAT_RATE_M2V.length) {
-					writer.writeField(VATUtil.VAT_RATE_TEXTS[VATUtil.VAT_RATE_M2V[vatRate]]);
+				if (account.getVatRate().compareTo(BigDecimal.ZERO) > 0) {
+					writer.writeField(formatter.format(account.getVatRate()));
 				}
 				else {
 					writer.writeField("");
@@ -119,6 +121,9 @@ public class COAPrintModel implements PrintModel {
 	}
 
 	public void writeODS(ODFSpreadsheet s) {
+		DecimalFormat formatter = new DecimalFormat();
+		formatter.setMinimumFractionDigits(0);
+		formatter.setMaximumFractionDigits(2);
 		s.setTitle("Tilikartta");
 		s.defineColumn("co1", new BigDecimal("0.30").multiply(
 				new BigDecimal(accountLevel + 1)).toPlainString() + "cm");
@@ -140,10 +145,9 @@ public class COAPrintModel implements PrintModel {
 				s.writeEmptyCell();
 				s.writeTextCell(account.getNumber());
 				s.writeTextCell(account.getName());
-				int vatRate = account.getVatRate();
 
-				if (vatRate > 0 && vatRate < VATUtil.VAT_RATE_M2V.length) {
-					s.writeTextCell("ALV " + VATUtil.VAT_RATE_TEXTS[VATUtil.VAT_RATE_M2V[vatRate]]);
+				if (account.getVatRate().compareTo(BigDecimal.ZERO) > 0) {
+					s.writeTextCell(String.format("ALV %s %%", formatter.format(account.getVatRate())));
 				}
 			}
 			else {

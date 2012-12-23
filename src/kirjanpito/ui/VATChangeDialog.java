@@ -9,6 +9,7 @@ import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.GroupLayout;
@@ -16,7 +17,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTable;
@@ -30,7 +30,6 @@ import kirjanpito.models.VATChangeTableModel;
 import kirjanpito.models.VATChangeWorker;
 import kirjanpito.ui.resources.Resources;
 import kirjanpito.util.Registry;
-import kirjanpito.util.VATUtil;
 
 public class VATChangeDialog extends JDialog implements AccountSelectionListener {
 	private Registry registry;
@@ -56,34 +55,37 @@ public class VATChangeDialog extends JDialog implements AccountSelectionListener
 		ruleTable = new JTable(ruleTableModel);
 		ruleTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		ruleTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
-		
+
 		accountCellEditor = new AccountCellEditor(registry, ruleTableModel, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				showAccountSelectionDialog();
 			}
 		});
-		
+
 		TableColumn column = ruleTable.getColumnModel().getColumn(0);
 		column.setCellEditor(accountCellEditor);
 		column.setCellRenderer(new AccountCellRenderer(registry, ruleTableModel));
 		column.setPreferredWidth(80);
-		
-		ComboBoxCellEditor percentCellEditor = new ComboBoxCellEditor(VATUtil.VAT_RATE_TEXTS);
-		ComboBoxCellRenderer percentCellRenderer = new ComboBoxCellRenderer(VATUtil.VAT_RATE_TEXTS);
-		
+
+		DecimalFormat formatter = new DecimalFormat();
+		formatter.setMinimumFractionDigits(0);
+		formatter.setMaximumFractionDigits(2);
+		CurrencyCellEditor percentCellEditor = new CurrencyCellEditor();
+		CurrencyCellRenderer percentCellRenderer = new CurrencyCellRenderer(formatter);
+
 		column = ruleTable.getColumnModel().getColumn(1);
 		column.setCellEditor(percentCellEditor);
 		column.setCellRenderer(percentCellRenderer);
 		column.setPreferredWidth(30);
-		
+
 		column = ruleTable.getColumnModel().getColumn(2);
 		column.setCellEditor(percentCellEditor);
 		column.setCellRenderer(percentCellRenderer);
 		column.setPreferredWidth(30);
-		
+
 		column = ruleTable.getColumnModel().getColumn(3);
 		column.setPreferredWidth(550);
-		
+
 		addRuleButton = new JButton(new ImageIcon(Resources.load("list-add-16x16.png")));
 		addRuleButton.setToolTipText("Lisää muutos");
 		addRuleButton.addActionListener(new ActionListener() {
@@ -92,20 +94,20 @@ public class VATChangeDialog extends JDialog implements AccountSelectionListener
 				ruleTableModel.fireTableDataChanged();
 			}
 		});
-		
+
 		removeRuleButton = new JButton(new ImageIcon(Resources.load("list-remove-16x16.png")));
 		removeRuleButton.setToolTipText("Poista muutos");
 		removeRuleButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				int index = ruleTable.getSelectedRow();
-				
+
 				if (index >= 0) {
 					model.removeRule(index);
 					ruleTableModel.fireTableRowsDeleted(index, index);
 				}
 			}
 		});
-		
+
 		JSeparator separator = new JSeparator();
 
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -113,7 +115,7 @@ public class VATChangeDialog extends JDialog implements AccountSelectionListener
 			public void windowOpened(WindowEvent e) {
 				ruleTable.setRowHeight(getFontMetrics(ruleTable.getFont()).getHeight() + 6);
 			}
-			
+
 			public void windowClosing(WindowEvent e) {
 				close();
 			}
@@ -187,22 +189,14 @@ public class VATChangeDialog extends JDialog implements AccountSelectionListener
 		if (accountSelectionDialog != null) {
 			accountSelectionDialog.dispose();
 		}
-		
+
 		dispose();
 	}
-	
+
 	public void doChanges() {
 		stopEditing();
-		
-		if (model.isChangesDone()) {
-			int result = JOptionPane.showConfirmDialog(this, "ALV-kantojen muutokset on jo tehty. Haluatko varmasti\ntehdä muutokset uudelleen?",
-					getTitle(), JOptionPane.YES_NO_OPTION);
-			
-			if (result == JOptionPane.NO_OPTION) {
-				return;
-			}
-		}
-		
+		model.sortRules();
+		ruleTableModel.fireTableDataChanged();
 		final VATChangeDialog parent = this;
 		final VATChangeWorker worker = new VATChangeWorker(registry, model);
 		TaskProgressDialog dialog = new TaskProgressDialog(this, getTitle(), worker);
@@ -216,9 +210,9 @@ public class VATChangeDialog extends JDialog implements AccountSelectionListener
 						worker.isCancelled()) {
 					return;
 				}
-				
+
 				int changes;
-				
+
 				try {
 					changes = worker.get();
 				}
@@ -230,7 +224,7 @@ public class VATChangeDialog extends JDialog implements AccountSelectionListener
 					e.printStackTrace();
 					return;
 				}
-				
+
 				if (changes == 0) {
 					SwingUtils.showInformationMessage(parent, "Tilikarttaan ei tehty muutoksia.");
 				}
@@ -238,15 +232,15 @@ public class VATChangeDialog extends JDialog implements AccountSelectionListener
 					SwingUtils.showInformationMessage(parent,
 							String.format("Tilikarttaan lisättiin %d uutta tiliä.", changes));
 				}
-				
+
 				close();
 			}
 		});
 	}
-	
+
 	public void save() {
 		stopEditing();
-		
+
 		try {
 			model.save();
 		}
@@ -254,24 +248,24 @@ public class VATChangeDialog extends JDialog implements AccountSelectionListener
 			SwingUtils.showErrorMessage(this, "Tiedostoon kirjoittaminen epäonnistui");
 		}
 	}
-	
+
 	public void showAccountSelectionDialog() {
 		if (accountSelectionDialog == null) {
 			accountSelectionDialog = new AccountSelectionDialog(
 					this, registry);
-			
+
 			accountSelectionDialog.setListener(this);
 			accountSelectionDialog.create();
 		}
-		
+
 		if (ruleTable.isEditing())
 			ruleTable.getCellEditor().cancelCellEditing();
-		
+
 		accountSelectionDialog.setSearchPhrase(
 				accountCellEditor.getTextField().getText());
 		accountSelectionDialog.setVisible(true);
 	}
-	
+
 	public void accountSelected() {
 		Account account = accountSelectionDialog.getSelectedAccount();
 		int index = ruleTable.getSelectedRow();
@@ -279,7 +273,7 @@ public class VATChangeDialog extends JDialog implements AccountSelectionListener
 		ruleTableModel.fireTableDataChanged();
 		accountSelectionDialog.setVisible(false);
 	}
-	
+
 	private void stopEditing() {
 		if (ruleTable.isEditing())
 			ruleTable.getCellEditor().stopCellEditing();

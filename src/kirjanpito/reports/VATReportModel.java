@@ -21,7 +21,6 @@ import kirjanpito.db.Settings;
 import kirjanpito.util.AccountBalances;
 import kirjanpito.util.CSVWriter;
 import kirjanpito.util.ODFSpreadsheet;
-import kirjanpito.util.VATUtil;
 
 /**
  * Malli ALV-laskelmalle.
@@ -271,23 +270,26 @@ public class VATReportModel implements PrintModel {
 		Collections.sort(rows);
 
 		int prevCode = -1;
-		int prevRate = -1;
+		BigDecimal prevRate = new BigDecimal("-1");
 		boolean codeChanged, rateChanged;
 		BigDecimal vatExcludedR, vatIncludedR, vatAmountR;
 		vatExcluded = vatExcludedR = BigDecimal.ZERO;
 		vatIncluded = vatIncludedR = BigDecimal.ZERO;
 		vatAmount = vatAmountR = BigDecimal.ZERO;
+		DecimalFormat formatter = new DecimalFormat();
+		formatter.setMinimumFractionDigits(0);
+		formatter.setMinimumFractionDigits(2);
 
 		/* Lisätään otsikot ja summarivit. */
 		for (int i = 0; i < rows.size(); i++) {
 			codeChanged = rows.get(i).account.getVatCode() != prevCode;
-			rateChanged = rows.get(i).account.getVatRate() != prevRate;
+			rateChanged = rows.get(i).account.getVatRate().compareTo(prevRate) != 0;
 
-			if ((codeChanged || rateChanged) && prevRate >= 0 &&
+			if ((codeChanged || rateChanged) && prevRate.compareTo(BigDecimal.ZERO) >= 0 &&
 					(prevCode == 4 || prevCode == 5 || prevCode == 9 || prevCode == 11)) {
 
 				String text = String.format("ALV %s yhteensä",
-						VATUtil.VAT_RATE_TEXTS[VATUtil.VAT_RATE_M2V[prevRate]]);
+						formatter.format(prevRate));
 
 				/* Lisätään ALV-prosentin summarivi. */
 				rows.add(i, new VATReportRow(3, null,
@@ -330,10 +332,10 @@ public class VATReportModel implements PrintModel {
 			prevCode = rows.get(i).account.getVatCode();
 		}
 
-		if (prevRate != -1) {
+		if (prevRate.compareTo(BigDecimal.ZERO) >= 0) {
 			if (prevCode == 4 || prevCode == 5 || prevCode == 9 || prevCode == 11) {
 				String text = String.format("ALV %s yhteensä",
-						VATUtil.VAT_RATE_TEXTS[VATUtil.VAT_RATE_M2V[prevRate]]);
+						formatter.format(prevRate));
 
 				/* Lisätään ALV-prosentin summarivi. */
 				rows.add(new VATReportRow(3, null,
@@ -607,8 +609,7 @@ public class VATReportModel implements PrintModel {
 					return account.getNumber().compareTo(o.account.getNumber());
 				}
 				else {
-					return VATUtil.VAT_RATE_M2V[account.getVatRate()] -
-						VATUtil.VAT_RATE_M2V[o.account.getVatRate()];
+					return account.getVatRate().compareTo(o.account.getVatRate());
 				}
 			}
 			else {

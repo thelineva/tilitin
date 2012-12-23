@@ -22,6 +22,9 @@ import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
@@ -69,7 +72,6 @@ import kirjanpito.util.CSVReader;
 import kirjanpito.util.CSVWriter;
 import kirjanpito.util.ChartOfAccounts;
 import kirjanpito.util.Registry;
-import kirjanpito.util.VATUtil;
 
 /**
  * Tilikartan muokkausikkuna.
@@ -85,7 +87,7 @@ public class COADialog extends JDialog {
 	private JCheckBoxMenuItem[] levelMenuItems;
 	private JCheckBoxMenuItem[] typeMenuItems;
 	private JCheckBoxMenuItem[] codeMenuItems;
-	private JCheckBoxMenuItem[] rateMenuItems;
+	private JMenuItem vatRateMenuItem;
 	private JMenuItem vatAccountMenuItem;
 	private JButton saveButton;
 	private JTable accountTable;
@@ -200,8 +202,19 @@ public class COADialog extends JDialog {
 			index++;
 		}
 
-		JMenu vatMenu = new JMenu("Arvonlisävero");
+		JMenu vatMenu = new JMenu("ALV-koodi");
+		accountPopupMenu.addSeparator();
 		accountPopupMenu.add(vatMenu);
+
+		vatRateMenuItem = SwingUtils.createMenuItem("Aseta ALV-prosentti", null,
+				'r', null, vatPercentListener);
+
+		accountPopupMenu.add(vatRateMenuItem);
+
+		vatAccountMenuItem = SwingUtils.createMenuItem("Valitse ALV-vastatili", null, 'V',
+				null, vatAccountListener);
+
+		accountPopupMenu.add(vatAccountMenuItem);
 
 		defaultAccountMenuItem = new JCheckBoxMenuItem("Oletusvastatili");
 		defaultAccountMenuItem.addActionListener(new ActionListener() {
@@ -226,6 +239,7 @@ public class COADialog extends JDialog {
 		favouriteAccountMenuItem.setMnemonic('S');
 		favouriteAccountMenuItem.addActionListener(toggleFavAccountAction);
 
+		accountPopupMenu.addSeparator();
 		accountPopupMenu.add(defaultAccountMenuItem);
 		accountPopupMenu.add(favouriteAccountMenuItem);
 
@@ -246,28 +260,6 @@ public class COADialog extends JDialog {
 			vatMenu.add(codeMenuItems[index]);
 			index++;
 		}
-
-		vatMenu.addSeparator();
-		rateMenuItems = new JCheckBoxMenuItem[VATUtil.VAT_RATE_TEXTS.length];
-		index = 0;
-
-		for (String rate : VATUtil.VAT_RATE_TEXTS) {
-			rateMenuItems[index] = new JCheckBoxMenuItem(rate);
-			rateMenuItems[index].addActionListener(accountVatRateListener);
-
-			if (index >= 1) {
-				vatMenu.add(rateMenuItems[index]);
-			}
-
-			index++;
-		}
-
-		vatMenu.addSeparator();
-
-		vatAccountMenuItem = SwingUtils.createMenuItem("Valitse vastatili", null, 'V',
-				null, vatAccountListener);
-
-		vatMenu.add(vatAccountMenuItem);
 
 		accountPopupMenu.addSeparator();
 
@@ -467,29 +459,11 @@ public class COADialog extends JDialog {
 				codeMenuItems[i].setState(accountVatCode == i);
 			}
 
-			/* Valitaan ALV-prosentti. */
-			int accountVatRate;
-
-			if (account.getVatRate() >= 0 && account.getVatRate() < VATUtil.VAT_RATES.length) {
-				accountVatRate = VATUtil.VAT_RATE_M2V[account.getVatRate()];
-			}
-			else {
-				accountVatRate = -1;
-			}
-
-			boolean rateEnabled = (accountVatCode == 4 ||
+			boolean vatRateEnabled = (accountVatCode == 4 ||
 					accountVatCode == 5 || accountVatCode == 9 || accountVatCode == 11);
 
-			if (!rateEnabled) {
-				accountVatRate = -1;
-			}
-
-			for (int i = 0; i < rateMenuItems.length; i++) {
-				rateMenuItems[i].setState(accountVatRate == i);
-				rateMenuItems[i].setEnabled(rateEnabled);
-			}
-
-			vatAccountMenuItem.setEnabled(rateEnabled);
+			vatRateMenuItem.setEnabled(vatRateEnabled);
+			vatAccountMenuItem.setEnabled(vatRateEnabled);
 			defaultAccountMenuItem.setState(account == model.getDefaultAccount());
 			favouriteAccountMenuItem.setState((account.getFlags() & 0x01) != 0);
 			accountPopupMenu.show(comp, x, y);
@@ -738,10 +712,10 @@ public class COADialog extends JDialog {
 		/* ALV-prosenttia käytetään vain, jos koodi on
 		 * verollinen myynti tai verolliset ostot. */
 		if (code < 4 || code > 5) {
-			account.setVatRate(0);
+			account.setVatRate(BigDecimal.ZERO);
 		}
 		else {
-			account.setVatRate(7); // 23 %
+			account.setVatRate(new BigDecimal("24.00"));
 		}
 
 		account.setVatAccount1Id(-1);
@@ -774,9 +748,8 @@ public class COADialog extends JDialog {
 	/**
 	 * Päivittää valitun tilin ALV-prosentin.
 	 *
-	 * @param rate alv-prosentti
 	 */
-	public void updateVatRate(int rate) {
+	public void updateVatRate() {
 		ChartOfAccounts coa = model.getChartOfAccounts();
 		int index = accountTable.getSelectedRow();
 
@@ -786,10 +759,41 @@ public class COADialog extends JDialog {
 		}
 
 		Account account = coa.getAccount(index);
+		DecimalFormat formatter = new DecimalFormat();
+		formatter.setParseBigDecimal(true);
+		formatter.setMinimumFractionDigits(0);
+		formatter.setMaximumFractionDigits(2);
+		BigDecimal percentage = null;
 
-		if (account.getVatRate() != rate) {
-			account.setVatRate(rate);
+		while (percentage == null) {
+			Object result = JOptionPane.showInputDialog(this,
+					"Syötä ALV-prosentti.", "ALV-prosentti",
+					JOptionPane.QUESTION_MESSAGE, null, null,
+					formatter.format(account.getVatRate()));
+
+			if (result == null) {
+				return;
+			}
+
+			try {
+				percentage = (BigDecimal)formatter.parse(result.toString());
+			}
+			catch (ParseException e) {
+				continue;
+			}
+
+			if (percentage.compareTo(BigDecimal.ZERO) < 0 ||
+					percentage.compareTo(new BigDecimal("100")) > 0) {
+				SwingUtils.showInformationMessage(this,
+						"ALV-prosentin on oltava vähintään 0 ja korkeintaan 100.");
+				percentage = null;
+			}
+		}
+
+		if (percentage.compareTo(account.getVatRate()) != 0) {
+			account.setVatRate(percentage);
 			model.updateRow(index, false);
+			tableModel.fireTableCellUpdated(index, 1);
 			setSaveEnabled(true);
 
 			if (account.getVatAccount1Id() < 0) {
@@ -1036,20 +1040,10 @@ public class COADialog extends JDialog {
 		}
 	};
 
-	/* ALV-prosenttivaihtoehto */
-	private ActionListener accountVatRateListener = new ActionListener() {
+	/* ALV-prosentti */
+	private ActionListener vatPercentListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
-			int rate = -1;
-
-			/* Tarkistetaan, mitä vaihtoehtoa valikosta on klikattu. */
-			for (int i = 0; i < rateMenuItems.length; i++) {
-				if (rateMenuItems[i] == e.getSource()) {
-					rate = VATUtil.VAT_RATE_V2M[i];
-					break;
-				}
-			}
-
-			updateVatRate(rate);
+			updateVatRate();
 		}
 	};
 
@@ -1189,6 +1183,9 @@ public class COADialog extends JDialog {
 			CSVWriter csv = new CSVWriter(writer);
 			ChartOfAccounts coa = model.getChartOfAccounts();
 			ListSelectionModel selectionModel = accountTable.getSelectionModel();
+			DecimalFormat formatter = new DecimalFormat();
+			formatter.setMinimumFractionDigits(0);
+			formatter.setMaximumFractionDigits(2);
 			int len = accountTable.getRowCount();
 
 			for (int i = 0; i < len; i++) {
@@ -1202,7 +1199,7 @@ public class COADialog extends JDialog {
 							csv.writeField(account.getName());
 							csv.writeField(Integer.toString(account.getType()));
 							csv.writeField(Integer.toString(account.getVatCode()));
-							csv.writeField(Integer.toString(account.getVatRate()));
+							csv.writeField(formatter.format(account.getVatRate()));
 							csv.writeField(accountIdToString(account.getVatAccount1Id()));
 							csv.writeField(accountIdToString(account.getVatAccount2Id()));
 							csv.writeLine();
@@ -1276,6 +1273,8 @@ public class COADialog extends JDialog {
 			CSVReader csv = new CSVReader(reader);
 			ChartOfAccounts coa = model.getChartOfAccounts();
 			String[] fields = null;
+			DecimalFormat formatter = new DecimalFormat();
+			formatter.setParseBigDecimal(true);
 
 			try {
 				while ((fields = csv.readLine()) != null) {
@@ -1315,13 +1314,7 @@ public class COADialog extends JDialog {
 							throw new NumberFormatException();
 						}
 
-						account.setVatRate(Integer.parseInt(fields[5]));
-
-						if (account.getVatRate() < 0 ||
-								account.getVatRate() >= rateMenuItems.length) {
-							throw new NumberFormatException();
-						}
-
+						account.setVatRate((BigDecimal)formatter.parse(fields[5]));
 						account.setVatAccount1Id(findAccount(fields[6]));
 						account.setVatAccount2Id(findAccount(fields[7]));
 						model.updateRow(index, positionChanged);
@@ -1360,6 +1353,9 @@ public class COADialog extends JDialog {
 			}
 			catch (IOException e) {
 				e.printStackTrace();
+			}
+			catch (ParseException e) {
+				logger.log(Level.WARNING, "Virheellinen rivi: " + Arrays.toString(fields));
 			}
 			catch (NumberFormatException e) {
 				logger.log(Level.WARNING, "Virheellinen rivi: " + Arrays.toString(fields));
