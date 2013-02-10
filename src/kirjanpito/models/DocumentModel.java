@@ -1174,6 +1174,10 @@ public class DocumentModel {
 	}
 
 	public boolean isMonthEditable(Date date) {
+		if (date == null) {
+			return true;
+		}
+
 		return Arrays.binarySearch(lockedMonths,
 				monthFormat.format(date)) < 0;
 	}
