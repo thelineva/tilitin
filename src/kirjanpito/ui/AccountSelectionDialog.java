@@ -32,6 +32,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.RowFilter;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
@@ -215,7 +216,13 @@ public class AccountSelectionDialog extends JDialog {
 					/* Kun Mac L&F on käytössä, tekstikentän sisältö maalataan automaattisesti
 					 * kun kohdistus siirtyy tekstikenttään. Poistetaan maalaus, jotta sisältöä ei korvata,
 					 * kun käyttäjä jatkaa hakusanan kirjoittamista.*/
-					searchTextField.setCaretPosition(searchTextField.getText().length());
+
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							searchTextField.setCaretPosition(searchTextField.getText().length());
+						}
+					});
+
 					firstFocus = false;
 				}
 			}
