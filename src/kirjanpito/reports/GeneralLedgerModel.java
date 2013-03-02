@@ -177,11 +177,13 @@ public class GeneralLedgerModel implements PrintModel {
 							return;
 						}
 
-						if (entry.isDebit()) {
-							totalDebit = totalDebit.add(entry.getAmount());
-						}
-						else {
-							totalCredit = totalCredit.add(entry.getAmount());
+						if (document.getNumber() >= 1) {
+							if (entry.isDebit()) {
+								totalDebit = totalDebit.add(entry.getAmount());
+							}
+							else {
+								totalCredit = totalCredit.add(entry.getAmount());
+							}
 						}
 
 						if (account.getType() == Account.TYPE_PROFIT_PREV) {
