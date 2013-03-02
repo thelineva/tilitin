@@ -1468,16 +1468,15 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 
 		updateTotalRow();
+		index = Math.min(index, tableModel.getRowCount() - 1);
 
-		/* Valitaan edellinen vienti. */
-		if (index >= 1) {
-			entryTable.setRowSelectionInterval(index - 1, index - 1);
+		if (tableModel.getRowCount() > 0) {
+			entryTable.setRowSelectionInterval(index, index);
+			entryTable.requestFocusInWindow();
 		}
-		else if (tableModel.getRowCount() > 0) {
-			entryTable.setRowSelectionInterval(0, 0);
+		else if (entryTable.isFocusOwner()) {
+			dateTextField.requestFocusInWindow();
 		}
-
-		entryTable.requestFocusInWindow();
 	}
 
 	/**
