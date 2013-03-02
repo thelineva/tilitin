@@ -118,6 +118,22 @@ public interface EntryDAO {
 			throws DataAccessException;
 
 	/**
+	 * Hakee tietokannasta tietyn tilikauden viennit tietyltä
+	 * aikaväliltä.
+	 *
+	 * @param periodId tilikauden tunniste
+	 * @param startDate alkamispäivämäärä
+	 * @param endDate päättymispäivämäärä
+	 * @param startNumber tositenumerovälin alku
+	 * @param callback callback
+	 * @throws DataAccessException jos tietojen hakeminen epäonnistuu
+	 */
+	public void getByPeriodIdAndDate(int periodId,
+			Date startDate, Date endDate, int startNumber,
+			DTOCallback<Entry> callback)
+			throws DataAccessException;
+
+	/**
 	 * Hakee tietokannasta viennit tositenumeroväliltä
 	 * <code>startNumber</code>..<code>endNumber</code>
 	 * tietyltä tilikaudelta.

@@ -183,7 +183,7 @@ public class VATReportModel implements PrintModel {
 		try {
 			sess = dataSource.openSession();
 			dataSource.getEntryDAO(sess).getByPeriodIdAndDate(period.getId(),
-				startDate, endDate, new DTOCallback<Entry>() {
+				startDate, endDate, 1, new DTOCallback<Entry>() {
 				public void process(Entry entry) {
 					if (entry.getFlag(0)) {
 						return;

@@ -229,7 +229,7 @@ public abstract class SQLEntryDAO implements EntryDAO {
 	protected abstract PreparedStatement getSelectByPeriodIdAndAccountIdOrderByNumberQuery() throws SQLException;
 
 	public void getByPeriodIdAndDate(int periodId, Date startDate,
-			Date endDate, DTOCallback<Entry> callback) throws DataAccessException {
+			Date endDate, int startNumber, DTOCallback<Entry> callback) throws DataAccessException {
 
 		ResultSet rs;
 
@@ -237,7 +237,12 @@ public abstract class SQLEntryDAO implements EntryDAO {
 			PreparedStatement stmt;
 			int index = 1;
 
-			if (periodId > 0) {
+			if (startNumber >= 0) {
+				stmt = getSelectByPeriodIdAndDateAndNumberQuery();
+				stmt.setInt(index++, periodId);
+				stmt.setInt(4, startNumber);
+			}
+			else if (periodId > 0) {
 				stmt = getSelectByPeriodIdAndDateQuery();
 				stmt.setInt(index++, periodId);
 			}
@@ -261,6 +266,11 @@ public abstract class SQLEntryDAO implements EntryDAO {
 		}
 	}
 
+	public void getByPeriodIdAndDate(int periodId, Date startDate,
+			Date endDate, DTOCallback<Entry> callback) throws DataAccessException {
+		getByPeriodIdAndDate(periodId, startDate, endDate, -1, callback);
+	}
+
 	/**
 	 * Palauttaa SELECT-kyselyn, jonka avulla haetaan viennit
 	 * tietyltä aikaväliltä
@@ -279,6 +289,17 @@ public abstract class SQLEntryDAO implements EntryDAO {
 	 * @throws SQLException jos kyselyn luominen epäonnistuu
 	 */
 	protected abstract PreparedStatement getSelectByPeriodIdAndDateQuery() throws SQLException;
+
+	/**
+	 * Palauttaa SELECT-kyselyn, jonka avulla haetaan tietyn tilikauden
+	 * viennit tietyltä aikaväliltä. Kyselyssä on neljä parametria:
+	 * 1. tilikauden tunniste, 2. alkamispäivämäärä, 3. päättymispäivämäärä ja
+	 * 4. tositenumerovälin alku.
+	 *
+	 * @return SELECT-kysely
+	 * @throws SQLException jos kyselyn luominen epäonnistuu
+	 */
+	protected abstract PreparedStatement getSelectByPeriodIdAndDateAndNumberQuery() throws SQLException;
 
 	public void getByPeriodIdAndNumber(int periodId,
 			int startNumber, int endNumber, DTOCallback<Entry> callback)
