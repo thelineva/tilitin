@@ -746,8 +746,9 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 				KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "nextCell");
 
 		entryTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(
-				KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.SHIFT_DOWN_MASK), "nextCell");
+				KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.SHIFT_DOWN_MASK), "prevCell");
 
+		entryTable.getActionMap().put("prevCell", prevCellAction);
 		entryTable.getActionMap().put("nextCell", nextCellAction);
 
 		/* Muutetaan ylänuolen toiminta. */
@@ -3176,6 +3177,63 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private ActionListener aboutListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			showAboutDialog();
+		}
+	};
+
+	private AbstractAction prevCellAction = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+
+		public void actionPerformed(ActionEvent e) {
+			int column = mapColumnIndexToModel(entryTable.getSelectedColumn());
+			int row = entryTable.getSelectedRow();
+			boolean changed = false;
+
+			if (entryTable.isEditing())
+				entryTable.getCellEditor().stopCellEditing();
+
+			if (row < 0) {
+				addEntry();
+				return;
+			}
+
+			/* Tilisarakkeesta siirrytään edellisen viennin selitteeseen. */
+			if (column == 0) {
+				if (row > 0) {
+					row--;
+					column = 4;
+					changed = true;
+				}
+				else {
+					dateTextField.requestFocusInWindow();
+					return;
+				}
+			}
+			/* Jos kreditsarakkeessa on 0,00, siirrytään debetsarakkeeseen.
+			 * Muussa tapauksessa kredit- ja debetsarakkeesta siirrytään
+			 * selitesarakkeeseen. */
+			else if (column == 1 || column == 2) {
+				BigDecimal amount = model.getEntry(row).getAmount();
+
+				if (amount.compareTo(BigDecimal.ZERO) == 0 && column == 2) {
+					column = 1;
+				}
+				else {
+					column = 0;
+				}
+
+				changed = true;
+			}
+			else {
+				Entry entry = model.getEntry(row);
+				column = entry.isDebit() ? 1 : 2;
+				changed = true;
+			}
+
+			if (changed) {
+				column = mapColumnIndexToView(column);
+				entryTable.changeSelection(row, column, false, false);
+				entryTable.editCellAt(row, column);
+			}
 		}
 	};
 
