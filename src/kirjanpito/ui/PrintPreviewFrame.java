@@ -102,9 +102,11 @@ public class PrintPreviewFrame extends JFrame {
 		createPrintPreviewPanel();
 		int shortcutKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
-		/* Suljetaan ikkuna, kun Escape-näppäintä painetaan. */
+		/* Suljetaan ikkuna, kun Escape tai Ctrl+W painetaan. */
 		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
 				KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
+		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_W, shortcutKeyMask), "close");
 		rootPane.getActionMap().put("close", closeListener);
 
 		/* Siirrytään edelliselle sivulle, kun Page Up -näppäintä painetaan. */
