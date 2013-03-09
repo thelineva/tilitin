@@ -23,7 +23,7 @@ import javax.swing.table.TableCellEditor;
 /**
  * <code>TableCellEditor</code>in toteuttava luokka, jolla
  * muokataan rahamääriä.
- * 
+ *
  * @author Tommi Helineva
  */
 public class CurrencyCellEditor extends AbstractCellEditor
@@ -36,7 +36,7 @@ public class CurrencyCellEditor extends AbstractCellEditor
 	private ActionListener actionListener;
 
 	private static final long serialVersionUID = 1L;
-	
+
 	public CurrencyCellEditor() {
 		formatter = new DecimalFormat();
 		formatter.setMinimumFractionDigits(2);
@@ -50,14 +50,14 @@ public class CurrencyCellEditor extends AbstractCellEditor
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					lastModifiers = e.getModifiersEx();
+					lastModifiers = e.getModifiers();
 				}
 			}
 
 			@Override
 			public void keyTyped(KeyEvent e) {
 				char c = e.getKeyChar();
-				
+
 				if (c == '.' || c == ',') {
 					e.setKeyChar(decimalSeparator);
 				}
@@ -71,11 +71,11 @@ public class CurrencyCellEditor extends AbstractCellEditor
 			}
 		});
 	}
-	
+
 	public int getLastModifiers() {
 		return lastModifiers;
 	}
-	
+
 	public void setLastModifiers(int lastModifiers) {
 		this.lastModifiers = lastModifiers;
 	}
@@ -119,7 +119,7 @@ public class CurrencyCellEditor extends AbstractCellEditor
 
 	/**
 	 * Palauttaa käyttäjän kirjoittaman rahamäärän.
-	 * 
+	 *
 	 * @return rahamäärä
 	 */
 	public Object getCellEditorValue() {

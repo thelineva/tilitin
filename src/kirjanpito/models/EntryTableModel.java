@@ -1,5 +1,7 @@
 package kirjanpito.models;
 
+import java.awt.Toolkit;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
 
@@ -11,21 +13,21 @@ import kirjanpito.ui.CurrencyCellEditor;
 /**
  * <code>TableModel</code>in toteuttava luokka, joka sisältää
  * vientien tiedot.
- * 
+ *
  * @author Tommi Helineva
  */
 public class EntryTableModel extends AbstractTableModel {
 	private DocumentModel model;
 	private CurrencyCellEditor currencyCellEditor;
 	private boolean vatEditable;
-	
+
 	private static final long serialVersionUID = 1L;
-	
+
 	/* Sarakkeiden otsikot */
 	private static final String[] COLUMN_CAPTIONS = new String[] {
 		"Tili", "Debet", "Kredit", "ALV", "Selite"
 	};
-	
+
 	public EntryTableModel(DocumentModel model) {
 		setModel(model);
 	}
@@ -56,7 +58,7 @@ public class EntryTableModel extends AbstractTableModel {
 
 	/**
 	 * Palauttaa sarakkeiden lukumäärän.
-	 * 
+	 *
 	 * @return sarakkeiden lukumäärä
 	 */
 	public int getColumnCount() {
@@ -65,7 +67,7 @@ public class EntryTableModel extends AbstractTableModel {
 
 	/**
 	 * Palauttaa vientien lukumäärän.
-	 * 
+	 *
 	 * @return vientien lukumäärä
 	 */
 	public int getRowCount() {
@@ -74,14 +76,14 @@ public class EntryTableModel extends AbstractTableModel {
 
 	/**
 	 * Palauttaa solun arvon.
-	 * 
+	 *
 	 * @param row rivin indeksi
 	 * @param col sarakkeen indeksi
 	 */
 	public Object getValueAt(int row, int col) {
 		Object value = null;
 		Entry entry = model.getEntry(row);
-		
+
 		if (col == 0) {
 			value = row;
 		}
@@ -103,13 +105,13 @@ public class EntryTableModel extends AbstractTableModel {
 		else if (col == -2) {
 			return (entry.getFlags() & 0x01) > 0;
 		}
-		
+
 		return value;
 	}
 
 	/**
 	 * Palauttaa sarakkeen <code>index</code> otsikon.
-	 * 
+	 *
 	 * @param index sarakkeen indeksi
 	 * @return sarakeotsikko
 	 */
@@ -119,7 +121,7 @@ public class EntryTableModel extends AbstractTableModel {
 
 	/**
 	 * Palauttaa <code>true</code>, jos taulukon solua voi muokata.
-	 * 
+	 *
 	 * @param row rivin indeksi
 	 * @param col sarakkeen indeksi
 	 * @return <code>true</code>, jos taulukon solua voi muokata
@@ -132,7 +134,7 @@ public class EntryTableModel extends AbstractTableModel {
 
 	/**
 	 * Asettaa solun arvon.
-	 * 
+	 *
 	 * @param value arvo
 	 * @param row rivin indeksi
 	 * @param col sarakkeen indeksi
@@ -147,14 +149,16 @@ public class EntryTableModel extends AbstractTableModel {
 			}
 		}
 		else if (col == 1) {
-			boolean vatEntries = (currencyCellEditor.getLastModifiers() & KeyEvent.SHIFT_DOWN_MASK) == 0;
+			boolean vatEntries = (currencyCellEditor.getLastModifiers() &
+					Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()) == 0;
 			Entry entry = model.getEntry(row);
 			entry.setDebit(true);
 			model.updateAmount(row, (BigDecimal)value, vatEntries);
 			currencyCellEditor.setLastModifiers(0);
 		}
 		else if (col == 2) {
-			boolean vatEntries = (currencyCellEditor.getLastModifiers() & KeyEvent.SHIFT_DOWN_MASK) == 0;
+			boolean vatEntries = (currencyCellEditor.getLastModifiers() &
+					Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()) == 0;
 			Entry entry = model.getEntry(row);
 			entry.setDebit(false);
 			model.updateAmount(row, (BigDecimal)value, vatEntries);
@@ -167,7 +171,7 @@ public class EntryTableModel extends AbstractTableModel {
 			Entry entry = model.getEntry(row);
 			entry.setDescription((String)value);
 		}
-		
+
 		model.setDocumentChanged();
 		fireTableRowsUpdated(row, row);
 	}
