@@ -1,8 +1,6 @@
 package kirjanpito.models;
 
 import java.awt.Toolkit;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
 import java.math.BigDecimal;
 
 import javax.swing.table.AbstractTableModel;
