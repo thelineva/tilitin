@@ -10,6 +10,8 @@ public class SpinnerDateModel extends AbstractSpinnerModel {
 	private DateTextField editor;
 	private Calendar cal;
 
+	private static final long serialVersionUID = 1L;
+
 	public SpinnerDateModel(DateTextField editor) {
 		this.editor = editor;
 		this.cal = Calendar.getInstance();
