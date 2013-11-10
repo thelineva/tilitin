@@ -2135,6 +2135,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 			SwingUtils.showDataAccessErrorMessage(this, e, message);
 		}
 
+		updateTitle();
 		updatePeriod();
 		updatePosition();
 		updateDocument();
