@@ -132,6 +132,22 @@ public class DocumentModel {
 		return "jdbc:sqlite:" + file.getAbsolutePath();
 	}
 
+	public File getDatabaseDir() {
+		AppSettings settings = AppSettings.getInstance();
+		String url = settings.getString("database.url", "");
+		File dir = null;
+
+		if (url.startsWith("jdbc:sqlite:")) {
+			dir = new File(url.substring(12)).getParentFile();
+
+			if (!dir.exists()) {
+				dir = null;
+			}
+		}
+
+		return dir;
+	}
+
 	/**
 	 * Hakee tietokannasta tarvittavat tiedot.
 	 *

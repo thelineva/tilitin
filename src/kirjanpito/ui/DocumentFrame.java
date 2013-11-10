@@ -137,6 +137,8 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	protected JMenu gotoMenu;
 	protected JMenu reportsMenu;
 	protected JMenu toolsMenu;
+	private JMenuItem newDatabaseMenuItem;
+	private JMenuItem openDatabaseMenuItem;
 	private JMenuItem newDocMenuItem;
 	private JMenuItem deleteDocMenuItem;
 	private JMenuItem addEntryMenuItem;
@@ -144,7 +146,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private JMenuItem pasteMenuItem;
 	private JMenuItem coaMenuItem;
 	private JMenuItem vatDocumentMenuItem;
-	private JMenuItem exportMenuItem;
 	private JMenuItem editEntryTemplatesMenuItem;
 	private JMenuItem createEntryTemplateMenuItem;
 	private JMenuItem startingBalancesMenuItem;
@@ -153,6 +154,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private JCheckBoxMenuItem searchMenuItem;
 	private JCheckBoxMenuItem[] docTypeMenuItems;
 	private JMenuItem editDocTypesMenuItem;
+	private JMenuItem setIgnoreFlagMenuItem;
 	private JButton prevButton;
 	private JButton nextButton;
 	private JButton searchButton;
@@ -266,18 +268,53 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		JMenuItem menuItem;
 		JMenu menu;
 
-		/* Luodaan Tosite-valikko. */
-		menu = new JMenu("Tosite");
+		/* Luodaan Tiedosto-valikko. */
+		menu = new JMenu("Tiedosto");
 		menu.setMnemonic('T');
 		menuBar.add(menu);
 
 		int shortcutKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
-		newDocMenuItem = SwingUtils.createMenuItem("Uusi", "document-new-16x16.png", 'U',
+		newDatabaseMenuItem = SwingUtils.createMenuItem("Uusi…",
+				null, 'U', null, newDatabaseListener);
+
+		menu.add(newDatabaseMenuItem);
+
+		openDatabaseMenuItem = SwingUtils.createMenuItem("Avaa…",
+				null, 'A', KeyStroke.getKeyStroke('O', shortcutKeyMask),
+				openDatabaseListener);
+
+		menu.add(openDatabaseMenuItem);
+
+		menu.add(SwingUtils.createMenuItem("Tietokanta-asetukset…", null, 'T', null,
+				databaseSettingsListener));
+
+		menu.addSeparator();
+		menu.add(SwingUtils.createMenuItem("Lopeta", "quit-16x16.png", 'L',
+				KeyStroke.getKeyStroke('Q', shortcutKeyMask),
+				quitListener));
+
+		/* Luodaan Muokkaa-valikko. */
+		menu = new JMenu("Muokkaa");
+		menu.setMnemonic('M');
+		menuBar.add(menu);
+
+		menu.add(SwingUtils.createMenuItem("Kopioi", null, 'K',
+				KeyStroke.getKeyStroke(KeyEvent.VK_C,
+						shortcutKeyMask), copyEntriesAction));
+
+		pasteMenuItem = SwingUtils.createMenuItem("Liitä", null, 'L',
+				KeyStroke.getKeyStroke(KeyEvent.VK_V,
+						shortcutKeyMask), pasteEntriesAction);
+
+		menu.add(pasteMenuItem);
+		menu.addSeparator();
+
+		newDocMenuItem = SwingUtils.createMenuItem("Uusi tosite", "document-new-16x16.png", 'U',
 				KeyStroke.getKeyStroke('N', shortcutKeyMask),
 				newDocListener);
 
-		deleteDocMenuItem = SwingUtils.createMenuItem("Poista", "delete-16x16.png", 'P',
+		deleteDocMenuItem = SwingUtils.createMenuItem("Poista tosite", "delete-16x16.png", 'P',
 				KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, shortcutKeyMask), deleteDocListener);
 
 		menu.add(newDocMenuItem);
@@ -307,31 +344,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		menu.addSeparator();
 
-		exportMenuItem = SwingUtils.createMenuItem("Vie…",
-				null, 'V', null, exportListener);
-
-		menu.add(exportMenuItem);
-
-		menu.add(SwingUtils.createMenuItem("Lopeta", "quit-16x16.png", 'L',
-				KeyStroke.getKeyStroke('Q', shortcutKeyMask),
-				quitListener));
-
-		/* Luodaan Muokkaa-valikko. */
-		menu = new JMenu("Muokkaa");
-		menu.setMnemonic('M');
-		menuBar.add(menu);
-
-		menu.add(SwingUtils.createMenuItem("Kopioi", null, 'K',
-				KeyStroke.getKeyStroke(KeyEvent.VK_C,
-						shortcutKeyMask), copyEntriesAction));
-
-		pasteMenuItem = SwingUtils.createMenuItem("Liitä", null, 'L',
-				KeyStroke.getKeyStroke(KeyEvent.VK_V,
-						shortcutKeyMask), pasteEntriesAction);
-
-		menu.add(pasteMenuItem);
-		menu.addSeparator();
-
 		coaMenuItem = SwingUtils.createMenuItem("Tilikartta…", null, 'T',
 				KeyStroke.getKeyStroke(KeyEvent.VK_T,
 						shortcutKeyMask), chartOfAccountsListener);
@@ -349,9 +361,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		menu.add(startingBalancesMenuItem);
 		menu.add(propertiesMenuItem);
 		menu.add(settingsMenuItem);
-
-		menu.add(SwingUtils.createMenuItem("Tietokanta-asetukset…", null, 'a', null,
-				databaseSettingsListener));
 
 		/* Luodaan Siirry-valikko. */
 		menu = gotoMenu = new JMenu("Siirry");
@@ -482,9 +491,11 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		menu.add(vatDocumentMenuItem);
 
-		menu.add(SwingUtils.createMenuItem("Ohita vienti ALV-laskelmassa", null, 'O',
+		setIgnoreFlagMenuItem = SwingUtils.createMenuItem("Ohita vienti ALV-laskelmassa", null, 'O',
 				KeyStroke.getKeyStroke(KeyEvent.VK_H, shortcutKeyMask),
-				setIgnoreFlagToEntryAction));
+				setIgnoreFlagToEntryAction);
+
+		menu.add(setIgnoreFlagMenuItem);
 
 		menu.add(SwingUtils.createMenuItem("Tilien saldojen vertailu", null, 'T',
 				null, balanceComparisonListener));
@@ -494,6 +505,9 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 
 		menu.add(SwingUtils.createMenuItem("ALV-kantojen muutokset", null, 'm',
 				null, vatChangeListener));
+
+		menu.add(SwingUtils.createMenuItem("Vie tiedostoon",
+				null, 'V', null, exportListener));
 
 		/* Luodaan Ohje-valikko. */
 		menu = new JMenu("Ohje");
@@ -2130,6 +2144,15 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		updateTableSettings();
 	}
 
+	public void openSqliteDataSource(File file) {
+		AppSettings settings = AppSettings.getInstance();
+		settings.set("database.url", String.format("jdbc:sqlite:%s",
+				file.getAbsolutePath().replace(File.pathSeparatorChar, '/')));
+		settings.set("database.username", "");
+		settings.set("database.password", "");
+		openDataSource();
+	}
+
 	protected void refreshModel(boolean positionChanged) {
 		try {
 			model.fetchDocuments(positionChanged ? -1 : model.getDocumentPosition());
@@ -2492,7 +2515,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		startingBalancesMenuItem.setEnabled(read);
 		propertiesMenuItem.setEnabled(read);
 		settingsMenuItem.setEnabled(read);
-		exportMenuItem.setEnabled(read);
 		gotoMenu.setEnabled(read);
 		docTypeMenu.setEnabled(read);
 		reportsMenu.setEnabled(read);
@@ -2510,6 +2532,7 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		addEntryMenuItem.setEnabled(edit);
 		addEntryButton.setEnabled(edit);
 		removeEntryMenuItem.setEnabled(edit);
+		setIgnoreFlagMenuItem.setEnabled(edit);
 		removeEntryButton.setEnabled(edit);
 		entryTemplateMenu.setEnabled(edit);
 		pasteMenuItem.setEnabled(edit);
@@ -2850,6 +2873,82 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 		}
 	};
 
+	/* Uusi tietokanta */
+	private ActionListener newDatabaseListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			final JFileChooser fileChooser = new JFileChooser(model.getDatabaseDir());
+			fileChooser.addChoosableFileFilter(sqliteFileFilter);
+			fileChooser.setFileFilter(sqliteFileFilter);
+			fileChooser.setAcceptAllFileFilterUsed(false);
+			fileChooser.setDialogTitle("Uusi tietokanta");
+			File file = null;
+
+			while (true) {
+				fileChooser.showSaveDialog(DocumentFrame.this);
+				file = fileChooser.getSelectedFile();
+
+				if (file == null) {
+					return;
+				}
+
+				if (file.exists()) {
+					SwingUtils.showErrorMessage(DocumentFrame.this, String.format(
+							"Tiedosto %s on jo olemassa. Valitse toinen nimi.", file.getAbsolutePath()));
+				}
+				else {
+					break;
+				}
+			}
+
+			openSqliteDataSource(file);
+		}
+	};
+
+	/* Avaa tietokanta */
+	private ActionListener openDatabaseListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			final JFileChooser fileChooser = new JFileChooser(model.getDatabaseDir());
+			fileChooser.addChoosableFileFilter(sqliteFileFilter);
+			fileChooser.setFileFilter(sqliteFileFilter);
+			fileChooser.setAcceptAllFileFilterUsed(false);
+			fileChooser.setDialogTitle("Avaa tietokanta");
+			fileChooser.showOpenDialog(DocumentFrame.this);
+			File file = fileChooser.getSelectedFile();
+
+			if (file == null) {
+				return;
+			}
+
+			openSqliteDataSource(file);
+		}
+	};
+
+	FileFilter sqliteFileFilter = new FileFilter() {
+		@Override
+		public boolean accept(File file) {
+			return file.isDirectory() || file.getName().toLowerCase().endsWith(".sqlite");
+		}
+
+		@Override
+		public String getDescription() {
+			return "Tilitin-tietokannat (.sqlite)";
+		}
+	};
+
+	/* Tietokanta-asetukset */
+	private ActionListener databaseSettingsListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			showDatabaseSettings();
+		}
+	};
+
+	/* Lopeta */
+	private ActionListener quitListener = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			quit();
+		}
+	};
+
 	/* Edellinen tosite */
 	private AbstractAction prevDocListener = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
@@ -2907,20 +3006,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private ActionListener deleteDocListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			deleteDocument();
-		}
-	};
-
-	/* Tietokanta-asetukset */
-	private ActionListener databaseSettingsListener = new ActionListener() {
-		public void actionPerformed(ActionEvent e) {
-			showDatabaseSettings();
-		}
-	};
-
-	/* Lopeta */
-	private ActionListener quitListener = new ActionListener() {
-		public void actionPerformed(ActionEvent e) {
-			quit();
 		}
 	};
 
