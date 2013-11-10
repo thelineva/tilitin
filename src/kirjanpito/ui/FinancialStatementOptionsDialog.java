@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -32,7 +34,7 @@ import kirjanpito.db.DataAccessException;
 import kirjanpito.db.DataSource;
 import kirjanpito.db.Period;
 import kirjanpito.db.Session;
-import kirjanpito.util.AppSettings;
+import kirjanpito.db.Settings;
 import kirjanpito.util.Registry;
 
 public class FinancialStatementOptionsDialog extends JDialog {
@@ -51,10 +53,11 @@ public class FinancialStatementOptionsDialog extends JDialog {
 	private List<Period> periods;
 	private JCheckBox pageBreakCheckBox;
 	private CustomFocusTraversalPolicy focusPolicy;
-	
+
 	public static final int TYPE_INCOME_STATEMENT = 1;
 	public static final int TYPE_BALANCE_SHEET = 2;
 	private static final int NUM_COLUMNS = 3;
+	private static Logger logger = Logger.getLogger(Kirjanpito.LOGGER_NAME);
 
 	public FinancialStatementOptionsDialog(Registry registry,
 			Frame owner, String title, int type) {
@@ -63,7 +66,7 @@ public class FinancialStatementOptionsDialog extends JDialog {
 		this.type = type;
 		this.focusPolicy = new CustomFocusTraversalPolicy();
 	}
-	
+
 	public Date[] getStartDates() {
 		return startDates;
 	}
@@ -113,7 +116,7 @@ public class FinancialStatementOptionsDialog extends JDialog {
 		setLocationRelativeTo(getOwner());
 		setFocusTraversalPolicy(focusPolicy);
 
-		AppSettings settings = AppSettings.getInstance();
+		Settings settings = registry.getSettings();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String prefix = (type == TYPE_INCOME_STATEMENT) ? "income-statement." : "balance-sheet.";
 		boolean empty = true;
@@ -125,7 +128,7 @@ public class FinancialStatementOptionsDialog extends JDialog {
 
 				try {
 					startDateFields[i].setDate(dateFormat.parse(
-							settings.getString(key, "")));
+							settings.getProperty(key, "")));
 					empty = false;
 				}
 				catch (ParseException e) {
@@ -136,7 +139,7 @@ public class FinancialStatementOptionsDialog extends JDialog {
 
 			try {
 				endDateFields[i].setDate(dateFormat.parse(
-						settings.getString(key, "")));
+						settings.getProperty(key, "")));
 				empty = false;
 			}
 			catch (ParseException e) {
@@ -217,7 +220,7 @@ public class FinancialStatementOptionsDialog extends JDialog {
 			j++;
 		}
 
-		AppSettings settings = AppSettings.getInstance();
+		Settings settings = registry.getSettings();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String prefix = (type == TYPE_INCOME_STATEMENT) ? "income-statement." : "balance-sheet.";
 		String key;
@@ -225,23 +228,23 @@ public class FinancialStatementOptionsDialog extends JDialog {
 		for (int i = 0; i < NUM_COLUMNS; i++) {
 			if (type == TYPE_INCOME_STATEMENT) {
 				key = prefix + i + ".start-date";
-
-				if (i >= startDates.length || startDates[i] == null) {
-					settings.remove(key);
-				}
-				else {
-					settings.set(key, dateFormat.format(startDates[i]));
-				}
+				settings.setProperty(key, (i >= startDates.length || startDates[i] == null) ? null :
+					dateFormat.format(startDates[i]));
 			}
 
 			key = prefix + i + ".end-date";
+			settings.setProperty(key, (i >= endDates.length || endDates[i] == null) ? null :
+				dateFormat.format(endDates[i]));
+		}
 
-			if (i >= endDates.length || endDates[i] == null) {
-				settings.remove(key);
-			}
-			else {
-				settings.set(key, dateFormat.format(endDates[i]));
-			}
+		try {
+			saveSettings();
+		}
+		catch (DataAccessException e) {
+			String message = "Asetusten tallentaminen epäonnistui";
+			logger.log(Level.SEVERE, message, e);
+			SwingUtils.showDataAccessErrorMessage(this, e, message);
+			return;
 		}
 
 		this.startDates = startDates;
@@ -271,7 +274,7 @@ public class FinancialStatementOptionsDialog extends JDialog {
 			if (type == TYPE_INCOME_STATEMENT) {
 				startDateSpinners[1].setValue(null);
 			}
-			
+
 			endDateSpinners[1].setValue(null);
 		}
 
@@ -415,7 +418,7 @@ public class FinancialStatementOptionsDialog extends JDialog {
 		c.gridx = 1;
 		c.anchor = GridBagConstraints.EAST;
 		panel.add(cancelButton, c);
-		
+
 		c.gridx = 2;
 		c.insets = new Insets(5, 5, 10, 10);
 		c.weightx = 0.0;
@@ -426,6 +429,24 @@ public class FinancialStatementOptionsDialog extends JDialog {
 		focusPolicy.add(okButton);
 		focusPolicy.add(cancelButton);
 		focusPolicy.add(resetButton);
+	}
+
+	private void saveSettings() throws DataAccessException {
+		DataSource dataSource = registry.getDataSource();
+		Session sess = null;
+
+		try {
+			sess = dataSource.openSession();
+			dataSource.getSettingsDAO(sess).save(registry.getSettings());
+			sess.commit();
+		}
+		catch (DataAccessException e) {
+			if (sess != null) sess.rollback();
+			throw e;
+		}
+		finally {
+			if (sess != null) sess.close();
+		}
 	}
 
 	private static class CustomFocusTraversalPolicy extends FocusTraversalPolicy {
