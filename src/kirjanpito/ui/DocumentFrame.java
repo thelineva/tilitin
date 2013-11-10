@@ -2878,7 +2878,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private ActionListener newDatabaseListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			final JFileChooser fileChooser = new JFileChooser(model.getDatabaseDir());
-			fileChooser.addChoosableFileFilter(sqliteFileFilter);
 			fileChooser.setFileFilter(sqliteFileFilter);
 			fileChooser.setAcceptAllFileFilterUsed(false);
 			fileChooser.setDialogTitle("Uusi tietokanta");
@@ -2913,7 +2912,6 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 	private ActionListener openDatabaseListener = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			final JFileChooser fileChooser = new JFileChooser(model.getDatabaseDir());
-			fileChooser.addChoosableFileFilter(sqliteFileFilter);
 			fileChooser.setFileFilter(sqliteFileFilter);
 			fileChooser.setAcceptAllFileFilterUsed(false);
 			fileChooser.setDialogTitle("Avaa tietokanta");

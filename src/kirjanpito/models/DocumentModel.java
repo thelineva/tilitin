@@ -134,8 +134,12 @@ public class DocumentModel {
 
 	public File getDatabaseDir() {
 		AppSettings settings = AppSettings.getInstance();
-		String url = settings.getString("database.url", "");
+		String url = settings.getString("database.url", null);
 		File dir = null;
+
+		if (url == null) {
+			url = buildDefaultJDBCURL();
+		}
 
 		if (url.startsWith("jdbc:sqlite:")) {
 			dir = new File(url.substring(12)).getParentFile();
