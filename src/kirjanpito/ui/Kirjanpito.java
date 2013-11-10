@@ -26,6 +26,9 @@ public class Kirjanpito implements Runnable {
 	public static File logFile;
 	private boolean debug;
 	private File configFile;
+	private String jdbcUrl;
+	private String username;
+	private String password;
 
 	public static final String APP_NAME = "Tilitin";
 	public static final String APP_VERSION = "1.4.1";
@@ -77,6 +80,22 @@ public class Kirjanpito implements Runnable {
 			catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+
+		if (jdbcUrl != null) {
+			if (!jdbcUrl.startsWith("jdbc:")) {
+				jdbcUrl = String.format("jdbc:sqlite:%s", jdbcUrl.replace(File.pathSeparatorChar, '/'));
+			}
+
+			settings.set("database.url", jdbcUrl);
+		}
+
+		if (username != null) {
+			settings.set("database.username", username);
+		}
+
+		if (password != null) {
+			settings.set("database.password", password);
 		}
 
 		Registry registry = new Registry();
@@ -158,6 +177,27 @@ public class Kirjanpito implements Runnable {
 					invalid = true;
 				}
 			}
+			else if (args[i].equals("-u") || args[i].equals("--username")) {
+				try {
+					p.username = args[i+1];
+					i++;
+				}
+				catch (Exception e) {
+					invalid = true;
+				}
+			}
+			else if (args[i].equals("-p") || args[i].equals("--password")) {
+				try {
+					p.password = args[i+1];
+					i++;
+				}
+				catch (Exception e) {
+					invalid = true;
+				}
+			}
+			else if (i == args.length - 1 && !args[i].startsWith("-")) {
+				p.jdbcUrl = args[i];
+			}
 			else {
 				invalid = true;
 			}
@@ -172,7 +212,8 @@ public class Kirjanpito implements Runnable {
 	}
 
 	private static void printUsage() {
-		System.err.println("Käyttö: tilitin [--config CONFIG] [--debug]");
+		System.err.println("Käyttö: tilitin [-c|--config CONFIG] [-d|--debug] ");
+		System.err.println("        [-u|--username USERNAME] [-p|--password PASSWORD] [FILE|JDBC_URL]");
 	}
 
 	private static class ExceptionHandler implements UncaughtExceptionHandler {
