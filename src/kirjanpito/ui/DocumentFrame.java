@@ -2891,6 +2891,10 @@ public class DocumentFrame extends JFrame implements AccountSelectionListener {
 					return;
 				}
 
+				if (!file.getName().toLowerCase().endsWith(".sqlite")) {
+					file = new File(file.getAbsolutePath() + ".sqlite");
+				}
+
 				if (file.exists()) {
 					SwingUtils.showErrorMessage(DocumentFrame.this, String.format(
 							"Tiedosto %s on jo olemassa. Valitse toinen nimi.", file.getAbsolutePath()));
