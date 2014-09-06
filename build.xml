@@ -10,7 +10,7 @@
 	</target>
 
 	<target name="compile" depends="init">
-		<javac srcdir="${src}" destdir="${build}" classpath="${lib}/itext.jar" encoding="UTF-8" includeantruntime="false" debug="true" debuglevel="lines" target="1.6" source="1.6"/>
+		<javac srcdir="${src}" destdir="${build}" classpath="${lib}/itext.jar" encoding="UTF-8" includeantruntime="false" debug="true" debuglevel="lines" />
 		<copy todir="${build}">
 			<fileset dir="${src}">
 				<exclude name="**/*.java"/>
@@ -18,6 +18,7 @@
 		</copy>
 
 		<jar destfile="${dist}/tilitin.jar" basedir="${build}">
+			<zipgroupfileset dir="${lib}" includes="*.jar" excludes=""/>
 			<manifest>
 				<attribute name="Main-Class" value="kirjanpito.ui.Kirjanpito"/>
 				<attribute name="Class-Path" value="sqlite-jdbc.jar mysql-connector.jar postgresql-jdbc.jar itext.jar"/>
