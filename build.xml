@@ -3,7 +3,8 @@
 	<property name="lib" location="lib"/>
 	<property name="build" location="bin"/>
 	<property name="dist" location="dist"/>
-
+	<property name="install" location="install"/>
+	
 	<target name="init">
 		<mkdir dir="${build}"/>
 		<mkdir dir="${dist}"/>
@@ -28,5 +29,17 @@
 
 	<target name="clean">
 		<delete dir="${build}"/>
+	</target>
+	
+	<target name="install">
+		<mkdir dir="${install}"/>
+		<copy file="${dist}/tilitin.jar" todir="${install}"/>
+		<copy todir="${install}">
+			<fileset dir="${lib}"/>
+		</copy>
+		<mkdir dir="${install}/tilikarttamallit"/>
+		<copy todir="${install}/tilikarttamallit">
+			<fileset dir="tilikarttamallit"/>
+		</copy>
 	</target>
 </project>
